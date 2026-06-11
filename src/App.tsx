@@ -1,0 +1,67 @@
+import "./App.css";
+import { HashRouter as Router, useLocation, useRoutes } from "react-router-dom";
+import routes from "~react-pages";
+import MainLayout from "./layouts/mainlayout";
+import { Suspense } from "react";
+import { Spin, Typography } from "antd";
+import useNetworkStatus from "./hooks/useNetworkStatus";
+import NetworkError from "./views/errors/NetworkError";
+import NotFound from "./views/errors/404";
+
+const { Text } = Typography;
+
+const Loader = () => (
+  <div
+    style={{
+      height: "100vh",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      flexDirection: "column",
+      gap: "12px",
+    }}
+  >
+    <Text strong>Teams Bot is loading...</Text>
+    <Spin size="large" />
+  </div>
+);
+
+function App() {
+  const location = useLocation();
+  const isOnline = useNetworkStatus();
+  // if (location.pathname === "/") {
+  //   return <Navigate to="/login" replace />;
+  // }
+  const element = useRoutes([
+    ...routes,
+    { path: "*", element: <NotFound /> }
+  ]);
+
+  const cleanPath = location.pathname.replace(/\/+$/, "");
+
+  const noLayoutRoutes = ['/login', '/signup', '/forgot-password'];
+
+  return (
+    <>
+      {!isOnline ? (
+        <NetworkError />
+      ) : (
+        <Suspense fallback={<Loader />}>
+          {noLayoutRoutes.includes(cleanPath) ? (
+            element
+          ) : (
+            <MainLayout>{element}</MainLayout>
+          )}
+        </Suspense>
+      )}
+    </>
+  );
+}
+
+export default function Root() {
+  return (
+    <Router>
+      <App />
+    </Router>
+  );
+}
