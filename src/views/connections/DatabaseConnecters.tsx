@@ -13,6 +13,11 @@ import {
     CheckCircleFilled,
 } from "@ant-design/icons";
 import { useState } from "react";
+import azureImg from "../../assets/AzureSQL.png";
+import mysqlImg from "../../assets/mysql.png";
+import postgresImg from "../../assets/pgsql.png";
+import oracleImg from "../../assets/oracle.png";
+import snowflakeImg from "../../assets/snowflake.png";
 
 const { Title, Text } = Typography;
 const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
@@ -21,36 +26,35 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
     const [selectedDb, setSelectedDb] = useState("azure");
 
     const [form] = Form.useForm();
-
     const databases = [
         {
             key: "azure",
             name: "Azure SQL",
-            icon: "☁️",
+            image: azureImg,
             color: "#0078D4",
         },
         {
             key: "mysql",
             name: "MySQL",
-            icon: "🐬",
+            image: mysqlImg,
             color: "#00758F",
         },
         {
             key: "postgres",
             name: "PostgreSQL",
-            icon: "🐘",
+            image: postgresImg,
             color: "#336791",
         },
         {
             key: "oracle",
             name: "Oracle",
-            icon: "🔴",
+            image: oracleImg,
             color: "#F80000",
         },
         {
             key: "snowflake",
             name: "Snowflake",
-            icon: "❄️",
+            image: snowflakeImg,
             color: "#29B5E8",
         },
     ];
@@ -120,13 +124,16 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
                                         textAlign: "center",
                                     }}
                                 >
-                                    <div
+                                    <img
+                                        src={db.image}
+                                        alt={db.name}
                                         style={{
-                                            fontSize: 48,
+                                            width: 64,
+                                            height: 64,
+                                            objectFit: "contain",
+                                            marginBottom: 12,
                                         }}
-                                    >
-                                        {db.icon}
-                                    </div>
+                                    />
 
                                     <Title
                                         level={5}
@@ -187,15 +194,36 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
                                 color: "#fff",
                             }}
                         >
-                            <Title
-                                level={3}
+                            <div
                                 style={{
-                                    color: "#fff",
-                                    margin: 0,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 12,
                                 }}
                             >
-                                {current.icon} {current.name}
-                            </Title>
+                                <img
+                                    src={current.image}
+                                    alt={current.name}
+                                    style={{
+                                        width: 40,
+                                        height: 40,
+                                        objectFit: "contain",
+                                        background: "#fff",
+                                        borderRadius: 8,
+                                        padding: 4,
+                                    }}
+                                />
+
+                                <Title
+                                    level={3}
+                                    style={{
+                                        color: "#fff",
+                                        margin: 0,
+                                    }}
+                                >
+                                    {current.name}
+                                </Title>
+                            </div>
 
                             <Text
                                 style={{

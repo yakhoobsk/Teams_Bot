@@ -11,12 +11,9 @@ import {
     Typography,
     Space,
 } from "antd";
-import {
-    CloudServerOutlined,
-    BugOutlined,
-} from "@ant-design/icons";
 import { motion } from "framer-motion";
-
+import servicenowimg from "../../assets/servicenow.png"
+import Azuredeops from "../../assets/Azuredeops.png"
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
 
@@ -78,45 +75,33 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                             style={{
                                 background:
                                     "linear-gradient(135deg,#464775,#6264A7,#7B83EB)",
-                                padding: 24,
+                                padding: "20px 24px",
                                 color: "#fff",
+                                borderRadius: "12px 12px 0 0",
                             }}
                         >
                             <Space
                                 align="center"
-                                size={16}
+                                size={20}
                             >
-                                <div
+                                <img
+                                    src={servicenowimg}
+                                    alt="servicenow"
                                     style={{
-                                        width: 56,
-                                        height: 56,
-                                        borderRadius:
-                                            16,
-                                        background:
-                                            "rgba(255,255,255,.15)",
-                                        display:
-                                            "flex",
-                                        alignItems:
-                                            "center",
-                                        justifyContent:
-                                            "center",
+                                        height: 42,
+                                        width: 62,
+                                        objectFit: "contain",
+                                        display: "block",
                                     }}
-                                >
-                                    <CloudServerOutlined
-                                        style={{
-                                            fontSize:
-                                                28,
-                                        }}
-                                    />
-                                </div>
+                                />
 
                                 <div>
                                     <Title
-                                        level={4}
+                                        level={3}
                                         style={{
-                                            color:
-                                                "#fff",
+                                            color: "#fff",
                                             margin: 0,
+                                            lineHeight: 1.2,
                                         }}
                                     >
                                         ServiceNow
@@ -124,8 +109,10 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
 
                                     <Text
                                         style={{
-                                            color:
-                                                "rgba(255,255,255,.85)",
+                                            color: "rgba(255,255,255,0.85)",
+                                            fontSize: 16,
+                                            display: "block",
+                                            marginTop: 2,
                                         }}
                                     >
                                         Ticket Integration
@@ -257,49 +244,38 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                             padding: 0,
                         }}
                     >
+
                         <div
                             style={{
                                 background:
-                                    "linear-gradient(135deg,#0F6CBD,#2D7DFF,#4F9BFF)",
-                                padding: 24,
+                                    "linear-gradient(135deg,#464775,#6264A7,#7B83EB)",
+                                padding: "20px 24px",
                                 color: "#fff",
+                                borderRadius: "12px 12px 0 0",
                             }}
                         >
                             <Space
                                 align="center"
-                                size={16}
+                                size={20}
                             >
-                                <div
+                                <img
+                                    src={Azuredeops}
+                                    alt="servicenow"
                                     style={{
-                                        width: 56,
-                                        height: 56,
-                                        borderRadius:
-                                            16,
-                                        background:
-                                            "rgba(255,255,255,.15)",
-                                        display:
-                                            "flex",
-                                        alignItems:
-                                            "center",
-                                        justifyContent:
-                                            "center",
+                                        height: 42,
+                                        width: 62,
+                                        objectFit: "contain",
+                                        display: "block",
                                     }}
-                                >
-                                    <BugOutlined
-                                        style={{
-                                            fontSize:
-                                                28,
-                                        }}
-                                    />
-                                </div>
+                                />
 
                                 <div>
                                     <Title
-                                        level={4}
+                                        level={3}
                                         style={{
-                                            color:
-                                                "#fff",
+                                            color: "#fff",
                                             margin: 0,
+                                            lineHeight: 1.2,
                                         }}
                                     >
                                         Azure DevOps
@@ -307,8 +283,10 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
 
                                     <Text
                                         style={{
-                                            color:
-                                                "rgba(255,255,255,.85)",
+                                            color: "rgba(255,255,255,0.85)",
+                                            fontSize: 16,
+                                            display: "block",
+                                            marginTop: 2,
                                         }}
                                     >
                                         Work Item

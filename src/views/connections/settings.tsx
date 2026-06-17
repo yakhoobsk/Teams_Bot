@@ -97,6 +97,20 @@ export default function TeamConfiguration() {
         );
     };
 
+    const handleActiveChange = (
+        key: string,
+        checked: boolean
+    ) => {
+        setDataSource((prev) =>
+            prev.map((item) => ({
+                ...item,
+                active: checked
+                    ? item.key === key
+                    : false,
+            }))
+        );
+    };
+
     const columns = [
         {
             title: "Team ID",
@@ -218,18 +232,31 @@ export default function TeamConfiguration() {
         },
         {
             title: "Status",
-            width: 120,
+            width: 180,
             render: (_: any, record: any) => (
-                <Switch
-                    checked={record.active}
-                    onChange={(value) =>
-                        updateField(
-                            record.key,
-                            "active",
-                            value
-                        )
-                    }
-                />
+                <Space>
+                    <Switch
+                        checked={record.active}
+                        onChange={(checked) =>
+                            handleActiveChange(
+                                record.key,
+                                checked
+                            )
+                        }
+                    />
+
+                    <Tag
+                        color={
+                            record.active
+                                ? "success"
+                                : "default"
+                        }
+                    >
+                        {record.active
+                            ? "Active"
+                            : "Inactive"}
+                    </Tag>
+                </Space>
             ),
         },
     ];
@@ -288,7 +315,7 @@ export default function TeamConfiguration() {
                             border: "none",
                         }}
                     >
-                        Add Team
+                        Add Connection
                     </Button>
                 </Space>
             </div>

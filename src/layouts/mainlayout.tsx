@@ -3,12 +3,9 @@ import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     HomeOutlined,
-    RobotOutlined,
-    MessageOutlined,
-    BarChartOutlined,
-    SettingOutlined,
     UserOutlined,
     LogoutOutlined,
+    ApiOutlined,
 } from "@ant-design/icons";
 import { Layout, Avatar } from "antd";
 import { motion } from "framer-motion";
@@ -32,25 +29,16 @@ export default function MainLayout({ children }: Props) {
             label: "Dashboard",
             path: "/",
         },
+
         {
-            icon: <RobotOutlined />,
-            label: "Bot Management",
-            path: "/bot-management",
+            icon: <ApiOutlined />,
+            label: "Connecters",
+            path: "/connections",
         },
         {
-            icon: <MessageOutlined />,
-            label: "Conversations",
-            path: "/conversations",
-        },
-        {
-            icon: <BarChartOutlined />,
-            label: "Analytics",
-            path: "/analytics",
-        },
-        {
-            icon: <SettingOutlined />,
-            label: "Settings",
-            path: "/settings-page",
+            icon: <ApiOutlined />,
+            label: "User Management",
+            path: "/user-mangement",
         },
     ];
 

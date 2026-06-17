@@ -19,6 +19,8 @@ import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo1.png";
 import FeatureCard from "../../components/feturecard";
+import { LoginUser } from "../../redux/Services/authService";
+import { useAppDispatch } from "../../redux/hooks";
 
 const featureCards = [
     {
@@ -78,7 +80,7 @@ const LoginPage: React.FC = () => {
     const [step, setStep] = useState<"email" | "otp">("email");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-
+    const dispatch = useAppDispatch();
     const [slideIndex, setSlideIndex] = useState(0);
 
     useEffect(() => {
@@ -92,7 +94,6 @@ const LoginPage: React.FC = () => {
 
         return () => clearInterval(timer);
     }, []);
-
     const handleEmailSubmit = async () => {
         try {
             const values = await form.validateFields();
@@ -101,13 +102,24 @@ const LoginPage: React.FC = () => {
 
             setLoading(true);
 
-            setTimeout(() => {
-                setLoading(false);
+            const payload = {
+                Email_ID: values.email,
+            };
+
+            const response = await dispatch(
+                LoginUser(payload)
+            ).unwrap();
+
+            if (response?.status === "success") {
                 setStep("otp");
-                message.success("OTP sent successfully");
-            }, 1500);
+            }
+
+            setLoading(false);
         } catch (err: any) {
-            message.error(err.message);
+            setLoading(false);
+            message.error(
+                err?.message || "Failed to send OTP"
+            );
         }
     };
 

@@ -4,79 +4,34 @@ import { getSecureItem, setSecureItem } from "../../utils/webSecureStorage";
 import { decryptIfNeeded } from "../../utils/cryptoAES";
 
 
-const AiApi = axios.create({
+const boomiApi = axios.create({
     baseURL: config.BASEURL,
     headers: config.headersCommon,
     timeout: 20000,
 });
 
-
-const boomiApi = axios.create({
-    baseURL: config.BOOMI_BASEURL,
-    headers: config.headersCommon,
-    timeout: 20000,
-});
-
-
-AiApi.interceptors.request.use(
-    async (configuration: any) => {
-        try {
-            const token = import.meta.env.VITE_AI_BASIC_TOKEN;
-
-            if (token) {
-                setSecureItem("aiAccessToken", token);
-            }
-
-            const encryptedToken = getSecureItem("aiAccessToken");
-
-            configuration.headers = configuration.headers || {};
-
-            if (encryptedToken !== null) {
-                const decryptedToken = decryptIfNeeded(encryptedToken);
-
-                if (decryptedToken) {
-                    configuration.headers.Authorization = `Basic ${decryptedToken}`;
-                }
-            }
-        } catch (error) {
-            console.log(error);
-        }
-
-        return configuration;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-
 boomiApi.interceptors.request.use(
     async (configuration: any) => {
         try {
             const token = import.meta.env.VITE_BOOMI_BASIC_TOKEN;
-
             if (token) {
-                setSecureItem("boomiAccessToken", token);
+                setSecureItem("accessToken", token);
             }
-
-            const encryptedToken = getSecureItem("boomiAccessToken");
-
+            const encryptedToken = getSecureItem('accessToken');
             configuration.headers = configuration.headers || {};
-
             if (encryptedToken !== null) {
                 const decryptedToken = decryptIfNeeded(encryptedToken);
-
                 if (decryptedToken) {
-                    configuration.headers.Authorization = `Basic ${decryptedToken}`;
+                    configuration.headers.Authorization = `Basic ${decryptedToken}` as string;
                 }
             }
         } catch (error) {
-            console.log(error);
         }
 
         return configuration;
     },
     (error) => {
+
         return Promise.reject(error);
     }
 );
@@ -100,4 +55,4 @@ const decryptedToken = () => {
     return null;
 };
 
-export { AiApi, urlGenarator, decryptedToken, boomiApi }
+export { boomiApi, urlGenarator, decryptedToken, }

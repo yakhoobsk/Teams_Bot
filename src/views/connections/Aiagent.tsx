@@ -6,27 +6,23 @@ import {
     Form,
     Input,
     Button,
-    Switch,
     Tag,
 } from "antd";
 import {
     KeyOutlined,
-    SafetyCertificateOutlined,
     CheckCircleFilled,
-    RobotOutlined,
-    CloudOutlined,
-    ApiOutlined,
-    OpenAIOutlined,
 } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import chatgptLogo from "../../assets/chatgpt-icon.png";
+import copilotLogo from "../../assets/copilot-icon.png";
+import claudeLogo from "../../assets/claude-ai-icon.png";
+import geminiLogo from "../../assets/google-gemini-icon.png";
 
 const { Title, Text } = Typography;
 const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
     console.log("Active Tab in AI Agent Connectors:", activeTab);
     const [selectedAgent, setSelectedAgent] = useState("chatgpt");
-
-    const [enabled, setEnabled] = useState(false);
 
     const [form] = Form.useForm();
 
@@ -34,25 +30,25 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
         {
             key: "chatgpt",
             name: "ChatGPT",
-            icon: <RobotOutlined />,
+            image: chatgptLogo,
             color: "#10A37F",
         },
         {
             key: "copilot",
             name: "Copilot",
-            icon: <CloudOutlined />,
+            image: copilotLogo,
             color: "#0078D4",
         },
         {
             key: "claude",
             name: "Claude",
-            icon: <ApiOutlined />,
+            image: claudeLogo,
             color: "#D97706",
         },
         {
             key: "gemini",
             name: "Gemini",
-            icon: <OpenAIOutlined />,
+            image: geminiLogo,
             color: "#4285F4",
         },
     ];
@@ -140,14 +136,15 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                                             border: `2px solid ${agent.color}30`,
                                         }}
                                     >
-                                        <span
+                                        <img
+                                            src={agent.image}
+                                            alt={agent.name}
                                             style={{
-                                                fontSize: 32,
-                                                color: agent.color,
+                                                width: 40,
+                                                height: 40,
+                                                objectFit: "contain",
                                             }}
-                                        >
-                                            {agent.icon}
-                                        </span>
+                                        />
                                     </div>
 
                                     <Title
@@ -226,42 +223,49 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                                 }}
                             >
                                 <div>
-                                    <Title
-                                        level={3}
+                                    <div
                                         style={{
-                                            color:
-                                                "#fff",
-                                            margin:
-                                                0,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 12,
                                         }}
                                     >
-                                        {
-                                            current.icon
-                                        }{" "}
-                                        {
-                                            current.name
-                                        }
-                                    </Title>
+                                        <img
+                                            src={current.image}
+                                            alt={current.name}
+                                            style={{
+                                                width: 42,
+                                                height: 42,
+                                                objectFit: "contain",
+                                                background: "#fff",
+                                                borderRadius: 10,
+                                                padding: 4,
+                                            }}
+                                        />
 
-                                    <Text
-                                        style={{
-                                            color:
-                                                "rgba(255,255,255,.9)",
-                                        }}
-                                    >
-                                        AI Provider
-                                        Configuration
-                                    </Text>
+                                        <div>
+                                            <Title
+                                                level={3}
+                                                style={{
+                                                    color: "#fff",
+                                                    margin: 0,
+                                                }}
+                                            >
+                                                {current.name}
+                                            </Title>
+
+                                            <Text
+                                                style={{
+                                                    color: "rgba(255,255,255,.9)",
+                                                }}
+                                            >
+                                                AI Provider Configuration
+                                            </Text>
+                                        </div>
+                                    </div>
+
                                 </div>
 
-                                <Switch
-                                    checked={
-                                        enabled
-                                    }
-                                    onChange={
-                                        setEnabled
-                                    }
-                                />
                             </div>
                         </div>
 
@@ -272,7 +276,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                             <Row gutter={16}>
                                 <Col
                                     xs={24}
-                                    md={12}
+                                    md={24}
                                 >
                                     <Form.Item
                                         label="API Key"
@@ -291,34 +295,12 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                                             }
                                             placeholder="Enter API Key"
                                             size="small"
+
                                         />
                                     </Form.Item>
                                 </Col>
 
-                                <Col
-                                    xs={24}
-                                    md={12}
-                                >
-                                    <Form.Item
-                                        label="Token"
-                                        name="token"
-                                    >
-                                        <Input.Password
-                                            prefix={
-                                                <SafetyCertificateOutlined
 
-                                                    style={{
-                                                        color: "#6264A7",
-                                                        fontSize: 18,
-
-                                                    }}
-                                                />
-                                            }
-                                            placeholder="Enter Token"
-                                            size="small"
-                                        />
-                                    </Form.Item>
-                                </Col>
                             </Row>
 
                             <div
@@ -328,16 +310,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                                     gap: 12,
                                 }}
                             >
-                                <Button
-                                    size="large"
-                                    style={{
-                                        borderRadius:
-                                            12,
-                                    }}
-                                >
-                                    Test
-                                    Connection
-                                </Button>
+
 
                                 <Button
                                     type="primary"

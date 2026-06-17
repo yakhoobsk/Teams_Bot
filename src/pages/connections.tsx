@@ -1,4 +1,4 @@
-import SettingsView from "../views/settings";
+import SettingsView from "../views/connections";
 
 const Settings = () => {
 
