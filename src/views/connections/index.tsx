@@ -12,7 +12,7 @@ const SettingsView = () => {
     const [activeTab, setActiveTab] = useState("TeamsConfiguration");
 
     const items = [
-        { key: "TeamsConfiguration", label: "Teams", children: <TeamConfiguration /> },
+        { key: "TeamsConfiguration", label: "Teams Configration", children: <TeamConfiguration /> },
         { key: "Tickets", label: "Ticket Connectors", children: <ITSMConnectors activeTab={activeTab} /> },
         { key: "Database", label: "Database Connectors", children: <DatabaseConnectors activeTab={activeTab} /> },
         { key: "AIAgents", label: "AI Agent Connectors", children: <AIAgentConnectors activeTab={activeTab} /> },

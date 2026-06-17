@@ -38,13 +38,8 @@ interface User {
 }
 
 const modulesList = [
-    "Dashboard",
-    "Users",
-    "Orders",
-    "Payments",
-    "Reports",
-    "Settings",
-    "Notifications",
+    "Api Services",
+    "MDH",
     "Audit Logs",
 ];
 

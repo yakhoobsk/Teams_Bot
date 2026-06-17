@@ -6,6 +6,7 @@ import {
     UserOutlined,
     LogoutOutlined,
     ApiOutlined,
+    TeamOutlined,
 } from "@ant-design/icons";
 import { Layout, Avatar } from "antd";
 import { motion } from "framer-motion";
@@ -36,7 +37,7 @@ export default function MainLayout({ children }: Props) {
             path: "/connections",
         },
         {
-            icon: <ApiOutlined />,
+            icon: <TeamOutlined />,
             label: "User Management",
             path: "/user-mangement",
         },
