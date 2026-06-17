@@ -4,7 +4,7 @@ const Dashboard = () => {
 
     return (
         <>
-            hi
+            Dashboard , please check below module(connecters, useremanagement)
         </>
     )
 }
