@@ -12,7 +12,7 @@ const BadRequest = () => {
             title="400 - Bad Request"
             subTitle="The request could not be understood by the server."
             extra={
-                <Button type="primary" onClick={() => navigate("/")}>
+                <Button type="primary" onClick={() => navigate("/connections")}>
                     Go Home
                 </Button>
             }

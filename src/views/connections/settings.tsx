@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Table,
     Card,
-    Select,
     Switch,
     Button,
     Space,
@@ -14,6 +13,8 @@ import {
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import AddTeamModal from "../../components/AddTeamModal";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { TeamsconfigGet } from "../../redux/Services/connectersServices";
 
 const { Title, Text } = Typography;
 interface TeamConfig {
@@ -29,73 +30,32 @@ interface TeamConfig {
 
 export default function TeamConfiguration() {
     const [openModal, setOpenModal] = useState(false);
-    const [dataSource, setDataSource] =
-        useState<TeamConfig[]>([
-            {
-                key: "1",
-                teamId: "TEAM001",
-                connector: "Microsoft Teams",
-                companyName: "EasyStepIn",
-                ticket: "Jira",
-                database: "MySQL",
-                aiAgent: "ChatGPT",
-                active: true,
-            },
-            {
-                key: "2",
-                teamId: "TEAM002",
-                connector: "Microsoft Teams",
-                companyName: "EasyStepIn",
-                ticket: "ServiceNow",
-                database: "Oracle",
-                aiAgent: "Gemini",
-                active: false,
-            },
-            {
-                key: "3",
-                teamId: "TEAM003",
-                connector: "Microsoft Teams",
-                companyName: "EasyStepIn",
-                ticket: "Jira",
-                database: "PostgreSQL",
-                aiAgent: "Copilot",
-                active: true,
-            },
-            {
-                key: "4",
-                teamId: "TEAM004",
-                connector: "Microsoft Teams",
-                companyName: "EasyStepIn",
-                ticket: "ServiceNow",
-                database: "MySQL",
-                aiAgent: "ChatGPT",
-                active: true,
-            },
-            {
-                key: "5",
-                teamId: "TEAM005",
-                connector: "Microsoft Teams",
-                companyName: "EasyStepIn",
-                ticket: "Jira",
-                database: "Oracle",
-                aiAgent: "Gemini",
-                active: false,
-            },
-        ]);
+    const config = useAppSelector((state) => state.connecters?.teamcofigget);
+    const dispatch = useAppDispatch()
+    const [dataSource, setDataSource] = useState<TeamConfig[]>([]);
+    useEffect(() => {
 
-    const updateField = (
-        key: string,
-        field: string,
-        value: any
-    ) => {
-        setDataSource((prev) =>
-            prev.map((item) =>
-                item.key === key
-                    ? { ...item, [field]: value }
-                    : item
-            )
+        dispatch(TeamsconfigGet({}));
+
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (!config) return;
+
+        const mappedData = (config.All_Divisions || []).map(
+            (item: any, index: number) => ({
+                key: item.connector_id || index.toString(),
+                teamId: item.connector_id,
+                connector: "Microsoft Teams",
+                companyName: item.created_by,
+                ticket: item.ticket_name,
+                database: item.connector_name,
+                aiAgent: item.agent_name,
+                active: item.is_active === "true",
+            })
         );
-    };
+        setDataSource(mappedData);
+    }, [config]);
 
     const handleActiveChange = (
         key: string,
@@ -143,92 +103,24 @@ export default function TeamConfiguration() {
         ,
         {
             title: "Tickets",
+            dataIndex: "ticket",
+            key: "ticket",
             width: 180,
-            render: (_: any, record: any) => (
-                <Select
-                    value={record.ticket}
-                    style={{ width: "100%" }}
-                    onChange={(value) =>
-                        updateField(
-                            record.key,
-                            "ticket",
-                            value
-                        )
-                    }
-                    options={[
-                        {
-                            label: "Jira",
-                            value: "Jira",
-                        },
-                        {
-                            label: "ServiceNow",
-                            value: "ServiceNow",
-                        },
-                    ]}
-                />
-            ),
+            render: (value: string) => value || "-",
         },
         {
             title: "Database",
+            dataIndex: "database",
+            key: "database",
             width: 180,
-            render: (_: any, record: any) => (
-                <Select
-                    value={record.database}
-                    style={{ width: "100%" }}
-                    onChange={(value) =>
-                        updateField(
-                            record.key,
-                            "database",
-                            value
-                        )
-                    }
-                    options={[
-                        {
-                            label: "MySQL",
-                            value: "MySQL",
-                        },
-                        {
-                            label: "Oracle",
-                            value: "Oracle",
-                        },
-                        {
-                            label: "PostgreSQL",
-                            value: "PostgreSQL",
-                        },
-                    ]}
-                />
-            ),
+            render: (value: string) => value || "-",
         },
         {
             title: "AI Agent",
+            dataIndex: "aiAgent",
+            key: "aiAgent",
             width: 180,
-            render: (_: any, record: any) => (
-                <Select
-                    value={record.aiAgent}
-                    style={{ width: "100%" }}
-                    onChange={(value) =>
-                        updateField(
-                            record.key,
-                            "aiAgent",
-                            value
-                        )
-                    }
-                    options={[
-                        {
-                            label: "ChatGPT",
-                            value: "ChatGPT",
-                        },
-                        {
-                            label: "Gemini",
-                            value: "Gemini",
-                        },
-                        {
-                            label: "Copilot",
-                            value: "Copilot",
-                        },
-                    ]}
-                />
-            ),
+            render: (value: string) => value || "-",
         },
         {
             title: "Status",
@@ -400,9 +292,7 @@ export default function TeamConfiguration() {
                         rowKey="key"
                         columns={columns}
                         dataSource={dataSource}
-                        pagination={{
-                            pageSize: 5,
-                        }}
+                        pagination={false}
                         scroll={{
                             x: 1100,
                         }}

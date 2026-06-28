@@ -11,33 +11,39 @@ import {
 import {
     KeyOutlined,
     CheckCircleFilled,
+    EyeInvisibleOutlined,
+    EyeTwoTone,
 } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import chatgptLogo from "../../assets/chatgpt-icon.png";
 import copilotLogo from "../../assets/copilot-icon.png";
 import claudeLogo from "../../assets/claude-ai-icon.png";
 import geminiLogo from "../../assets/google-gemini-icon.png";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { aiconnecterCreate, AIConnectersGet, aiconnecterUpdate } from "../../redux/Services/connectersServices";
 
 const { Title, Text } = Typography;
 const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
-    console.log("Active Tab in AI Agent Connectors:", activeTab);
-    const [selectedAgent, setSelectedAgent] = useState("chatgpt");
 
+    const [selectedAgent, setSelectedAgent] = useState("chatgpt");
+    const dispatch = useAppDispatch()
+    const aigent = useAppSelector((state) => state.connecters?.aiagentget);
+
+    useEffect(() => {
+        if (activeTab === "AIAgents") {
+            dispatch(AIConnectersGet({}));
+        }
+    }, [activeTab, dispatch]);
     const [form] = Form.useForm();
 
+    const agents = aigent?.[0]?.agents || [];
     const aiAgents = [
         {
             key: "chatgpt",
             name: "ChatGPT",
             image: chatgptLogo,
             color: "#10A37F",
-        },
-        {
-            key: "copilot",
-            name: "Copilot",
-            image: copilotLogo,
-            color: "#0078D4",
         },
         {
             key: "claude",
@@ -51,12 +57,74 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
             image: geminiLogo,
             color: "#4285F4",
         },
-    ];
+        {
+            key: "copilot",
+            name: "Copilot",
+            image: copilotLogo,
+            color: "#0078D4",
+        },
+    ].map((item) => {
+        const apiData = agents.find((a: any) => {
+            const name =
+                a.agent_name.toLowerCase() === "microsoftcopilot"
+                    ? "copilot"
+                    : a.agent_name.toLowerCase();
+
+            return name === item.key;
+        });
+
+        return {
+            ...item,
+            apiKey: apiData?.api_key || "",
+            agentId: apiData?.agent_id || "",
+        };
+    });
+
+    useEffect(() => {
+        const selected = aiAgents.find(
+            (item: any) => item.key === selectedAgent
+        );
+
+        if (selected) {
+            form.setFieldsValue({
+                apiKey: selected.apiKey,
+            });
+        }
+    }, [selectedAgent, aiAgents]);
 
     const current =
-        aiAgents.find(
-            (x) => x.key === selectedAgent
-        ) || aiAgents[0];
+        aiAgents.find((item: any) => item.key === selectedAgent) ||
+        aiAgents[0];
+
+
+    const handleSave = async () => {
+        const values = await form.validateFields();
+
+        if (current.agentId) {
+            const payload = {
+                agent_id: current.agentId,
+                agent_name: current.name,
+                api_key: values.apiKey,
+            }
+            dispatch(
+                aiconnecterUpdate({ payload })
+            );
+        } else {
+            const payload = {
+                agent_id: "",
+                agent_name: current.name,
+                api_key: values.apiKey,
+                created_by: "",
+                created_date: "",
+                is_active: true,
+            }
+            dispatch(
+                aiconnecterCreate({ payload })
+            );
+        }
+
+        dispatch(AIConnectersGet({}));
+    };
 
     return (
         <div style={{ padding: 24 }}>
@@ -74,7 +142,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                     marginTop: 24,
                 }}
             >
-                {aiAgents.map((agent) => (
+                {aiAgents.map((agent: any) => (
                     <Col
                         xs={24}
                         sm={12}
@@ -282,20 +350,13 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                                         label="API Key"
                                         name="apiKey"
                                     >
-                                        <Input
-                                            prefix={
-                                                <KeyOutlined
-
-                                                    style={{
-                                                        color: "#6264A7",
-                                                        fontSize: 18,
-
-                                                    }}
-                                                />
-                                            }
+                                        <Input.Password
+                                            prefix={<KeyOutlined style={{ color: "#6264A7", fontSize: 18 }} />}
                                             placeholder="Enter API Key"
                                             size="small"
-
+                                            iconRender={(visible) =>
+                                                visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
+                                            }
                                         />
                                     </Form.Item>
                                 </Col>
@@ -315,17 +376,14 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                                 <Button
                                     type="primary"
                                     size="large"
+                                    onClick={handleSave}
                                     style={{
-                                        borderRadius:
-                                            12,
-                                        border:
-                                            "none",
-                                        background:
-                                            current.color,
+                                        borderRadius: 12,
+                                        border: "none",
+                                        background: current.color,
                                     }}
                                 >
-                                    Save
-                                    Connector
+                                    Save Connector
                                 </Button>
                             </div>
                         </Form>

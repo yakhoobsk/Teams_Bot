@@ -8,40 +8,40 @@ interface LoginPayload {
 }
 
 interface LoginOTPPayload {
-    Email_ID: string;
+    "Email_id": string;
     Otp: any;
 }
 
 export const LoginUser = createAsyncThunk("auth/login", async (payload: LoginPayload, { rejectWithValue }) => {
     try {
-        const response = await boomiApi.post("/teams_bot/teams_login/otp_generation", payload);
+        const response = await boomiApi.post("/teams_bot/OTP/generation", payload);
 
-        if (response.data.status !== "success") {
-            showSnackbar("error", response?.data?.message || "Login failed");
+        if (response.data?.["Status code"] === "Success") {
+            showSnackbar("error", response?.data?.["Status message"] || "Login failed");
         } else {
-            showSnackbar("success", response?.data?.message || "Login successful");
+            showSnackbar("success", response?.data?.["Status message"] || "Login successful");
         }
         return response.data;
     } catch (error: any) {
-        showSnackbar("error", error.response?.data?.message || "Login failed");
-        return rejectWithValue(error.response?.data?.message || "Login failed");
+        showSnackbar("success", error.response?.data?.["Status message"] || "Login failed");
+        return rejectWithValue(error.response?.data?.["Status message"] || "Login failed");
     }
 }
 );
 
 export const Loginotp = createAsyncThunk("auth/OTP", async (payload: LoginOTPPayload, { rejectWithValue }) => {
     try {
-        const response = await boomiApi.post("/teams_bot/OTP_validation/login_validation", payload);
+        const response = await boomiApi.post("/teams_bot/OTP/login_validation", payload);
 
-        if (response.data.status !== "success") {
-            showSnackbar("error", response?.data?.message || "Login failed");
+        if (response.data?.["Status message"] === "success") {
+            showSnackbar("error", response.data?.["Status message"] || "Login failed");
         } else {
-            showSnackbar("success", response?.data?.message || "Login successful");
+            showSnackbar("success", response.data?.["Status message"] || "Login successful");
         }
         return response.data;
     } catch (error: any) {
-        showSnackbar("error", error.response?.data?.message || "Login failed");
-        return rejectWithValue(error.response?.data?.message || "Login failed");
+        showSnackbar("error", error.response.data?.["Status message"] || "Login failed");
+        return rejectWithValue(error.response.data?.["Status message"] || "Login failed");
     }
 }
 );

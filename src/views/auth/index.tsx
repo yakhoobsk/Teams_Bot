@@ -19,8 +19,9 @@ import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import logo from "../../assets/logo1.png";
 import FeatureCard from "../../components/feturecard";
-import { LoginUser } from "../../redux/Services/authService";
+import { Loginotp, LoginUser } from "../../redux/Services/authService";
 import { useAppDispatch } from "../../redux/hooks";
+import { showSnackbar } from "../../utils/snackbar";
 
 const featureCards = [
     {
@@ -71,7 +72,7 @@ const emailSchema = Yup.object({
 
 const otpSchema = Yup.object({
     otp: Yup.string()
-        .matches(/^\d{6}$/, "OTP must be 6 digits")
+        .matches(/^\d{4}$/, "OTP must be 4 digits")
         .required("OTP is required"),
 });
 
@@ -82,7 +83,7 @@ const LoginPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const [slideIndex, setSlideIndex] = useState(0);
-
+    const [emailId, setEmailId] = useState("");
     useEffect(() => {
         const timer = setInterval(() => {
             setSlideIndex((prev) =>
@@ -110,15 +111,18 @@ const LoginPage: React.FC = () => {
                 LoginUser(payload)
             ).unwrap();
 
-            if (response?.status === "success") {
+            if (
+                response?.["Status code"] === "200" &&
+                response?.["Status Response"] === "Success"
+            ) {
+                setEmailId(values.email);
                 setStep("otp");
             }
 
             setLoading(false);
         } catch (err: any) {
             setLoading(false);
-            message.error(
-                err?.message || "Failed to send OTP"
+            showSnackbar("error", err?.message || "Failed to send OTP"
             );
         }
     };
@@ -131,16 +135,38 @@ const LoginPage: React.FC = () => {
 
             setLoading(true);
 
-            setTimeout(() => {
-                setLoading(false);
-                message.success("Login Successful");
-                navigate("/");
-            }, 1500);
+            const payload = {
+                "Email_id": emailId,
+                Otp: values.otp,
+            };
+
+            const response = await dispatch(
+                Loginotp(payload)
+            ).unwrap();
+
+            if (
+                response?.["Status code"] === "200" &&
+                response?.["Status_Response"]?.toLowerCase() === "success"
+            ) {
+                localStorage.setItem(
+                    "isAuthenticated",
+                    "true"
+                );
+
+                navigate("/WelcomeScreen", {
+                    replace: true,
+                });
+            }
+
+            setLoading(false);
         } catch (err: any) {
-            message.error(err.message);
+            setLoading(false);
+
+            message.error(
+                err?.message || "OTP Validation Failed"
+            );
         }
     };
-
     return (
         <div
             style={{
@@ -509,8 +535,8 @@ const LoginPage: React.FC = () => {
                                             }
                                             name="otp"
                                         >
-                                            <Input
-                                                maxLength={6}
+                                            <Input.Password
+                                                maxLength={4}
                                                 prefix={
                                                     <SafetyOutlined
                                                         style={{
@@ -518,7 +544,8 @@ const LoginPage: React.FC = () => {
                                                         }}
                                                     />
                                                 }
-                                                placeholder="123456"
+                                                placeholder="Enter OTP"
+                                                visibilityToggle={false}
                                                 style={{
                                                     height: 58,
                                                     borderRadius: 16,
@@ -526,8 +553,7 @@ const LoginPage: React.FC = () => {
                                                     textAlign: "center",
                                                     fontSize: 24,
                                                     letterSpacing: 8,
-                                                    border:
-                                                        "1px solid #E5E7EB",
+                                                    border: "1px solid #E5E7EB",
                                                 }}
                                             />
                                         </Form.Item>

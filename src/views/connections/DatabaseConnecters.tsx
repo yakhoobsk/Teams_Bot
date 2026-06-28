@@ -12,57 +12,122 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     CheckCircleFilled,
 } from "@ant-design/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import azureImg from "../../assets/AzureSQL.png";
 import mysqlImg from "../../assets/mysql.png";
 import postgresImg from "../../assets/pgsql.png";
 import oracleImg from "../../assets/oracle.png";
 import snowflakeImg from "../../assets/snowflake.png";
+import { databaseconnecterCreate, DataBaseConnectersGet, databaseconnecterUpdate } from "../../redux/Services/connectersServices";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 
 const { Title, Text } = Typography;
 const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
-    console.log("Active Tab in AI Agent Connectors:", activeTab);
-
     const [selectedDb, setSelectedDb] = useState("azure");
+    const dispatch = useAppDispatch()
+    const database = useAppSelector((state) => state.connecters?.databaseget);
+    const connectors = database?.[0]?.Connectors || [];
+
+    useEffect(() => {
+        if (activeTab === "Database") {
+            dispatch(DataBaseConnectersGet({}));
+        }
+    }, [activeTab, dispatch]);
 
     const [form] = Form.useForm();
     const databases = [
         {
             key: "azure",
+            apiKey: "azuresql",
             name: "Azure SQL",
             image: azureImg,
             color: "#0078D4",
         },
         {
             key: "mysql",
+            apiKey: "mysql",
             name: "MySQL",
             image: mysqlImg,
             color: "#00758F",
         },
         {
             key: "postgres",
+            apiKey: "postgres",
             name: "PostgreSQL",
             image: postgresImg,
             color: "#336791",
         },
         {
             key: "oracle",
+            apiKey: "oracle",
             name: "Oracle",
             image: oracleImg,
             color: "#F80000",
         },
         {
             key: "snowflake",
+            apiKey: "snowflake",
             name: "Snowflake",
             image: snowflakeImg,
             color: "#29B5E8",
         },
-    ];
+    ].map((db) => {
+        const apiData = connectors.find(
+            (item: any) =>
+                item.connector_name?.toLowerCase() === db.apiKey.toLowerCase()
+        );
+
+        return {
+            ...db,
+            connectorId: apiData?.connector_id || "",
+            connection_url: apiData?.connection_url || "",
+            class_name: apiData?.class_name || "",
+            user_name: apiData?.user_name || "",
+            password: apiData?.password || "",
+            schema_name: apiData?.schema_name || "",
+        };
+    });
+
+
+    const handleSave = async () => {
+        const values = await form.validateFields();
+
+        const selectedConnector = connectors.find(
+            (item: any) =>
+                item.connector_name.toLowerCase() === current.apiKey.toLowerCase()
+        );
+
+        const payload = {
+            Mail_Id: "",
+            connector_name: current.apiKey,
+            connection_url: values.host,
+            class_name: values.port,
+            user_name: values.username,
+            password: values.password,
+            schema_name: values.schema,
+        };
+
+        if (selectedConnector?.connector_id) {
+            dispatch(databaseconnecterUpdate({ payload }));
+        } else {
+            dispatch(databaseconnecterCreate({ payload }));
+        }
+        dispatch(DataBaseConnectersGet({}));
+
+    };
 
     const current =
-        databases.find(
-            (db) => db.key === selectedDb
-        ) || databases[0];
+        databases.find((db) => db.key === selectedDb) || databases[0];
+
+    useEffect(() => {
+        form.setFieldsValue({
+            host: current.connection_url,
+            port: current.class_name,
+            username: current.user_name,
+            password: current.password,
+            schema: current.schema_name,
+        });
+    }, [current, form]);
 
     return (
         <div
@@ -304,10 +369,10 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
                                 <Button
                                     type="primary"
                                     size="large"
+                                    onClick={handleSave}
                                     style={{
                                         borderRadius: 12,
-                                        background:
-                                            current.color,
+                                        background: current.color,
                                     }}
                                 >
                                     Save Connector

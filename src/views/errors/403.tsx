@@ -12,7 +12,7 @@ const Forbidden = () => {
             title="403 - Forbidden"
             subTitle="You don't have permission to access this page."
             extra={
-                <Button type="primary" onClick={() => navigate("/")}>
+                <Button type="primary" onClick={() => navigate("/connections")}>
                     Back Home
                 </Button>
             }

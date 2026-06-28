@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     Modal,
     Form,
@@ -14,6 +14,8 @@ import {
     DatabaseOutlined,
     RobotOutlined,
 } from "@ant-design/icons";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, TeamsconfigCreate } from "../redux/Services/connectersServices";
 
 interface Props {
     open: boolean;
@@ -27,9 +29,56 @@ const AddTeamModal: React.FC<Props> = ({
     onSubmit,
 }) => {
     const [form] = Form.useForm();
+    const dispatch = useAppDispatch()
+    const aigent = useAppSelector((state) => state.connecters?.aiagentget);
+    const agents = aigent?.[0]?.agents || [];
+    const database = useAppSelector((state) => state.connecters?.databaseget);
+    const connectors = database?.[0]?.Connectors || [];
+    const itsm = useAppSelector((state) => state.connecters?.itsmget);
+    const ticketConnectors = itsm?.Response || itsm?.[0]?.Response || [];
 
+    useEffect(() => {
+
+        dispatch(AIConnectersGet({}));
+        dispatch(DataBaseConnectersGet({}));
+        dispatch(ITSMConnectersGet({}));
+
+    }, [dispatch]);
     const handleFinish = (values: any) => {
-        onSubmit(values);
+        const selectedTicket = ticketConnectors.find(
+            (item: any) =>
+                item.ticket_name.toLowerCase() === values.ticket.toLowerCase()
+        );
+
+        const selectedDatabase = connectors.find(
+            (item: any) =>
+                item.connector_name.toLowerCase() === values.database.toLowerCase()
+        );
+
+        const selectedAgent = agents.find(
+            (item: any) =>
+                item.agent_name.toLowerCase() === values.aiAgent.toLowerCase()
+        );
+
+        const payload = {
+            company_name: values.companyName,
+            connector: values.connector,
+
+            ticket_name: values.ticket,
+            database_name: values.database,
+            ai_agent_name: values.aiAgent,
+
+            ticket_details: selectedTicket || {},
+
+            database_details: selectedDatabase || {},
+
+            ai_agent_details: selectedAgent || {},
+        };
+
+        console.log(payload);
+        dispatch(TeamsconfigCreate({ payload }))
+        onSubmit(payload);
+
         form.resetFields();
     };
 
@@ -178,18 +227,10 @@ const AddTeamModal: React.FC<Props> = ({
                                         suffixIcon={
                                             <ToolOutlined />
                                         }
-                                        options={[
-                                            {
-                                                label: "Jira",
-                                                value: "Jira",
-                                            },
-                                            {
-                                                label:
-                                                    "ServiceNow",
-                                                value:
-                                                    "ServiceNow",
-                                            },
-                                        ]}
+                                        options={ticketConnectors.map((item: any) => ({
+                                            label: item.ticket_name,
+                                            value: item.ticket_name,
+                                        }))}
                                     />
                                 </Form.Item>
                             </Col>
@@ -211,22 +252,10 @@ const AddTeamModal: React.FC<Props> = ({
                                         suffixIcon={
                                             <DatabaseOutlined />
                                         }
-                                        options={[
-                                            {
-                                                label: "MySQL",
-                                                value: "MySQL",
-                                            },
-                                            {
-                                                label: "Oracle",
-                                                value: "Oracle",
-                                            },
-                                            {
-                                                label:
-                                                    "PostgreSQL",
-                                                value:
-                                                    "PostgreSQL",
-                                            },
-                                        ]}
+                                        options={connectors.map((item: any) => ({
+                                            label: item.connector_name,
+                                            value: item.connector_name,
+                                        }))}
                                     />
                                 </Form.Item>
                             </Col>
@@ -248,20 +277,10 @@ const AddTeamModal: React.FC<Props> = ({
                                         suffixIcon={
                                             <RobotOutlined />
                                         }
-                                        options={[
-                                            {
-                                                label: "ChatGPT",
-                                                value: "ChatGPT",
-                                            },
-                                            {
-                                                label: "Gemini",
-                                                value: "Gemini",
-                                            },
-                                            {
-                                                label: "Copilot",
-                                                value: "Copilot",
-                                            },
-                                        ]}
+                                        options={agents.map((item: any) => ({
+                                            label: item.agent_name,
+                                            value: item.agent_name,
+                                        }))}
                                     />
                                 </Form.Item>
                             </Col>

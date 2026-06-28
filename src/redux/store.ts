@@ -6,6 +6,8 @@ import storage from "redux-persist/es/storage";
 import { FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, } from "redux-persist"
 
 import { authTransform } from '../utils/authTransform'
+import ConnectersSliceReducer from "./Slices/connectersSlices";
+
 
 
 const authPersistConfig = {
@@ -19,6 +21,7 @@ const persistedAuthReducer = persistReducer(authPersistConfig, authSlice)
 export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
+    connecters: ConnectersSliceReducer,
 
   },
 

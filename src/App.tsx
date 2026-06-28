@@ -1,5 +1,5 @@
 import "./App.css";
-import { HashRouter as Router, useLocation, useRoutes } from "react-router-dom";
+import { Navigate, HashRouter as Router, useLocation, useRoutes } from "react-router-dom";
 import routes from "~react-pages";
 import MainLayout from "./layouts/mainlayout";
 import { Suspense } from "react";
@@ -29,17 +29,38 @@ const Loader = () => (
 function App() {
   const location = useLocation();
   const isOnline = useNetworkStatus();
-  // if (location.pathname === "/") {
-  //   return <Navigate to="/login" replace />;
-  // }
+
+  const isAuthenticated =
+    localStorage.getItem("isAuthenticated") === "true";
+
   const element = useRoutes([
     ...routes,
-    { path: "*", element: <NotFound /> }
+    { path: "*", element: <NotFound /> },
   ]);
 
   const cleanPath = location.pathname.replace(/\/+$/, "");
 
-  const noLayoutRoutes = ['/login', '/signup', '/forgot-password'];
+  const noLayoutRoutes = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/WelcomeScreen"
+  ];
+
+
+  if (
+    !isAuthenticated &&
+    !noLayoutRoutes.includes(cleanPath)
+  ) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (
+    isAuthenticated &&
+    cleanPath === "/login"
+  ) {
+    return <Navigate to="/connections" replace />;
+  }
 
   return (
     <>

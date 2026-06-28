@@ -1,48 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Pagination } from "antd";
 
 interface PaginationProps {
     totalRecords: number;
+    currentPage: number;
+    pageSize: number;
     onChange: (page: number, limit: number) => void;
 }
 
-const AppPagination: React.FC<PaginationProps> = ({ totalRecords, onChange }) => {
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(5);
-
-    useEffect(() => {
-        const url = new URL(window.location.href);
-
-        const pageParam = parseInt(url.searchParams.get("page") || "1", 10);
-        const rowParam = parseInt(url.searchParams.get("row") || "5", 10);
-
-        setPage(pageParam);
-        setLimit(rowParam);
-    }, []);
-
-    const handleChange = (newPage: number, newLimit: number) => {
-        const url = new URL(window.location.href);
-
-        url.searchParams.set("page", newPage.toString());
-        url.searchParams.set("row", newLimit.toString());
-
-        window.history.pushState({}, "", url);
-
-        setPage(newPage);
-        setLimit(newLimit);
-
-        onChange(newPage, newLimit);
+const AppPagination: React.FC<PaginationProps> = ({
+    totalRecords,
+    currentPage,
+    pageSize,
+    onChange,
+}) => {
+    const handleChange = (page: number, pageSize: number) => {
+        onChange(page, pageSize);
     };
 
     return (
         <Pagination
-            current={page}
-            pageSize={limit}
+            current={currentPage}
+            pageSize={pageSize}
             total={totalRecords}
             showSizeChanger
+            pageSizeOptions={["5", "10", "20"]}
             onChange={handleChange}
             onShowSizeChange={handleChange}
-            pageSizeOptions={["5", "10", "20"]}
         />
     );
 };

@@ -2,16 +2,16 @@ import { useState, type ReactNode } from "react";
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
-    HomeOutlined,
-    UserOutlined,
     LogoutOutlined,
     ApiOutlined,
     TeamOutlined,
 } from "@ant-design/icons";
-import { Layout, Avatar } from "antd";
+import { Layout } from "antd";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logocomany.png";
+import { LogoutUser } from "../redux/Services/connectersServices";
+import { useAppDispatch } from "../redux/hooks";
 const { Header, Sider, Content } = Layout;
 
 interface Props {
@@ -21,15 +21,11 @@ export default function MainLayout({ children }: Props) {
     const [collapsed, setCollapsed] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-
+    const dispatch = useAppDispatch()
 
 
     const menus = [
-        {
-            icon: <HomeOutlined />,
-            label: "Dashboard",
-            path: "/",
-        },
+
 
         {
             icon: <ApiOutlined />,
@@ -46,13 +42,24 @@ export default function MainLayout({ children }: Props) {
     const selectedMenu =
         menus.find(
             (item) => item.path === location.pathname
-        )?.label || "Dashboard";
+        )?.label || "No Page Found";
 
-    const handleLogout = () => {
-        // localStorage.clear();
-        // sessionStorage.clear();
+    const handleLogout = async () => {
+        try {
+            await dispatch(LogoutUser({})).unwrap();
 
-        navigate("/login");
+            localStorage.removeItem("isAuthenticated");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("persist:auth");
+            localStorage.removeItem("persist:root");
+
+            localStorage.clear();
+            sessionStorage.clear();
+
+            navigate("/login", { replace: true });
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
     };
 
     return (
@@ -179,46 +186,13 @@ export default function MainLayout({ children }: Props) {
                             bottom: 25,
                             left: 15,
                             right: 15,
-                            background: "rgba(255,255,255,0.12)",
+
                             borderRadius: 18,
                             padding: 16,
                             backdropFilter: "blur(20px)",
                         }}
                     >
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 12,
-                            }}
-                        >
-                            <Avatar
-                                size={50}
-                                icon={<UserOutlined />}
-                            />
 
-                            {!collapsed && (
-                                <div style={{ flex: 1 }}>
-                                    <div
-                                        style={{
-                                            color: "#fff",
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        Admin User
-                                    </div>
-
-                                    <div
-                                        style={{
-                                            color: "rgba(255,255,255,0.7)",
-                                            fontSize: 12,
-                                        }}
-                                    >
-                                        Super Admin
-                                    </div>
-                                </div>
-                            )}
-                        </div>
 
                         {!collapsed && (
                             <motion.div
@@ -352,7 +326,7 @@ export default function MainLayout({ children }: Props) {
                         </motion.div>
                     </div>
 
-                    <div
+                    {/* <div
                         style={{
                             display: "flex",
                             alignItems: "center",
@@ -365,7 +339,7 @@ export default function MainLayout({ children }: Props) {
                             size={45}
                             icon={<UserOutlined />}
                         />
-                    </div>
+                    </div> */}
                 </Header>
 
                 {/* CONTENT */}

@@ -1,10 +1,8 @@
-import { useState } from "react";
 import {
     Card,
     Form,
     Input,
     Button,
-    Switch,
     Row,
     Col,
     Grid,
@@ -14,6 +12,9 @@ import {
 import { motion } from "framer-motion";
 import servicenowimg from "../../assets/servicenow.png"
 import Azuredeops from "../../assets/Azuredeops.png"
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { useEffect } from "react";
+import { itsmconnecterCreate, ITSMConnectersGet } from "../../redux/Services/connectersServices";
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
 
@@ -23,20 +24,83 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
     const screens = useBreakpoint();
     const isMobile = !screens.md;
 
-    const [ServicenowEnabled, setServicenowEnabled] =
-        useState(false);
-
-    const [ADOEnabled, setADOEnabled] =
-        useState(false);
-
     const [ServicenowForm] = Form.useForm();
     const [ADOForm] = Form.useForm();
+    const dispatch = useAppDispatch()
+    const itsm = useAppSelector((state) => state.connecters?.itsmget);
+    const ticketConnectors = itsm?.Response || itsm?.[0]?.Response || [];
 
-    const saveconnecters = (
-        values: any,
-        type: string
-    ) => {
-        console.log(type, values);
+    useEffect(() => {
+        if (activeTab === "Tickets") {
+            dispatch(ITSMConnectersGet({}));
+        }
+    }, [activeTab, dispatch]);
+
+    const connectors = [
+        {
+            key: "ServiceNow",
+            apiKey: "ServiceNow Connector",
+            form: ServicenowForm,
+        },
+        {
+            key: "ADO",
+            apiKey: "Azure DevOps Connector",
+            form: ADOForm,
+        },
+    ].map((item) => {
+        const apiData = ticketConnectors.find(
+            (x: any) =>
+                x.ticket_name?.toLowerCase() === item.apiKey.toLowerCase()
+        );
+
+        return {
+            ...item,
+            ticketId: apiData?.ticket_id || "",
+            instance_url: apiData?.instance_url || "",
+            username: apiData?.username || "",
+            token: apiData?.access_token || "",
+            is_active: apiData?.is_active || false,
+        };
+    });
+
+    useEffect(() => {
+        const serviceNow = connectors.find(
+            (x) => x.key === "ServiceNow"
+        );
+
+        ServicenowForm.setFieldsValue({
+            instance_url: serviceNow?.instance_url || "",
+            username: serviceNow?.username || "",
+            token: serviceNow?.token || "",
+        });
+
+        const ado = connectors.find(
+            (x) => x.key === "ADO"
+        );
+
+        ADOForm.setFieldsValue({
+            instance_url: ado?.instance_url || "",
+            username: ado?.username || "",
+            token: ado?.token || "",
+        });
+    }, [itsm]);
+
+    const saveconnecters = async (values: any, type: string) => {
+
+
+        const payload = {
+            instance_url: values.instance_url,
+            username: values.username,
+            access_token: values.token,
+            ticket_name:
+                type === "ServiceNow"
+                    ? "servicenow"
+                    : "azuredevops",
+        };
+
+        dispatch(itsmconnecterCreate({ payload }));
+
+        dispatch(ITSMConnectersGet({}));
     };
 
     const cardStyle = {
@@ -142,16 +206,7 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                     Status
                                 </Text>
 
-                                <Switch
-                                    checked={
-                                        ServicenowEnabled
-                                    }
-                                    onChange={
-                                        setServicenowEnabled
-                                    }
-                                    checkedChildren="ON"
-                                    unCheckedChildren="OFF"
-                                />
+
                             </div>
 
                             <Form
@@ -317,16 +372,6 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                     Status
                                 </Text>
 
-                                <Switch
-                                    checked={
-                                        ADOEnabled
-                                    }
-                                    onChange={
-                                        setADOEnabled
-                                    }
-                                    checkedChildren="ON"
-                                    unCheckedChildren="OFF"
-                                />
                             </div>
 
                             <Form
