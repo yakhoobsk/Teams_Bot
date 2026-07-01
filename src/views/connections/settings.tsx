@@ -14,7 +14,8 @@ import {
 import { motion } from "framer-motion";
 import AddTeamModal from "../../components/AddTeamModal";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { TeamsconfigGet } from "../../redux/Services/connectersServices";
+import { TeamsconfigDashboardGet, TeamsconfigGet } from "../../redux/Services/connectersServices";
+import ThresholdConfiguration from "../../components/ThresholdConfiguration";
 
 const { Title, Text } = Typography;
 interface TeamConfig {
@@ -27,16 +28,23 @@ interface TeamConfig {
     aiAgent: string;
     active: boolean;
 }
+interface TeamConfigurationProps {
+    activeTab: string;
+}
 
-export default function TeamConfiguration() {
+const TeamConfiguration = ({ activeTab }: TeamConfigurationProps) => {
     const [openModal, setOpenModal] = useState(false);
     const config = useAppSelector((state) => state.connecters?.teamcofigget);
     const dispatch = useAppDispatch()
     const [dataSource, setDataSource] = useState<TeamConfig[]>([]);
+    const Dashboardconfig = useAppSelector((state) => state.connecters?.teamdashboardget);
+    const [openThresholdModal, setOpenThresholdModal] = useState(false);
+
     useEffect(() => {
-
-        dispatch(TeamsconfigGet({}));
-
+        if (activeTab === "TeamsConfiguration") {
+            dispatch(TeamsconfigGet({}));
+            dispatch(TeamsconfigDashboardGet({}));
+        }
     }, [dispatch]);
 
     useEffect(() => {
@@ -193,6 +201,20 @@ export default function TeamConfiguration() {
                 </div>
 
                 <Space>
+                    <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        size="large"
+                        onClick={() => setOpenThresholdModal(true)}
+                        style={{
+                            borderRadius: 12,
+                            height: 42,
+                            background: "linear-gradient(135deg,#6264A7,#7B83EB)",
+                            border: "none",
+                        }}
+                    >
+                        Threshold Notification
+                    </Button>
 
                     <Button
                         type="primary"
@@ -225,16 +247,20 @@ export default function TeamConfiguration() {
             >
                 {[
                     {
-                        title: "Total Teams",
-                        value: 5,
+                        title: "Total Teams Configuration",
+                        value: Dashboardconfig?.teams_configuration ?? 0,
                     },
                     {
-                        title: "Active Teams",
-                        value: 3,
+                        title: "Total Ticket Connectors",
+                        value: Dashboardconfig?.ticket_connectors ?? 0,
                     },
                     {
-                        title: "AI Agents",
-                        value: 3,
+                        title: "Total Database Connectors",
+                        value: Dashboardconfig?.database_connectors ?? 0,
+                    },
+                    {
+                        title: "Total Agent Connectors",
+                        value: Dashboardconfig?.agent_connectors ?? 0,
                     },
                 ].map((item) => (
                     <motion.div
@@ -322,6 +348,15 @@ export default function TeamConfiguration() {
                     }}
                 />
             </motion.div>
+
+            <ThresholdConfiguration
+
+                open={openThresholdModal}
+                onClose={() => setOpenThresholdModal(false)}
+            />
+
         </motion.div>
     );
 }
+
+export default TeamConfiguration;

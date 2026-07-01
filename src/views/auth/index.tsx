@@ -5,7 +5,6 @@ import {
     Input,
     Button,
     Typography,
-    message,
 } from "antd";
 import {
     MailOutlined,
@@ -136,35 +135,44 @@ const LoginPage: React.FC = () => {
             setLoading(true);
 
             const payload = {
-                "Email_id": emailId,
+                Email_id: emailId,
                 Otp: values.otp,
             };
 
-            const response = await dispatch(
-                Loginotp(payload)
-            ).unwrap();
+            const response = await dispatch(Loginotp(payload)).unwrap();
+
+            console.log("OTP Response:", response);
+
+            const statusCode = String(response?.["Status code"] ?? "").trim();
+            const statusResponse = String(
+                response?.["Status_Response"] ?? ""
+            )
+                .trim()
+                .toLowerCase();
+
 
             if (
-                response?.["Status code"] === "200" &&
-                response?.["Status_Response"]?.toLowerCase() === "success"
+                statusCode === "200" &&
+                statusResponse === "success"
             ) {
-                localStorage.setItem(
-                    "isAuthenticated",
-                    "true"
-                );
+                localStorage.setItem("isAuthenticated", "true");
+
+                setLoading(false);
 
                 navigate("/WelcomeScreen", {
                     replace: true,
                 });
+
+                return;
             }
 
             setLoading(false);
+
+
         } catch (err: any) {
             setLoading(false);
 
-            message.error(
-                err?.message || "OTP Validation Failed"
-            );
+
         }
     };
     return (

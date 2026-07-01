@@ -102,11 +102,11 @@ export const databaseconnecterUpdate = createAsyncThunk("database/Update", async
     try {
 
         const response = await boomiApi.post("/teams_bot/Database_connectors/update", payload);
-        const data = response.data?.[0];
-        if (data?.Status_Response === "Failure") {
-            showSnackbar("error", data?.Status_Message || "Ai failed");
-        } else if (data?.Status_Response === "Success") {
-            showSnackbar("success", data?.Status_Message || "Ai successful");
+
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Ai failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Ai successful");
 
         }
         return response.data;
@@ -160,7 +160,7 @@ export const TeamsconfigGet = createAsyncThunk(
     async (_: any, { rejectWithValue }) => {
 
         try {
-            const response = await boomiApi.post("/teams_bot/Temas_Configuration/get_divisions");
+            const response = await boomiApi.post("/teams_bot/Temas_Configuration/all_connectors");
             return response.data;
         } catch (error: any) {
             return rejectWithValue(
@@ -171,10 +171,43 @@ export const TeamsconfigGet = createAsyncThunk(
 );
 
 
+export const TeamsconfigDashboardGet = createAsyncThunk(
+    "TeamsconfigDashboardGet/get",
+    async (_: any, { rejectWithValue }) => {
+
+        try {
+            const response = await boomiApi.post("/teams_bot/dashboard/get");
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || "Fetch failed"
+            );
+        }
+    }
+);
+
 export const TeamsconfigCreate = createAsyncThunk("Teamsconfig/create", async ({ payload }: any, { rejectWithValue }) => {
     try {
 
-        const response = await boomiApi.post("/teams_bot/Tickets_Connectors/create", payload);
+        const response = await boomiApi.post("/teams_bot/Temas_Configuration/insert", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Ai failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Ai successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Ai failed");
+    }
+}
+);
+
+
+export const TeamsconfigUpdate = createAsyncThunk("Teamsconfig/Update", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Temas_Configuration/update", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Ai failed");
         } else if (response?.data?.Status_Response === "Success") {

@@ -27,7 +27,7 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
     const dispatch = useAppDispatch()
     const database = useAppSelector((state) => state.connecters?.databaseget);
     const connectors = database?.[0]?.Connectors || [];
-
+    const auth = useAppSelector((state) => state.auth?.authotp);
     useEffect(() => {
         if (activeTab === "Database") {
             dispatch(DataBaseConnectersGet({}));
@@ -98,7 +98,7 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
         );
 
         const payload = {
-            Mail_Id: "",
+            Mail_Id: auth?.Mail_Id,
             connector_name: current.apiKey,
             connection_url: values.host,
             class_name: values.port,

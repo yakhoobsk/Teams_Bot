@@ -1,16 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { LoginUser } from "../Services/authService";
+import { Loginotp, LoginUser } from "../Services/authService";
 import { removeSecureItem } from "../../utils/webSecureStorage";
 
 interface AuthState {
     loading: boolean;
     auth: any;
+    authotp: any;
     error: string | null;
 }
 
 const initialState: AuthState = {
     loading: false,
     auth: null,
+    authotp: null,
     error: null
 };
 
@@ -41,6 +43,21 @@ const authSlice = createSlice({
             })
 
             .addCase(LoginUser.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(Loginotp.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+
+            .addCase(Loginotp.fulfilled, (state, action) => {
+                state.loading = false;
+                state.authotp = action.payload;
+            })
+
+            .addCase(Loginotp.rejected, (state, action: any) => {
                 state.loading = false;
                 state.error = action.payload;
             });

@@ -15,7 +15,7 @@ import {
     RobotOutlined,
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, TeamsconfigCreate } from "../redux/Services/connectersServices";
+import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, TeamsconfigCreate, TeamsconfigGet } from "../redux/Services/connectersServices";
 
 interface Props {
     open: boolean;
@@ -26,7 +26,6 @@ interface Props {
 const AddTeamModal: React.FC<Props> = ({
     open,
     onClose,
-    onSubmit,
 }) => {
     const [form] = Form.useForm();
     const dispatch = useAppDispatch()
@@ -46,38 +45,31 @@ const AddTeamModal: React.FC<Props> = ({
     }, [dispatch]);
     const handleFinish = (values: any) => {
         const selectedTicket = ticketConnectors.find(
-            (item: any) =>
-                item.ticket_name.toLowerCase() === values.ticket.toLowerCase()
+            (item: any) => item.ticket_name === values.ticket
         );
 
         const selectedDatabase = connectors.find(
-            (item: any) =>
-                item.connector_name.toLowerCase() === values.database.toLowerCase()
+            (item: any) => item.connector_name === values.database
         );
 
         const selectedAgent = agents.find(
-            (item: any) =>
-                item.agent_name.toLowerCase() === values.aiAgent.toLowerCase()
+            (item: any) => item.ai_agent === values.aiAgent
         );
 
         const payload = {
             company_name: values.companyName,
             connector: values.connector,
 
-            ticket_name: values.ticket,
+            ticket_system: values.ticket,
             database_name: values.database,
-            ai_agent_name: values.aiAgent,
+            ai_agent: values.aiAgent,
 
-            ticket_details: selectedTicket || {},
-
-            database_details: selectedDatabase || {},
-
-            ai_agent_details: selectedAgent || {},
+            ticket_details: JSON.stringify(selectedTicket),
+            database_details: JSON.stringify(selectedDatabase),
+            ai_agent_details: JSON.stringify(selectedAgent),
         };
-
-        console.log(payload);
-        dispatch(TeamsconfigCreate({ payload }))
-        onSubmit(payload);
+        dispatch(TeamsconfigCreate({ payload })).unwrap()
+        dispatch(TeamsconfigGet({}))
 
         form.resetFields();
     };
