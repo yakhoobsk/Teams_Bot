@@ -1,20 +1,19 @@
 import { Tabs } from "antd";
 import { useEffect, useState } from "react";
-import DatabaseConnectors from "./DatabaseConnecters";
+import ITSMConnectors from "./itsmConnecters";
+import AIAgentConnectors from "./Aiagent";
 import { motion, AnimatePresence } from "framer-motion";
-import RestApiManagement from "./restapiconnecters";
 
 
-const SettingsView = () => {
+const GenralconnectersView = () => {
 
-    const [activeTab, setActiveTab] = useState("Database");
+    const [activeTab, setActiveTab] = useState("AIAgents");
 
     const items = [
 
 
-        { key: "Database", label: "Database Connectors", children: <DatabaseConnectors activeTab={activeTab} /> },
-        { key: "RestAPI", label: "REST API Connectors", children: <RestApiManagement /> },
-        // { key: "TeamsConfiguration", label: "Teams Configuration", children: <TeamConfiguration activeTab={activeTab} /> },
+        { key: "AIAgents", label: "AI Agent Connectors", children: <AIAgentConnectors activeTab={activeTab} /> },
+        { key: "Tickets", label: "Ticket Connectors", children: <ITSMConnectors activeTab={activeTab} /> },
     ];
 
     useEffect(() => {
@@ -89,4 +88,4 @@ const SettingsView = () => {
     );
 };
 
-export default SettingsView;
+export default GenralconnectersView;

@@ -13,6 +13,7 @@ import {
     ToolOutlined,
     DatabaseOutlined,
     RobotOutlined,
+    ApiOutlined,
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, TeamsconfigCreate, TeamsconfigGet } from "../redux/Services/connectersServices";
@@ -252,7 +253,7 @@ const AddTeamModal: React.FC<Props> = ({
                                 </Form.Item>
                             </Col>
 
-                            <Col xs={24}>
+                            <Col xs={24} md={12}>
                                 <Form.Item
                                     name="aiAgent"
                                     rules={[
@@ -272,6 +273,30 @@ const AddTeamModal: React.FC<Props> = ({
                                         options={agents.map((item: any) => ({
                                             label: item.agent_name,
                                             value: item.agent_name,
+                                        }))}
+                                    />
+                                </Form.Item>
+                            </Col>
+                            <Col xs={24} md={12}>
+                                <Form.Item
+                                    name="RestApi"
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message:
+                                                "Rest API is required",
+                                        },
+                                    ]}
+                                >
+                                    <Select
+                                        size="large"
+                                        placeholder="Rest API"
+                                        suffixIcon={
+                                            <ApiOutlined />
+                                        }
+                                        options={ticketConnectors.map((item: any) => ({
+                                            label: item.ticket_name,
+                                            value: item.ticket_name,
                                         }))}
                                     />
                                 </Form.Item>

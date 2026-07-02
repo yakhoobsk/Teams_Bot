@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import RestApiManagement from "./restapiconnecters";
 
 
-const SettingsView = () => {
+const IntegrationConnectors = () => {
 
     const [activeTab, setActiveTab] = useState("Database");
 
@@ -89,4 +89,4 @@ const SettingsView = () => {
     );
 };
 
-export default SettingsView;
+export default IntegrationConnectors;

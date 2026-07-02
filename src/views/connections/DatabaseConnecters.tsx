@@ -6,11 +6,17 @@ import {
     Row,
     Col,
     Typography,
+    Modal,
+    Table,
+    Popconfirm,
+
 
 } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     CheckCircleFilled,
+    DatabaseOutlined,
+    DeleteOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import azureImg from "../../assets/AzureSQL.png";
@@ -20,14 +26,59 @@ import oracleImg from "../../assets/oracle.png";
 import snowflakeImg from "../../assets/snowflake.png";
 import { databaseconnecterCreate, DataBaseConnectersGet, databaseconnecterUpdate } from "../../redux/Services/connectersServices";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import type { ColumnsType } from "antd/es/table";
 
 const { Title, Text } = Typography;
+
+interface DatabaseRecord {
+    key: string;
+    name: string;
+    database: string;
+    server: string;
+    port: string;
+    username: string;
+    password: string;
+    schema: string;
+    warehouse: string;
+    host: string;
+}
+
+const databaseData = [
+    {
+        key: "1",
+        name: "Azure SQL",
+        database: "EmployeeDB",
+        server: "azure.database.windows.net",
+        port: "1433",
+        username: "admin",
+        password: "********",
+        schema: "dbo",
+        warehouse: "-",
+        host: "-",
+    },
+    {
+        key: "2",
+        name: "Snowflake",
+        database: "SalesDB",
+        server: "-",
+        port: "-",
+        username: "snow_user",
+        password: "********",
+        schema: "PUBLIC",
+        warehouse: "COMPUTE_WH",
+        host: "-",
+    },
+];
+
+
+
 const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
     const [selectedDb, setSelectedDb] = useState("azure");
     const dispatch = useAppDispatch()
     const database = useAppSelector((state) => state.connecters?.databaseget);
     const connectors = database?.[0]?.Connectors || [];
     const auth = useAppSelector((state) => state.auth?.authotp);
+    const [openDatabaseModal, setOpenDatabaseModal] = useState(false);
     useEffect(() => {
         if (activeTab === "Database") {
             dispatch(DataBaseConnectersGet({}));
@@ -87,7 +138,118 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
             schema_name: apiData?.schema_name || "",
         };
     });
+    const columns: ColumnsType<DatabaseRecord> = [
+        {
+            title: "Name",
+            dataIndex: "name",
+            key: "name",
+        },
+        {
+            title: "Database Name",
+            dataIndex: "database",
+            key: "database",
+        },
+        {
+            title: "Server",
+            dataIndex: "server",
+            key: "server",
+        },
+        {
+            title: "Port",
+            dataIndex: "port",
+            key: "port",
+            width: 100,
+        },
+        {
+            title: "Username",
+            dataIndex: "username",
+            key: "username",
+        },
+        {
+            title: "Password",
+            dataIndex: "password",
+            key: "password",
+        },
+        {
+            title: "Schema",
+            dataIndex: "schema",
+            key: "schema",
+        },
+        {
+            title: "Warehouse",
+            dataIndex: "warehouse",
+            key: "warehouse",
+        },
+        {
+            title: "Host",
+            dataIndex: "host",
+            key: "host",
+        },
+        {
+            title: "Action",
+            key: "action",
+            align: "center",
+            width: 90,
+            render: (_) => (
+                <Popconfirm
+                    title="Delete Connector?"
 
+                >
+                    <Button
+                        danger
+                        type="text"
+                        icon={<DeleteOutlined />}
+                    />
+                </Popconfirm>
+            ),
+        },
+    ];
+
+    const databaseFields = {
+        azure: [
+            { name: "database", label: "Database Name" },
+            { name: "server", label: "Server" },
+            { name: "port", label: "Port" },
+            { name: "username", label: "Username" },
+            { name: "password", label: "Password", password: true },
+        ],
+
+        mysql: [
+            { name: "database", label: "Database Name" },
+            { name: "host", label: "Host" },
+            { name: "port", label: "Port" },
+            { name: "username", label: "Username" },
+            { name: "password", label: "Password", password: true },
+        ],
+
+        postgres: [
+            { name: "database", label: "Database Name" },
+            { name: "host", label: "Host" },
+            { name: "port", label: "Port" },
+            { name: "username", label: "Username" },
+            { name: "password", label: "Password", password: true },
+        ],
+
+        oracle: [
+            { name: "database", label: "Database Name" },
+            { name: "host", label: "Host" },
+            { name: "port", label: "Port" },
+            { name: "service_name", label: "Service Name" },
+            { name: "username", label: "Username" },
+            { name: "password", label: "Password", password: true },
+        ],
+
+        snowflake: [
+            { name: "database", label: "Database Name" },
+            { name: "account", label: "Account" },
+            { name: "warehouse", label: "Warehouse" },
+            { name: "schema", label: "Schema" },
+            { name: "username", label: "Username" },
+            { name: "password", label: "Password", password: true },
+        ],
+    };
+
+    const fields = databaseFields[selectedDb as keyof typeof databaseFields];
 
     const handleSave = async () => {
         const values = await form.validateFields();
@@ -135,13 +297,45 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
                 padding: 24,
             }}
         >
-            <Title level={2}>
-                Database Connectors
-            </Title>
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: 24,
+                }}
+            >
+                <div>
+                    <Title
+                        level={2}
+                        style={{ marginBottom: 4 }}
+                    >
+                        Database Connectors
+                    </Title>
 
-            <Text type="secondary">
-                Connect enterprise databases securely
-            </Text>
+                    <Text type="secondary">
+                        Connect enterprise databases securely
+                    </Text>
+                </div>
+
+                <Button
+                    type="primary"
+                    icon={<DatabaseOutlined />}
+                    size="large"
+                    style={{
+                        borderRadius: 10,
+                        height: 42,
+                        paddingInline: 20,
+                        fontWeight: 600,
+                        background: "#1677ff",
+                    }}
+
+                    onClick={() => setOpenDatabaseModal(true)}
+
+                >
+                    Manage Database Connectors
+                </Button>
+            </div>
 
             <Row
                 gutter={[20, 20]}
@@ -305,50 +499,39 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
                             form={form}
                         >
                             <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item
-                                        label="Host"
-                                        name="host"
-                                    >
-                                        <Input placeholder="e.g. db.company.com or localhost" />
-                                    </Form.Item>
-                                </Col>
-
-                                <Col span={12}>
-                                    <Form.Item
-                                        label="Port"
-                                        name="port"
-                                    >
-                                        <Input placeholder="e.g. 1433, 3306, 5432" />
-                                    </Form.Item>
-                                </Col>
-
-                                <Col span={12}>
-                                    <Form.Item
-                                        label="Username"
-                                        name="username"
-                                    >
-                                        <Input placeholder="Enter database username" />
-                                    </Form.Item>
-                                </Col>
-
-                                <Col span={12}>
-                                    <Form.Item
-                                        label="Password"
-                                        name="password"
-                                    >
-                                        <Input.Password placeholder="Enter database password" />
-                                    </Form.Item>
-                                </Col>
-
-                                <Col span={24}>
-                                    <Form.Item
-                                        label="Schema Name"
-                                        name="schema"
-                                    >
-                                        <Input placeholder="e.g. public, dbo, sales_schema" />
-                                    </Form.Item>
-                                </Col>
+                                {fields.map((field) => (
+                                    <Col span={12} key={field.name}>
+                                        <Form.Item
+                                            label={
+                                                <span
+                                                    style={{
+                                                        color: "#000000ce",
+                                                        fontWeight: 500,
+                                                    }}
+                                                >
+                                                    {field.label}
+                                                </span>
+                                            }
+                                            name={field.name}
+                                            rules={[
+                                                {
+                                                    required: true,
+                                                    message: `Please enter ${field.label}`,
+                                                },
+                                            ]}
+                                        >
+                                            {field.password ? (
+                                                <Input.Password
+                                                    placeholder={`Enter ${field.label}`}
+                                                />
+                                            ) : (
+                                                <Input
+                                                    placeholder={`Enter ${field.label}`}
+                                                />
+                                            )}
+                                        </Form.Item>
+                                    </Col>
+                                ))}
                             </Row>
 
                             <div
@@ -382,6 +565,36 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
                     </Card>
                 </motion.div>
             </AnimatePresence>
+
+            <Modal
+                open={openDatabaseModal}
+                title="Database Connectors"
+                onCancel={() => setOpenDatabaseModal(false)}
+                footer={[
+                    <Button
+                        key="close"
+                        onClick={() => setOpenDatabaseModal(false)}
+                    >
+                        Close
+                    </Button>,
+                ]}
+                width={1400}
+                centered
+                destroyOnClose
+            >
+                <Table
+                    bordered
+                    rowKey="key"
+                    columns={columns}
+                    dataSource={databaseData}
+                    pagination={{
+                        pageSize: 10,
+                    }}
+                    scroll={{
+                        x: 1600,
+                    }}
+                />
+            </Modal>
         </div>
     );
 }

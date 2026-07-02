@@ -9,7 +9,7 @@ const WelcomeScreen = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            navigate("/connections", { replace: true });
+            navigate("/connectionsboomi", { replace: true });
         }, 2500);
 
         return () => clearTimeout(timer);

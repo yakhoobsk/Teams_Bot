@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
     Table,
     Card,
-    Switch,
     Button,
     Space,
     Tag,
@@ -65,19 +64,19 @@ const TeamConfiguration = ({ activeTab }: TeamConfigurationProps) => {
         setDataSource(mappedData);
     }, [config]);
 
-    const handleActiveChange = (
-        key: string,
-        checked: boolean
-    ) => {
-        setDataSource((prev) =>
-            prev.map((item) => ({
-                ...item,
-                active: checked
-                    ? item.key === key
-                    : false,
-            }))
-        );
-    };
+    // const handleActiveChange = (
+    //     key: string,
+    //     checked: boolean
+    // ) => {
+    //     setDataSource((prev) =>
+    //         prev.map((item) => ({
+    //             ...item,
+    //             active: checked
+    //                 ? item.key === key
+    //                 : false,
+    //         }))
+    //     );
+    // };
 
     const columns = [
         {
@@ -131,34 +130,41 @@ const TeamConfiguration = ({ activeTab }: TeamConfigurationProps) => {
             render: (value: string) => value || "-",
         },
         {
-            title: "Status",
+            title: "Rest API",
+            dataIndex: "restApi",
+            key: "restApi",
             width: 180,
-            render: (_: any, record: any) => (
-                <Space>
-                    <Switch
-                        checked={record.active}
-                        onChange={(checked) =>
-                            handleActiveChange(
-                                record.key,
-                                checked
-                            )
-                        }
-                    />
-
-                    <Tag
-                        color={
-                            record.active
-                                ? "success"
-                                : "default"
-                        }
-                    >
-                        {record.active
-                            ? "Active"
-                            : "Inactive"}
-                    </Tag>
-                </Space>
-            ),
+            render: (value: string) => value || "-",
         },
+        // {
+        //     title: "Status",
+        //     width: 180,
+        //     render: (_: any, record: any) => (
+        //         <Space>
+        //             <Switch
+        //                 checked={record.active}
+        //                 onChange={(checked) =>
+        //                     handleActiveChange(
+        //                         record.key,
+        //                         checked
+        //                     )
+        //                 }
+        //             />
+
+        //             <Tag
+        //                 color={
+        //                     record.active
+        //                         ? "success"
+        //                         : "default"
+        //                 }
+        //             >
+        //                 {record.active
+        //                     ? "Active"
+        //                     : "Inactive"}
+        //             </Tag>
+        //         </Space>
+        //     ),
+        // },
     ];
 
     return (

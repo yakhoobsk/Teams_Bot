@@ -1,10 +1,17 @@
-import { useState, type ReactNode } from "react";
+import React, { useState, type ReactNode } from "react";
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     LogoutOutlined,
     ApiOutlined,
     TeamOutlined,
+    RobotOutlined,
+    DownOutlined,
+    RightOutlined,
+    SettingOutlined,
+    DatabaseOutlined,
+    DeploymentUnitOutlined,
+    NotificationOutlined,
 } from "@ant-design/icons";
 import { Layout } from "antd";
 import { motion } from "framer-motion";
@@ -22,15 +29,44 @@ export default function MainLayout({ children }: Props) {
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useAppDispatch()
+    const [openMenu, setOpenMenu] = useState("Connector Settings");
 
 
     const menus = [
-
-
         {
-            icon: <ApiOutlined />,
-            label: "Connecters",
-            path: "/connections",
+            icon: <RobotOutlined />,
+            label: "Teams Bot Configurations",
+            path: "/connectionsboomi",
+        },
+        {
+            icon: <SettingOutlined />,
+            label: "Connector Settings",
+            key: "connector-settings",
+            children: [
+                {
+                    key: "/genralconnections",
+                    icon: <DatabaseOutlined />,
+                    label: "General Connections",
+                    path: "/genralconnections",
+                },
+                {
+                    key: "/connections",
+                    icon: <ApiOutlined />,
+                    label: "DataHub Connections",
+                    path: "/connections",
+                },
+                {
+                    key: "/integrationconnections",
+                    icon: <DeploymentUnitOutlined />,
+                    label: "Integration Connections",
+                    path: "/integrationconnections",
+                },
+            ],
+        },
+        {
+            icon: <NotificationOutlined />,
+            label: "Channels & Alerts",
+            path: "/channelspage",
         },
         {
             icon: <TeamOutlined />,
@@ -38,11 +74,27 @@ export default function MainLayout({ children }: Props) {
             path: "/user-mangement",
         },
     ];
+    const selectedMenu = React.useMemo(() => {
+        for (const menu of menus) {
+            // Parent menu
+            if (menu.path === location.pathname) {
+                return menu.label;
+            }
 
-    const selectedMenu =
-        menus.find(
-            (item) => item.path === location.pathname
-        )?.label || "No Page Found";
+            // Child menu
+            if (menu.children) {
+                const child = menu.children.find(
+                    (c) => c.path === location.pathname
+                );
+
+                if (child) {
+                    return child.label;
+                }
+            }
+        }
+
+        return "No Page Found";
+    }, [location.pathname]);
 
     const handleLogout = async () => {
         try {
@@ -141,38 +193,98 @@ export default function MainLayout({ children }: Props) {
                         }}
                     >
                         {menus.map((item) => (
-                            <motion.div
-                                key={item.label}
-                                whileHover={{ x: 8 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => navigate(item.path)}
-                                style={{
-                                    marginBottom: 12,
-                                    borderRadius: 14,
-                                    cursor: "pointer",
-                                    color: "#fff",
-                                    padding: "14px 18px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 15,
-                                    background:
-                                        location.pathname === item.path
-                                            ? "rgba(255,255,255,0.15)"
-                                            : "transparent",
-                                }}
-                            >
-                                <span
+                            <div key={item.label}>
+                                <motion.div
+                                    whileHover={{ x: 8 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => {
+                                        if (item.children) {
+                                            setOpenMenu(
+                                                openMenu === item.label ? "" : item.label
+                                            );
+                                        } else {
+                                            navigate(item.path);
+                                        }
+                                    }}
                                     style={{
-                                        fontSize: 18,
+                                        marginBottom: 12,
+                                        borderRadius: 14,
+                                        cursor: "pointer",
+                                        color: "#fff",
+                                        padding: "14px 18px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        background:
+                                            location.pathname === item.path
+                                                ? "rgba(255,255,255,0.15)"
+                                                : "transparent",
                                     }}
                                 >
-                                    {item.icon}
-                                </span>
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 15,
+                                        }}
+                                    >
+                                        <span style={{ fontSize: 18 }}>
+                                            {item.icon}
+                                        </span>
 
-                                {!collapsed && (
-                                    <span>{item.label}</span>
-                                )}
-                            </motion.div>
+                                        {!collapsed && <span>{item.label}</span>}
+                                    </div>
+
+                                    {!collapsed &&
+                                        item.children &&
+                                        (openMenu === item.label ? (
+                                            <DownOutlined />
+                                        ) : (
+                                            <RightOutlined />
+                                        ))}
+                                </motion.div>
+
+                                {!collapsed &&
+                                    item.children &&
+                                    openMenu === item.label && (
+                                        <div
+                                            style={{
+                                                marginLeft: 30,
+                                                marginBottom: 10,
+                                            }}
+                                        >
+                                            {item.children.map((child) => (
+                                                <motion.div
+                                                    key={child.path}
+                                                    whileHover={{ x: 6 }}
+                                                    onClick={() =>
+                                                        navigate(child.path)
+                                                    }
+                                                    style={{
+                                                        padding: "10px 16px",
+                                                        marginBottom: 6,
+                                                        borderRadius: 10,
+                                                        cursor: "pointer",
+                                                        color:
+                                                            location.pathname === child.path
+                                                                ? "#fff"
+                                                                : "rgba(255,255,255,.8)",
+                                                        background:
+                                                            location.pathname === child.path
+                                                                ? "rgba(255,255,255,.15)"
+                                                                : "transparent",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 10,
+                                                    }}
+                                                >
+                                                    {child.icon}
+                                                    <span>{child.label}</span>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    )}
+                            </div>
                         ))}
                     </div>
 

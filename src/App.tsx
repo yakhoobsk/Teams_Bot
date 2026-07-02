@@ -59,7 +59,7 @@ function App() {
     isAuthenticated &&
     cleanPath === "/login"
   ) {
-    return <Navigate to="/connections" replace />;
+    return <Navigate to="/connectionsboomi" replace />;
   }
 
   return (
