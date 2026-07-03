@@ -20,7 +20,6 @@ import logo from "../../assets/logo1.png";
 import FeatureCard from "../../components/feturecard";
 import { Loginotp, LoginUser } from "../../redux/Services/authService";
 import { useAppDispatch } from "../../redux/hooks";
-import { showSnackbar } from "../../utils/snackbar";
 
 const featureCards = [
     {
@@ -121,8 +120,7 @@ const LoginPage: React.FC = () => {
             setLoading(false);
         } catch (err: any) {
             setLoading(false);
-            showSnackbar("error", err?.message || "Failed to send OTP"
-            );
+
         }
     };
 
