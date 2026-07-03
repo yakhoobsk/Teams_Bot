@@ -12,21 +12,46 @@ interface LoginOTPPayload {
     Otp: any;
 }
 
-export const LoginUser = createAsyncThunk("auth/login", async (payload: LoginPayload, { rejectWithValue }) => {
-    try {
-        const response = await boomiApi.post("/teams_bot/OTP/generation", payload);
+export const LoginUser = createAsyncThunk(
+    "auth/login",
+    async (payload: LoginPayload, { rejectWithValue }) => {
+        try {
+            const response = await boomiApi.post(
+                "/teams_bot/OTP/generation",
+                payload
+            );
 
-        if (response.data?.["Status code"] === "Success") {
-            showSnackbar("error", response?.data?.["Status message"] || "Login failed");
-        } else {
-            showSnackbar("success", response?.data?.["Status message"] || "Login successful");
+            const data = response.data;
+
+            const statusCode =
+                data.Status_code || data["Status code"];
+
+            const statusResponse =
+                data.Status_Response || data["Status Response"];
+
+            const statusMessage =
+                data.Status_Message || data["Status message"];
+
+            if (statusResponse === "Success" || statusCode === "200") {
+                showSnackbar("success", statusMessage || "OTP Sent Successfully");
+                return data;
+            }
+
+            showSnackbar("error", statusMessage || "Login Failed");
+            return rejectWithValue(statusMessage || "Login Failed");
+        } catch (error: any) {
+            const data = error.response?.data;
+
+            const message =
+                data?.Status_Message ||
+                data?.["Status message"] ||
+                "Something went wrong";
+
+            showSnackbar("error", message);
+
+            return rejectWithValue(message);
         }
-        return response.data;
-    } catch (error: any) {
-        showSnackbar("success", error.response?.data?.["Status message"] || "Login failed");
-        return rejectWithValue(error.response?.data?.["Status message"] || "Login failed");
     }
-}
 );
 
 export const Loginotp = createAsyncThunk("auth/OTP", async (payload: LoginOTPPayload, { rejectWithValue }) => {
