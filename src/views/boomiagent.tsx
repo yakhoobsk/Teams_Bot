@@ -10,6 +10,7 @@ import {
     Button,
     Tag,
     Space,
+    Tabs,
 } from "antd";
 import {
     RobotOutlined,
@@ -45,7 +46,10 @@ export default function AgentConfiguration(): React.ReactElement {
     const [customIntegrationActive, setCustomIntegrationActive] =
         useState<boolean>(false);
 
-    const renderSelectField = (label: string, placeholder: string): React.ReactElement => (
+    const renderSelectField = (
+        label: string,
+        placeholder: string
+    ): React.ReactElement => (
         <div>
             <Text
                 style={{
@@ -59,11 +63,7 @@ export default function AgentConfiguration(): React.ReactElement {
                 {label}
             </Text>
 
-            <Select
-                size="large"
-                placeholder={placeholder}
-                style={{ width: "100%" }}
-            />
+            <Select size="large" placeholder={placeholder} style={{ width: "100%" }} />
         </div>
     );
 
@@ -83,7 +83,7 @@ export default function AgentConfiguration(): React.ReactElement {
         <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay }}
+            transition={{ duration: 0.4, delay }}
             style={{ height: "100%" }}
         >
             <Card
@@ -91,12 +91,12 @@ export default function AgentConfiguration(): React.ReactElement {
                 bordered={false}
                 style={{
                     height: "100%",
-                    borderRadius: 14,
+                    borderRadius: 16,
                     overflow: "hidden",
                     background: "#ffffff",
                     border: active ? `1px solid ${color}` : "1px solid #e5e7eb",
                     boxShadow: active
-                        ? `0 18px 42px ${color}26`
+                        ? `0 18px 42px ${color}24`
                         : "0 10px 30px rgba(15, 23, 42, 0.07)",
                     transition: "all 0.25s ease",
                 }}
@@ -224,6 +224,118 @@ export default function AgentConfiguration(): React.ReactElement {
         </motion.div>
     );
 
+    const dataHubTab = (
+        <Row gutter={[24, 24]} align="stretch">
+            <Col xs={24} lg={12}>
+                <AgentCard
+                    title="Boomi DataHub Agent"
+                    description="Configure your Boomi REST API connection."
+                    category="DataHub Agent"
+                    active={boomiDataHubActive}
+                    color="#2563eb"
+                    lightColor="#38bdf8"
+                    icon={<RobotOutlined />}
+                    saveIcon={<SaveOutlined />}
+                    onToggle={(checked) => {
+                        setBoomiDataHubActive(checked);
+                        if (checked) setCustomDataHubActive(false);
+                    }}
+                >
+                    {renderSelectField("REST API Connection", "Select REST API")}
+                </AgentCard>
+            </Col>
+
+            <Col xs={24} lg={12}>
+                <AgentCard
+                    title="Custom DataHub Agent"
+                    description="Configure database, AI, ticket, and REST connections."
+                    category="DataHub Agent"
+                    active={customDataHubActive}
+                    color="#7c3aed"
+                    lightColor="#a855f7"
+                    icon={<DatabaseOutlined />}
+                    saveIcon={<ApiOutlined />}
+                    onToggle={(checked) => {
+                        setCustomDataHubActive(checked);
+                        if (checked) setBoomiDataHubActive(false);
+                    }}
+                    delay={0.08}
+                >
+                    <Row gutter={[16, 18]}>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("Database Connection", "Select Database")}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("AI Agent Connection", "Select AI Agent")}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("Ticket Connection", "Select Ticket Connection")}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("REST API Connection", "Select REST API")}
+                        </Col>
+                    </Row>
+                </AgentCard>
+            </Col>
+        </Row>
+    );
+
+    const integrationTab = (
+        <Row gutter={[24, 24]} align="stretch">
+            <Col xs={24} lg={12}>
+                <AgentCard
+                    title="Boomi Integration Agent"
+                    description="Configure your Boomi integration REST API."
+                    category="Integration Agent"
+                    active={boomiIntegrationActive}
+                    color="#0f766e"
+                    lightColor="#14b8a6"
+                    icon={<ThunderboltOutlined />}
+                    saveIcon={<SaveOutlined />}
+                    onToggle={(checked) => {
+                        setBoomiIntegrationActive(checked);
+                        if (checked) setCustomIntegrationActive(false);
+                    }}
+                >
+                    {renderSelectField("REST API Connection", "Select REST API")}
+                </AgentCard>
+            </Col>
+
+            <Col xs={24} lg={12}>
+                <AgentCard
+                    title="Custom Integration Agent"
+                    description="Configure custom integrations and external connections."
+                    category="Integration Agent"
+                    active={customIntegrationActive}
+                    color="#ea580c"
+                    lightColor="#f97316"
+                    icon={<DatabaseOutlined />}
+                    saveIcon={<ApiOutlined />}
+                    onToggle={(checked) => {
+                        setCustomIntegrationActive(checked);
+                        if (checked) setBoomiIntegrationActive(false);
+                    }}
+                    delay={0.08}
+                >
+                    <Row gutter={[16, 18]}>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("Database Connection", "Select Database")}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("AI Agent Connection", "Select AI Agent")}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("Ticket Connection", "Select Ticket Connection")}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("REST API Connection", "Select REST API")}
+                        </Col>
+                    </Row>
+                </AgentCard>
+            </Col>
+        </Row>
+    );
+
     return (
         <div
             style={{
@@ -233,122 +345,52 @@ export default function AgentConfiguration(): React.ReactElement {
                     "linear-gradient(180deg, #f8fafc 0%, #eef2f7 45%, #f8fafc 100%)",
             }}
         >
-            <div style={{ marginBottom: 28 }}>
+            <div style={{ marginBottom: 24 }}>
                 <Title level={2} style={{ margin: 0, color: "#0f172a" }}>
                     Teams Bot Configuration
                 </Title>
 
                 <Text style={{ color: "#64748b", fontSize: 15 }}>
-                    Configure DataHub and Integration agents for your Teams bot.
+                    Configure DataHub and Integration agents separately.
                 </Text>
             </div>
 
-            <Row gutter={[24, 24]} align="stretch">
-                <Col xs={24} lg={12}>
-                    <AgentCard
-                        title="Boomi DataHub Agent"
-                        description="Configure your Boomi REST API connection."
-                        category="DataHub Agent"
-                        active={boomiDataHubActive}
-                        color="#2563eb"
-                        lightColor="#38bdf8"
-                        icon={<RobotOutlined />}
-                        saveIcon={<SaveOutlined />}
-                        onToggle={(checked) => {
-                            setBoomiDataHubActive(checked);
-                            if (checked) setCustomDataHubActive(false);
-                        }}
-                    >
-                        {renderSelectField("REST API Connection", "Select REST API")}
-                    </AgentCard>
-                </Col>
-
-                <Col xs={24} lg={12}>
-                    <AgentCard
-                        title="Custom DataHub Agent"
-                        description="Configure database, AI, ticket, and REST connections."
-                        category="DataHub Agent"
-                        active={customDataHubActive}
-                        color="#7c3aed"
-                        lightColor="#a855f7"
-                        icon={<DatabaseOutlined />}
-                        saveIcon={<ApiOutlined />}
-                        onToggle={(checked) => {
-                            setCustomDataHubActive(checked);
-                            if (checked) setBoomiDataHubActive(false);
-                        }}
-                        delay={0.08}
-                    >
-                        <Row gutter={[16, 18]}>
-                            <Col xs={24} sm={12}>
-                                {renderSelectField("Database Connection", "Select Database")}
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                {renderSelectField("AI Agent Connection", "Select AI Agent")}
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                {renderSelectField("Ticket Connection", "Select Ticket Connection")}
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                {renderSelectField("REST API Connection", "Select REST API")}
-                            </Col>
-                        </Row>
-                    </AgentCard>
-                </Col>
-
-                <Col xs={24} lg={12}>
-                    <AgentCard
-                        title="Boomi Integration Agent"
-                        description="Configure your Boomi integration REST API."
-                        category="Integration Agent"
-                        active={boomiIntegrationActive}
-                        color="#0f766e"
-                        lightColor="#14b8a6"
-                        icon={<ThunderboltOutlined />}
-                        saveIcon={<SaveOutlined />}
-                        onToggle={(checked) => {
-                            setBoomiIntegrationActive(checked);
-                            if (checked) setCustomIntegrationActive(false);
-                        }}
-                        delay={0.16}
-                    >
-                        {renderSelectField("REST API Connection", "Select REST API")}
-                    </AgentCard>
-                </Col>
-
-                <Col xs={24} lg={12}>
-                    <AgentCard
-                        title="Custom Integration Agent"
-                        description="Configure custom integrations and external connections."
-                        category="Integration Agent"
-                        active={customIntegrationActive}
-                        color="#ea580c"
-                        lightColor="#f97316"
-                        icon={<DatabaseOutlined />}
-                        saveIcon={<ApiOutlined />}
-                        onToggle={(checked) => {
-                            setCustomIntegrationActive(checked);
-                            if (checked) setBoomiIntegrationActive(false);
-                        }}
-                        delay={0.24}
-                    >
-                        <Row gutter={[16, 18]}>
-                            <Col xs={24} sm={12}>
-                                {renderSelectField("Database Connection", "Select Database")}
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                {renderSelectField("AI Agent Connection", "Select AI Agent")}
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                {renderSelectField("Ticket Connection", "Select Ticket Connection")}
-                            </Col>
-                            <Col xs={24} sm={12}>
-                                {renderSelectField("REST API Connection", "Select REST API")}
-                            </Col>
-                        </Row>
-                    </AgentCard>
-                </Col>
-            </Row>
+            <Card
+                bordered={false}
+                style={{
+                    borderRadius: 18,
+                    boxShadow: "0 14px 34px rgba(15, 23, 42, 0.08)",
+                    border: "1px solid #e5e7eb",
+                }}
+                bodyStyle={{ padding: 24 }}
+            >
+                <Tabs
+                    defaultActiveKey="datahub"
+                    size="large"
+                    items={[
+                        {
+                            key: "datahub",
+                            label: (
+                                <Space>
+                                    <DatabaseOutlined />
+                                    DataHub
+                                </Space>
+                            ),
+                            children: dataHubTab,
+                        },
+                        {
+                            key: "integration",
+                            label: (
+                                <Space>
+                                    <ApiOutlined />
+                                    Integration
+                                </Space>
+                            ),
+                            children: integrationTab,
+                        },
+                    ]}
+                />
+            </Card>
         </div>
     );
 }

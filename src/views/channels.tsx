@@ -71,6 +71,13 @@ const userOptions = [
     "William",
 ];
 
+const GroupOptions = [
+    "Product",
+    "R & D",
+    "Services"
+    ,
+];
+
 const dayOptions = [
     "Monday",
     "Tuesday",
@@ -178,7 +185,7 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                 render: (users: string[]) => (
                     <Space size={[6, 6]} wrap>
                         {users.map((user) => (
-                            <Tag key={user} color="geekblue">
+                            <Tag key={user} color="blue">
                                 {user}
                             </Tag>
                         ))}
@@ -191,7 +198,9 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                 key: "scheduleType",
                 render: (value: ScheduleType, record) => (
                     <Space direction="vertical" size={2}>
-                        <Text strong>{value}</Text>
+                        <Text strong style={{ color: "#020202c9" }}>
+                            {value}
+                        </Text>
                         {record.interval && (
                             <Text type="secondary" style={{ fontSize: 12 }}>
                                 Every {record.interval}{" "}
@@ -252,185 +261,186 @@ export default function AlertChannelConfiguration(): React.ReactElement {
 
     return (
         <div
+            className="alert-channel-page"
             style={{
                 minHeight: "100vh",
                 padding: 32,
-                background:
-                    "radial-gradient(circle at top left, #dbeafe 0, transparent 32%), linear-gradient(180deg, #f8fafc 0%, #eef2ff 50%, #f8fafc 100%)",
+                background: "#f4f7fb",
             }}
         >
             <style>
                 {`
-          @keyframes fadeUp {
-            from {
-              opacity: 0;
-              transform: translateY(18px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
+          .alert-channel-page .ant-form-item-label > label {
+            color: #000000a8 !important;
+            font-weight: 500 !important;
+            font-size: 14px !important;
           }
 
-          @keyframes softPulse {
-            0%, 100% {
-              box-shadow: 0 0 0 rgba(37, 99, 235, 0);
-            }
-            50% {
-              box-shadow: 0 0 32px rgba(37, 99, 235, 0.18);
-            }
+          .alert-channel-page .ant-select-selection-placeholder,
+          .alert-channel-page .ant-picker-input > input::placeholder,
+          .alert-channel-page .ant-input-number-input::placeholder {
+            color: #000000a8 !important;
+            font-weight: 500 !important;
+            font-size: 14px !important;
           }
 
-          .animated-card {
-            animation: fadeUp 0.45s ease both;
+          .alert-channel-page .ant-select-selector,
+          .alert-channel-page .ant-picker,
+          .alert-channel-page .ant-input-number {
+            border-radius: 10px !important;
           }
 
-          .metric-card {
+          .alert-channel-page .ant-table-thead > tr > th {
+            background: #f8fafc !important;
+            color: #334155 !important;
+            font-weight: 600 !important;
+          }
+
+          .alert-channel-page .ant-card {
             transition: all 0.25s ease;
           }
 
-          .metric-card:hover {
-            transform: translateY(-3px);
-          }
-
-          .form-card {
-            animation: fadeUp 0.5s ease both;
-          }
-
-          .table-card {
-            animation: fadeUp 0.6s ease both;
+          .alert-channel-page .summary-card:hover,
+          .alert-channel-page .main-card:hover {
+            transform: translateY(-2px);
           }
         `}
             </style>
 
-            <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+            <div style={{ maxWidth: 1220, margin: "0 auto" }}>
                 <Row gutter={[24, 24]} align="middle" style={{ marginBottom: 24 }}>
-                    <Col xs={24} lg={16}>
-                        <Space direction="vertical" size={6}>
-                            <Tag
-                                color="blue"
-                                style={{
-                                    width: "fit-content",
-                                    borderRadius: 999,
-                                    padding: "4px 12px",
-                                    fontWeight: 600,
-                                }}
-                            >
-                                Notification Management
-                            </Tag>
+                    <Col xs={24} lg={14}>
+                        <Tag
+                            color="blue"
+                            style={{
+                                borderRadius: 999,
+                                padding: "4px 12px",
+                                marginBottom: 10,
+                                fontWeight: 600,
+                            }}
+                        >
+                            Notification Management
+                        </Tag>
 
-                            <Title level={2} style={{ margin: 0, color: "#0f172a" }}>
-                                Alert Channels
-                            </Title>
+                        <Title level={2} style={{ margin: 0, color: "#111827" }}>
+                            Alert Channels
+                        </Title>
 
-                            <Text style={{ color: "#64748b", fontSize: 15 }}>
-                                Create, schedule, activate, and manage alert notification channels.
-                            </Text>
-                        </Space>
+                        <Text style={{ color: "#64748b", fontSize: 15 }}>
+                            Create notification channels, assign users, and control delivery schedules.
+                        </Text>
                     </Col>
 
-                    <Col xs={24} lg={8}>
-                        <Row gutter={[12, 12]}>
-                            <Col span={12}>
+                    <Col xs={24} lg={10}>
+                        <Row gutter={[14, 14]}>
+                            <Col xs={12}>
                                 <Card
-                                    className="metric-card animated-card"
+                                    className="summary-card"
                                     bordered={false}
                                     style={{
-                                        borderRadius: 16,
-                                        background: "#ecfdf5",
-                                        border: "1px solid #bbf7d0",
+                                        borderRadius: 14,
+                                        background: "#ffffff",
+                                        border: "1px solid #dbeafe",
+                                        boxShadow: "0 10px 26px rgba(15, 23, 42, 0.06)",
                                     }}
-                                    bodyStyle={{ padding: 16 }}
+                                    bodyStyle={{ padding: 18 }}
                                 >
-                                    <Text style={{ color: "#047857", fontWeight: 700 }}>Active</Text>
-                                    <Title level={3} style={{ margin: 0, color: "#065f46" }}>
-                                        {activeCount}
-                                    </Title>
+                                    <Space direction="vertical" size={2}>
+                                        <Text style={{ color: "#2563eb", fontWeight: 600 }}>
+                                            Active Channels
+                                        </Text>
+                                        <Title level={3} style={{ margin: 0, color: "#1d4ed8" }}>
+                                            {activeCount}
+                                        </Title>
+                                    </Space>
                                 </Card>
                             </Col>
 
-                            <Col span={12}>
+                            <Col xs={12}>
                                 <Card
-                                    className="metric-card animated-card"
+                                    className="summary-card"
                                     bordered={false}
                                     style={{
-                                        borderRadius: 16,
-                                        background: "#fff7ed",
+                                        borderRadius: 14,
+                                        background: "#ffffff",
                                         border: "1px solid #fed7aa",
+                                        boxShadow: "0 10px 26px rgba(15, 23, 42, 0.06)",
                                     }}
-                                    bodyStyle={{ padding: 16 }}
+                                    bodyStyle={{ padding: 18 }}
                                 >
-                                    <Text style={{ color: "#c2410c", fontWeight: 700 }}>
-                                        Inactive
-                                    </Text>
-                                    <Title level={3} style={{ margin: 0, color: "#9a3412" }}>
-                                        {inactiveCount}
-                                    </Title>
+                                    <Space direction="vertical" size={2}>
+                                        <Text style={{ color: "#ea580c", fontWeight: 600 }}>
+                                            Inactive Channels
+                                        </Text>
+                                        <Title level={3} style={{ margin: 0, color: "#c2410c" }}>
+                                            {inactiveCount}
+                                        </Title>
+                                    </Space>
                                 </Card>
                             </Col>
                         </Row>
                     </Col>
                 </Row>
 
-                <Row gutter={[24, 24]}>
-                    <Col xs={24} lg={9}>
+                <Row gutter={[24, 24]} align="stretch">
+                    <Col xs={24} lg={10}>
                         <Card
-                            className="form-card"
+                            className="main-card"
                             bordered={false}
                             style={{
+                                height: "100%",
                                 borderRadius: 16,
                                 border: "1px solid #e5e7eb",
-                                boxShadow: "0 12px 32px rgba(15, 23, 42, 0.08)",
+                                boxShadow: "0 14px 34px rgba(15, 23, 42, 0.08)",
                                 overflow: "hidden",
-                                background: "#ffffff",
                             }}
                             bodyStyle={{ padding: 0 }}
                         >
                             <div
                                 style={{
-                                    padding: "22px 24px",
-                                    background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)",
-                                    color: "#ffffff",
+                                    padding: 22,
+                                    background: "#ffffff",
+                                    borderBottom: "1px solid #eef2f7",
                                 }}
                             >
-                                <Space align="center" size={14}>
+                                <Space align="center" size={12}>
                                     <div
                                         style={{
                                             width: 46,
                                             height: 46,
                                             borderRadius: 12,
+                                            background: "#eff6ff",
+                                            color: "#2563eb",
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            background: "rgba(255,255,255,0.14)",
-                                            color: "#ffffff",
-                                            fontSize: 21,
+                                            fontSize: 22,
                                         }}
                                     >
                                         <BellOutlined />
                                     </div>
 
                                     <div>
-                                        <Title level={4} style={{ margin: 0, color: "#ffffff" }}>
+                                        <Title level={4} style={{ margin: 0, color: "#111827" }}>
                                             {isEditing ? "Edit Alert Channel" : "Create Alert Channel"}
                                         </Title>
-                                        <Text style={{ color: "rgba(255,255,255,0.72)" }}>
-                                            Configure recipients, schedule, and status.
+                                        <Text style={{ color: "#64748b" }}>
+                                            Fill the details below to configure alerts.
                                         </Text>
                                     </div>
                                 </Space>
                             </div>
 
-                            <div style={{ padding: 24 }}>
+                            <div style={{ padding: 22 }}>
                                 <Alert
-                                    type="success"
+                                    type="info"
                                     showIcon
-                                    message="Active channels send notifications automatically."
+                                    message="Active channels will send alerts based on the selected schedule."
                                     style={{
-                                        marginBottom: 22,
+                                        marginBottom: 20,
                                         borderRadius: 10,
-                                        background: "#f0fdf4",
-                                        border: "1px solid #bbf7d0",
+                                        background: "#eff6ff",
+                                        borderColor: "#bfdbfe",
                                     }}
                                 />
 
@@ -443,20 +453,19 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                                         active: true,
                                     }}
                                 >
-                                    <div
+                                    <Card
+                                        bordered={false}
                                         style={{
-                                            padding: 16,
                                             borderRadius: 14,
                                             background: "#f8fafc",
                                             border: "1px solid #eef2f7",
-                                            marginBottom: 18,
+                                            marginBottom: 16,
                                         }}
+                                        bodyStyle={{ padding: 16 }}
                                     >
                                         <Space align="center" size={8} style={{ marginBottom: 14 }}>
                                             <TeamOutlined style={{ color: "#2563eb" }} />
-                                            <Text strong style={{ color: "#0f172a" }}>
-                                                Recipients
-                                            </Text>
+                                            <Text strong style={{ color: "#020202c9" }}>Recipients</Text>
                                         </Space>
 
                                         <Form.Item
@@ -476,55 +485,80 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                                                 }))}
                                             />
                                         </Form.Item>
-                                    </div>
 
-                                    <div
+                                        <Space align="center" size={8} style={{ marginBottom: 12, marginTop: 10 }}>
+                                            <TeamOutlined style={{ color: "#2563eb" }} />
+                                            <Text strong style={{ color: "#020202c9" }}>Groups</Text>
+                                        </Space>
+
+                                        <Form.Item
+                                            name="Groups"
+                                            label="Groups"
+                                            rules={[{ required: true, message: "Please select users" }]}
+                                            style={{ marginBottom: 0 }}
+                                        >
+                                            <Select
+                                                mode="multiple"
+                                                placeholder="Select Groups"
+                                                allowClear
+                                                size="large"
+                                                options={GroupOptions.map((group) => ({
+                                                    label: group,
+                                                    value: group,
+                                                }))}
+                                            />
+                                        </Form.Item>
+                                    </Card>
+
+                                    <Card
+                                        bordered={false}
                                         style={{
-                                            padding: 16,
                                             borderRadius: 14,
                                             background: "#f8fafc",
                                             border: "1px solid #eef2f7",
-                                            marginBottom: 18,
+                                            marginBottom: 16,
                                         }}
+                                        bodyStyle={{ padding: 16 }}
                                     >
                                         <Space align="center" size={8} style={{ marginBottom: 14 }}>
                                             <CheckCircleOutlined style={{ color: "#16a34a" }} />
-                                            <Text strong style={{ color: "#0f172a" }}>
-                                                Channel Status
-                                            </Text>
+                                            <Text strong style={{ color: "#020202c9" }}>Status</Text>
                                         </Space>
 
                                         <Form.Item
                                             name="active"
+                                            label="Channel Status"
                                             valuePropName="checked"
                                             style={{ marginBottom: 0 }}
                                         >
                                             <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
                                         </Form.Item>
-                                    </div>
+                                    </Card>
 
-                                    <div
+                                    <Card
+                                        bordered={false}
                                         style={{
-                                            padding: 16,
                                             borderRadius: 14,
                                             background: "#f8fafc",
                                             border: "1px solid #eef2f7",
                                         }}
+                                        bodyStyle={{ padding: 16 }}
                                     >
                                         <Space align="center" size={8} style={{ marginBottom: 14 }}>
                                             <CalendarOutlined style={{ color: "#7c3aed" }} />
-                                            <Text strong style={{ color: "#0f172a" }}>
-                                                Schedule
-                                            </Text>
+                                            <Text strong style={{ color: "#020202c9" }}>Schedule</Text>
                                         </Space>
 
                                         <Form.Item
                                             name="scheduleType"
                                             label="Schedule Type"
-                                            rules={[{ required: true, message: "Please select schedule type" }]}
+                                            rules={[
+                                                { required: true, message: "Please select schedule type" },
+                                            ]}
                                         >
                                             <Select
                                                 size="large"
+                                                placeholder="Select schedule type"
                                                 onChange={(value: ScheduleType) => setScheduleType(value)}
                                                 options={[
                                                     { label: "Daily", value: "Daily" },
@@ -539,10 +573,15 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                                         </Form.Item>
 
                                         {scheduleType === "Daily" && (
-                                            <Form.Item name="interval" label="Repeat Every" style={{ marginBottom: 0 }}>
+                                            <Form.Item
+                                                name="interval"
+                                                label="Repeat Every"
+                                                style={{ marginBottom: 0 }}
+                                            >
                                                 <InputNumber
                                                     min={1}
                                                     addonAfter="Days"
+                                                    placeholder="Enter days"
                                                     size="large"
                                                     style={{ width: "100%" }}
                                                 />
@@ -555,28 +594,48 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                                                     <InputNumber
                                                         min={1}
                                                         addonAfter="Weeks"
+                                                        placeholder="Enter weeks"
                                                         size="large"
                                                         style={{ width: "100%" }}
                                                     />
                                                 </Form.Item>
 
-                                                <Form.Item name="days" label="Repeat On" style={{ marginBottom: 0 }}>
+                                                <Form.Item
+                                                    name="days"
+                                                    label="Repeat On"
+                                                    style={{ marginBottom: 0 }}
+                                                >
                                                     <Checkbox.Group options={dayOptions} />
                                                 </Form.Item>
                                             </>
                                         )}
 
-                                        {["Monthly", "Quarterly", "HalfYearly"].includes(scheduleType) && (
-                                            <Form.Item name="scheduleDate" label="Schedule Date" style={{ marginBottom: 0 }}>
-                                                <DatePicker size="large" style={{ width: "100%" }} />
-                                            </Form.Item>
-                                        )}
+                                        {["Monthly", "Quarterly", "HalfYearly"].includes(
+                                            scheduleType
+                                        ) && (
+                                                <Form.Item
+                                                    name="scheduleDate"
+                                                    label="Schedule Date"
+                                                    style={{ marginBottom: 0 }}
+                                                >
+                                                    <DatePicker
+                                                        placeholder="Select schedule date"
+                                                        size="large"
+                                                        style={{ width: "100%" }}
+                                                    />
+                                                </Form.Item>
+                                            )}
 
                                         {scheduleType === "Annually" && (
-                                            <Form.Item name="scheduleDate" label="Annual Date" style={{ marginBottom: 0 }}>
+                                            <Form.Item
+                                                name="scheduleDate"
+                                                label="Annual Date"
+                                                style={{ marginBottom: 0 }}
+                                            >
                                                 <DatePicker
                                                     picker="date"
                                                     format="DD MMMM"
+                                                    placeholder="Select annual date"
                                                     size="large"
                                                     style={{ width: "100%" }}
                                                 />
@@ -584,16 +643,21 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                                         )}
 
                                         {scheduleType === "Custom" && (
-                                            <Form.Item name="customDates" label="Custom Dates" style={{ marginBottom: 0 }}>
+                                            <Form.Item
+                                                name="customDates"
+                                                label="Custom Dates"
+                                                style={{ marginBottom: 0 }}
+                                            >
                                                 <DatePicker
                                                     multiple
                                                     format="DD-MM-YYYY"
+                                                    placeholder="Select custom dates"
                                                     size="large"
                                                     style={{ width: "100%" }}
                                                 />
                                             </Form.Item>
                                         )}
-                                    </div>
+                                    </Card>
 
                                     <Divider style={{ margin: "22px 0" }} />
 
@@ -605,8 +669,9 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                                                 icon={<ReloadOutlined />}
                                                 onClick={resetForm}
                                                 style={{
-                                                    borderRadius: 10,
                                                     height: 44,
+                                                    borderRadius: 10,
+                                                    fontWeight: 500,
                                                 }}
                                             >
                                                 Reset
@@ -626,7 +691,7 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                                                     fontWeight: 600,
                                                     background: "#2563eb",
                                                     borderColor: "#2563eb",
-                                                    boxShadow: "0 8px 18px rgba(37, 99, 235, 0.24)",
+                                                    boxShadow: "0 8px 20px rgba(37, 99, 235, 0.24)",
                                                 }}
                                             >
                                                 {isEditing ? "Update Channel" : "Create Channel"}
@@ -638,14 +703,15 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                         </Card>
                     </Col>
 
-                    <Col xs={24} lg={15}>
+                    <Col xs={24} lg={14}>
                         <Card
-                            className="table-card"
+                            className="main-card"
                             bordered={false}
                             style={{
-                                borderRadius: 18,
-                                border: "1px solid #e2e8f0",
-                                boxShadow: "0 18px 42px rgba(15, 23, 42, 0.09)",
+                                height: "100%",
+                                borderRadius: 16,
+                                border: "1px solid #e5e7eb",
+                                boxShadow: "0 14px 34px rgba(15, 23, 42, 0.08)",
                             }}
                             bodyStyle={{ padding: 24 }}
                         >
@@ -654,15 +720,15 @@ export default function AlertChannelConfiguration(): React.ReactElement {
                                     <Space align="center" size={12}>
                                         <div
                                             style={{
-                                                width: 42,
-                                                height: 42,
+                                                width: 46,
+                                                height: 46,
                                                 borderRadius: 12,
+                                                background: "#f0fdf4",
+                                                color: "#16a34a",
                                                 display: "flex",
                                                 alignItems: "center",
                                                 justifyContent: "center",
-                                                background: "#f0fdf4",
-                                                color: "#16a34a",
-                                                fontSize: 20,
+                                                fontSize: 22,
                                             }}
                                         >
                                             <ThunderboltOutlined />
@@ -681,8 +747,7 @@ export default function AlertChannelConfiguration(): React.ReactElement {
 
                                 <Col>
                                     <Tag
-                                        icon={<CheckCircleOutlined />}
-                                        color="success"
+                                        color="blue"
                                         style={{
                                             borderRadius: 999,
                                             padding: "6px 12px",

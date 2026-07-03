@@ -1,7 +1,7 @@
-import UserManagement from "../views/usermanagement";
+import Management from "../views/usermanagement/management";
 
 const UserManagementpage = () => {
 
-    return (<UserManagement />);
+    return (<Management />);
 }
 export default UserManagementpage; 

@@ -70,7 +70,7 @@ export default function MainLayout({ children }: Props) {
         },
         {
             icon: <TeamOutlined />,
-            label: "User Management",
+            label: " Management",
             path: "/user-mangement",
         },
     ];
