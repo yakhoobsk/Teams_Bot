@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
     Modal,
     Form,
@@ -14,7 +14,7 @@ import {
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface CreateRestApiModalProps {
+interface UpdateRestApiModalProps {
     open: boolean;
     loading?: boolean;
     onCancel: () => void;
@@ -22,7 +22,7 @@ interface CreateRestApiModalProps {
     initialValues?: any;
 }
 
-const CreateRestApiModal: React.FC<CreateRestApiModalProps> = ({
+const UpdateRestApiModal: React.FC<UpdateRestApiModalProps> = ({
     open,
     loading,
     onCancel,
@@ -60,54 +60,7 @@ const CreateRestApiModal: React.FC<CreateRestApiModalProps> = ({
         }
     };
 
-    useEffect(() => {
-        const formatJson = (value: any) => {
-            if (!value) return "";
 
-            try {
-                const parsed =
-                    typeof value === "string" ? JSON.parse(value) : value;
-
-                return JSON.stringify(parsed, null, 2);
-            } catch {
-                return value;
-            }
-        };
-
-        if (open) {
-            form.setFieldsValue({
-                ...initialValues,
-                request_headers: formatJson(initialValues?.request_headers),
-                request_parameters: formatJson(initialValues?.request_parameters),
-                request_body: formatJson(initialValues?.request_body),
-            });
-        } else {
-            form.resetFields();
-        }
-    }, [initialValues, open, form]);
-
-    const handleTestConnection = async () => {
-        try {
-            const values = await form.validateFields();
-
-            const payload = {
-                ...values,
-                request_headers: values.request_headers
-                    ? JSON.parse(values.request_headers)
-                    : {},
-                request_parameters: values.request_parameters
-                    ? JSON.parse(values.request_parameters)
-                    : {},
-                request_body: values.request_body
-                    ? JSON.parse(values.request_body)
-                    : {},
-            };
-
-            console.log(payload);
-        } catch (error) {
-            console.log(error);
-        }
-    };
 
     return (
         <>
@@ -160,20 +113,7 @@ textarea::placeholder,
                         Cancel
                     </Button>,
 
-                    !initialValues && (
-                        <Button
-                            key="test"
-                            size="large"
-                            onClick={handleTestConnection}
-                            style={{
-                                borderColor: "#0F52BA",
-                                color: "#0F52BA",
-                                fontWeight: 600,
-                            }}
-                        >
-                            Test Connection
-                        </Button>
-                    ),
+
 
                     <Button
                         key="submit"
@@ -428,4 +368,4 @@ textarea::placeholder,
     );
 };
 
-export default CreateRestApiModal;
+export default UpdateRestApiModal;

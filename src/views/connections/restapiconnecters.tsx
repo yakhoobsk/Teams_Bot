@@ -3,7 +3,6 @@ import {
     Card,
     Input,
     Space,
-    Switch,
     Table,
     Tag,
     Tooltip,
@@ -16,11 +15,16 @@ import {
     DeleteOutlined,
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CreateRestApiModal from "../../components/restapicreatemodal";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { RestApiConnectersCreate, RestApiConnectersDelete, RestApiConnectersGet, RestApiConnectersUpdate } from "../../redux/Services/connectersServices";
+import { Popover, Typography } from "antd";
 
+const { Paragraph } = Typography;
 interface RestApi {
-    rest_api_id: number;
+    id: number;
+    rest_api_id: string;
     api_name: string;
     base_url: string;
     http_method: string;
@@ -35,64 +39,130 @@ interface RestApi {
     timeout_seconds: number;
     retry_count: number;
     is_status: boolean;
+    created_date?: string;
+    created_by?: string;
 }
 
-const initialData: RestApi[] = [
-    {
-        rest_api_id: 1001,
-        api_name: "Get Users",
-        base_url: "https://api.company.com",
-        http_method: "GET",
-        resource_path: "/users",
-        authentication_type: "Bearer",
-        username: "admin",
-        password_token: "********",
-        request_headers: "Authorization",
-        request_parameters: "page=1",
-        request_body: "-",
-        response_format: "JSON",
-        timeout_seconds: 60,
-        retry_count: 3,
-        is_status: true,
-    },
-    {
-        rest_api_id: 1002,
-        api_name: "Create Ticket",
-        base_url: "https://api.company.com",
-        http_method: "POST",
-        resource_path: "/ticket/create",
-        authentication_type: "Basic",
-        username: "system",
-        password_token: "********",
-        request_headers: "Content-Type",
-        request_parameters: "-",
-        request_body: "{...}",
-        response_format: "JSON",
-        timeout_seconds: 90,
-        retry_count: 5,
-        is_status: false,
-    },
-];
 
-export default function RestApiManagement() {
-    const [data, setData] = useState(initialData);
+const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: string }) => {
     const [search, setSearch] = useState("");
     const [openModal, setOpenModal] = useState(false);
     const [loading, setLoading] = useState(false);
+    const restapiconnectersget = useAppSelector((state) => state.connecters?.restapiconnectersget);
+    const dispatch = useAppDispatch();
+    const [selectedRecord, setSelectedRecord] = useState<any>(null);
+
+    useEffect(() => {
+        if (activeTab === "RestAPI") {
+            dispatch(RestApiConnectersGet({}));
+        }
+    }, [dispatch]);
+    const data = restapiconnectersget?.Response || [];
 
     const filteredData = data.filter(
-        (item) =>
+        (item: RestApi) =>
             item.api_name.toLowerCase().includes(search.toLowerCase()) ||
             item.base_url.toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleStatus = (checked: boolean, id: number) => {
-        setData((prev) =>
-            prev.map((item) =>
-                item.rest_api_id === id
-                    ? { ...item, is_status: checked }
-                    : item
-            )
+    useEffect(() => {
+        if (restapiconnectersget?.Response?.length) {
+            restapiconnectersget.Response.map((item: any) => ({
+                id: item.id,
+                rest_api_id: item.rest_api_id,
+                api_name: item.api_name,
+                base_url: item.base_url,
+                http_method: item.http_method,
+                resource_path: item.resource_path,
+                authentication_type: item.authentication_type,
+                username: item.username,
+                password_token: item.password_token,
+                request_headers: item.request_headers || "",
+                request_parameters: item.request_parameters || "",
+                request_body: item.request_body || "",
+                response_format: item.response_format,
+                timeout_seconds: item.timeout_seconds,
+                retry_count: item.retry_count,
+                is_status: item.is_status,
+                created_date: item.created_date,
+                created_by: item.created_by || "",
+            }));
+
+        }
+    }, [restapiconnectersget]);
+
+
+    const handleDelete = async (record: RestApi) => {
+        try {
+            setLoading(true);
+
+            const payload = {
+                rest_api_id: record.rest_api_id,
+            };
+
+
+            await dispatch(
+                RestApiConnectersDelete({ payload })
+            ).unwrap();
+
+
+            dispatch(RestApiConnectersGet({}));
+        } catch (error) {
+            console.error("Delete API Error:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const renderPopup = (value?: string) => {
+        if (!value) return "-";
+
+        return (
+            <Popover
+                placement="left"
+                trigger="hover"
+                overlayInnerStyle={{
+                    borderRadius: 16,
+                    padding: 12,
+                }}
+                content={
+                    <div
+                        style={{
+                            width: 300,
+                            maxHeight: 350,
+                            overflow: "auto",
+                        }}
+                    >
+                        <Paragraph
+                            copyable
+                            style={{
+                                margin: 0,
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                                fontFamily: "monospace",
+                                fontSize: 13,
+                                color: "#333",
+                            }}
+                        >
+                            {value}
+                        </Paragraph>
+                    </div>
+                }
+            >
+                <span
+                    style={{
+                        cursor: "pointer",
+                        color: "#1677ff",
+                        display: "inline-block",
+                        maxWidth: 180,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {value}
+                </span>
+            </Popover>
         );
     };
 
@@ -112,8 +182,8 @@ export default function RestApiManagement() {
             title: "Base URL",
             dataIndex: "base_url",
             width: 220,
-            ellipsis: true,
-        },
+            render: renderPopup,
+        }, ,
         {
             title: "Method",
             dataIndex: "http_method",
@@ -149,30 +219,32 @@ export default function RestApiManagement() {
         {
             title: "Password / Token",
             dataIndex: "password_token",
-            width: 160,
+            width: 170,
+            render: renderPopup,
         },
         {
             title: "Headers",
             dataIndex: "request_headers",
-            width: 180,
-            ellipsis: true,
+            width: 200,
+            render: renderPopup,
         },
         {
             title: "Parameters",
             dataIndex: "request_parameters",
-            width: 180,
-            ellipsis: true,
+            width: 200,
+            render: renderPopup,
         },
         {
             title: "Request Body",
             dataIndex: "request_body",
-            width: 170,
-            ellipsis: true,
+            width: 220,
+            render: renderPopup,
         },
         {
-            title: "Response",
-            dataIndex: "response_format",
-            width: 120,
+            title: "Resource Path",
+            dataIndex: "resource_path",
+            width: 180,
+            render: renderPopup,
         },
         {
             title: "Timeout",
@@ -186,32 +258,24 @@ export default function RestApiManagement() {
             width: 90,
         },
         {
-            title: "Status",
-            dataIndex: "is_status",
-            width: 130,
-            render: (_: any, record: RestApi) => (
-                <Space>
-                    <Switch
-                        checked={record.is_status}
-                        checkedChildren="Active"
-                        unCheckedChildren="Inactive"
-                        onChange={(checked) =>
-                            handleStatus(checked, record.rest_api_id)
-                        }
-                    />
-                </Space>
-            ),
+            title: "type",
+            dataIndex: "Data Hub Type",
+            width: 90,
         },
         {
             title: "Actions",
             width: 120,
             fixed: "right",
-            render: () => (
+            render: (_: any, record: any) => (
                 <Space>
                     <Tooltip title="Edit">
                         <Button
                             shape="circle"
                             icon={<EditOutlined />}
+                            onClick={() => {
+                                setSelectedRecord(record);
+                                setOpenModal(true);
+                            }}
                         />
                     </Tooltip>
 
@@ -220,6 +284,7 @@ export default function RestApiManagement() {
                             danger
                             shape="circle"
                             icon={<DeleteOutlined />}
+                            onClick={() => handleDelete(record)}
                         />
                     </Tooltip>
                 </Space>
@@ -358,32 +423,69 @@ export default function RestApiManagement() {
                     }}
                 >
                     <Table
-                        rowKey="rest_api_id"
+                        rowKey="id"
                         columns={columns}
                         dataSource={filteredData}
                         bordered
-                        scroll={{
-                            x: 2500,
-                        }}
-                        pagination={{
-                            pageSize: 8,
-                            showSizeChanger: true,
-                        }}
+                        scroll={{ x: 2500 }}
+                        pagination={false}
                     />
                 </Card>
                 <CreateRestApiModal
                     open={openModal}
                     loading={loading}
-                    onCancel={() => setOpenModal(false)}
+                    initialValues={selectedRecord}
+                    onCancel={() => {
+                        setOpenModal(false);
+                        setSelectedRecord(null);
+                    }}
                     onSubmit={async (values) => {
-                        console.log("Form Values:", values);
-
                         try {
                             setLoading(true);
 
+                            if (selectedRecord) {
+                                const payload = {
+                                    rest_api_id: selectedRecord.rest_api_id,
+                                    api_name: values.api_name,
+                                    base_url: values.base_url,
+                                    http_method: values.http_method,
+                                    resource_path: values.resource_path,
+                                    authentication_type: values.authentication_type,
+                                    username: values.username,
+                                    password_token: values.password_token,
+                                    request_headers: values.request_headers,
+                                    request_parameters: values.request_parameters,
+                                    request_body: values.request_body,
+                                    response_format: values.response_format,
+                                    timeout_seconds: values.timeout_seconds,
+                                    retry_count: values.retry_count,
+                                    is_status: values.is_status ? 1 : 0,
+                                    updated_by: "yakhoob.shaik@easystepin.com",
+                                    updated_date: "2026-07-12 12:00:00",
+                                    type: type,
+                                };
 
+                                await dispatch(
+                                    RestApiConnectersUpdate({ payload })
+                                ).unwrap();
+
+                            } else {
+                                const payload = {
+                                    ...values,
+                                    created_by: "yakhoob.shaik@easystepin.com",
+                                    is_status: values.is_status ? 1 : 0,
+                                    type: type,
+                                };
+
+                                await dispatch(
+                                    RestApiConnectersCreate({ payload })
+                                ).unwrap();
+                            }
+
+                            dispatch(RestApiConnectersGet({}));
 
                             setOpenModal(false);
+                            setSelectedRecord(null);
                         } catch (error) {
                             console.error(error);
                         } finally {
@@ -395,3 +497,6 @@ export default function RestApiManagement() {
         </motion.div>
     );
 }
+
+
+export default RestApiManagement;

@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, TeamsconfigDashboardGet, TeamsconfigGet, UsersGet } from "../Services/connectersServices";
+import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigDashboardGet, TeamsconfigGet, UsersGet } from "../Services/connectersServices";
 
 
 
@@ -11,6 +11,7 @@ interface ConnectersState {
     teamcofigget: any;
     usersget: any;
     teamdashboardget: any;
+    restapiconnectersget: any;
     error: string | null;
 }
 
@@ -22,6 +23,7 @@ const initialState: ConnectersState = {
     teamcofigget: null,
     usersget: null,
     teamdashboardget: null,
+    restapiconnectersget: null,
     error: null,
 };
 
@@ -106,6 +108,22 @@ const ConnectersSlice = createSlice({
             })
 
             .addCase(TeamsconfigDashboardGet.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+
+            .addCase(RestApiConnectersGet.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+
+            .addCase(RestApiConnectersGet.fulfilled, (state, action) => {
+                state.loading = false;
+                state.restapiconnectersget = action.payload;
+            })
+
+            .addCase(RestApiConnectersGet.rejected, (state, action: any) => {
                 state.loading = false;
                 state.error = action.payload;
             })

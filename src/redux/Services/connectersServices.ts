@@ -223,6 +223,81 @@ export const TeamsconfigUpdate = createAsyncThunk("Teamsconfig/Update", async ({
 
 
 
+////////////////////////////////////////////////////////////////
+
+
+// Rest API connecters
+
+
+
+export const RestApiConnectersGet = createAsyncThunk(
+    "RestApiConnectersGet/get",
+    async (_: any, { rejectWithValue }) => {
+
+        try {
+            const response = await boomiApi.post("/teams_bot/restconfigure/fetch");
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || "Fetch failed"
+            );
+        }
+    }
+);
+
+export const RestApiConnectersCreate = createAsyncThunk("RestApiConnecters/create", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/restconfigure/create", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+    }
+}
+);
+
+export const RestApiConnectersUpdate = createAsyncThunk("RestApiConnecters/Update", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.put("/teams_bot/restconfigure/updated", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+    }
+}
+);
+
+export const RestApiConnectersDelete = createAsyncThunk("RestApiConnecters/Delete", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.delete("/teams_bot/restconfigure/delete", { data: payload });
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+    }
+}
+);
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
