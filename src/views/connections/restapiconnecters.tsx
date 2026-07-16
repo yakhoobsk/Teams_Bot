@@ -54,16 +54,41 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
 
     useEffect(() => {
         if (activeTab === "RestAPI") {
-            dispatch(RestApiConnectersGet({}));
+            dispatch(RestApiConnectersGet({ type: type }));
         }
     }, [dispatch]);
     const data = restapiconnectersget?.Response || [];
 
-    const filteredData = data.filter(
-        (item: RestApi) =>
-            item.api_name.toLowerCase().includes(search.toLowerCase()) ||
-            item.base_url.toLowerCase().includes(search.toLowerCase())
-    );
+
+    const filteredData = data.filter((item: RestApi) => {
+        const keyword = search.trim().toLowerCase();
+
+        if (!keyword) return true;
+
+        return [
+            item.rest_api_id,
+            item.api_name,
+            item.base_url,
+            item.http_method,
+            item.resource_path,
+            item.authentication_type,
+            item.username,
+            item.password_token,
+            item.request_headers,
+            item.request_parameters,
+            item.request_body,
+            item.response_format,
+            item.timeout_seconds?.toString(),
+            item.retry_count?.toString(),
+            item.created_by,
+            item.created_date,
+            item.is_status ? "active" : "inactive",
+        ]
+            .filter(Boolean)
+            .some((value: any) =>
+                value.toString().toLowerCase().includes(keyword)
+            );
+    });
 
     useEffect(() => {
         if (restapiconnectersget?.Response?.length) {
@@ -86,6 +111,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                 is_status: item.is_status,
                 created_date: item.created_date,
                 created_by: item.created_by || "",
+
             }));
 
         }
@@ -370,6 +396,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                                 style={{
                                     width: 260,
                                 }}
+                                value={search}
                                 onChange={(e) =>
                                     setSearch(e.target.value)
                                 }

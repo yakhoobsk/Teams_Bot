@@ -12,8 +12,8 @@ const IntegrationConnectors = () => {
     const items = [
 
 
-        { key: "Database", label: "Database Connectors", children: <DatabaseConnectors activeTab={activeTab} /> },
-        { key: "RestAPI", label: "REST API Connectors", children: <RestApiManagement activeTab={activeTab} type="Integrations" /> },
+        { key: "Database", label: "Database Connectors", children: <DatabaseConnectors activeTab={activeTab} type="integration" /> },
+        { key: "RestAPI", label: "REST API Connectors", children: <RestApiManagement activeTab={activeTab} type="integration" /> },
         // { key: "TeamsConfiguration", label: "Teams Configuration", children: <TeamConfiguration activeTab={activeTab} /> },
     ];
 

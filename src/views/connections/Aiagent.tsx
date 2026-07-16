@@ -11,6 +11,7 @@ import {
     Tooltip,
     Table,
     Modal,
+    Space,
 } from "antd";
 import {
     KeyOutlined,
@@ -19,6 +20,7 @@ import {
     EyeTwoTone,
     RobotOutlined,
     DeleteOutlined,
+    EditOutlined,
 } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -27,7 +29,7 @@ import copilotLogo from "../../assets/copilot-icon.png";
 import claudeLogo from "../../assets/claude-ai-icon.png";
 import geminiLogo from "../../assets/google-gemini-icon.png";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { aiconnecterCreate, AIConnectersGet, aiconnecterUpdate } from "../../redux/Services/connectersServices";
+import { aiconnecterCreate, aiconnecterDelete, AIConnectersGet, aiconnecterUpdate } from "../../redux/Services/connectersServices";
 import type { ColumnsType } from "antd/es/table";
 
 interface AiAgentRecord {
@@ -39,41 +41,7 @@ interface AiAgentRecord {
     endpoint: string;
 }
 
-const aiAgentData: AiAgentRecord[] = [
-    {
-        key: "1",
-        aiName: "ChatGPT",
-        model: "gpt-4o",
-        apiKey: "sk-****************",
-        deploymentName: "-",
-        endpoint: "-",
-    },
-    {
-        key: "2",
-        aiName: "Claude",
-        model: "claude-sonnet-4-6",
-        apiKey: "sk-ant-************",
-        deploymentName: "-",
-        endpoint: "-",
-    },
-    {
-        key: "3",
-        aiName: "Gemini",
-        model: "gemini-2.5-pro",
-        apiKey: "AIza**************",
-        deploymentName: "-",
-        endpoint: "-",
-    },
-    {
-        key: "4",
-        aiName: "Microsoft Copilot",
-        model: "gpt-4o",
-        apiKey: "****************",
-        deploymentName: "gpt-4o",
-        endpoint:
-            "https://my-openai-resource.openai.azure.com/",
-    },
-];
+
 
 const { Title, Text } = Typography;
 const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
@@ -82,6 +50,9 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
     const dispatch = useAppDispatch()
     const aigent = useAppSelector((state) => state.connecters?.aiagentget);
     const [openManageAgents, setOpenManageAgents] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
+    const [editRecord, setEditRecord] = useState<any>(null);
+    const [editForm] = Form.useForm();
 
     useEffect(() => {
         if (activeTab === "AIAgents") {
@@ -89,6 +60,19 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
         }
     }, [activeTab, dispatch]);
     const [form] = Form.useForm();
+    const aiAgentData: AiAgentRecord[] =
+        aigent?.[0]?.agents?.map((agent: any, index: number) => ({
+            key: agent.agent_id || String(index + 1),
+            aiName:
+                agent.agent_name === "microsoftcopilot"
+                    ? "Microsoft Copilot"
+                    : agent.agent_name.charAt(0).toUpperCase() +
+                    agent.agent_name.slice(1),
+            model: agent.model || "-",
+            apiKey: agent.api_key || "-",
+            deploymentName: agent.deployment_name || "-",
+            endpoint: agent.endpoint || "-",
+        })) || [];
 
     const agents = aigent?.[0]?.agents || [];
     const aiAgents = [
@@ -187,6 +171,37 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
             },
         ],
     };
+    const handleEdit = (record: any) => {
+        setEditRecord(record);
+
+        editForm.setFieldsValue({
+            aiName: record.aiName,
+            model: record.model,
+            apiKey: record.apiKey,
+            deploymentName: record.deploymentName,
+            endpoint: record.endpoint,
+        });
+
+        setEditOpen(true);
+    };
+
+    const handleUpdate = (values: any) => {
+
+        const payload = {
+            agent_id: editRecord.key,
+            agent_name: editRecord.aiName,
+            api_key: values.apiKey,
+            model: values.model,
+            deployment_name: values.deploymentName,
+            endpoint: values.endpoint,
+        };
+
+        dispatch(aiconnecterUpdate({ payload }));
+
+        setEditOpen(false);
+
+        dispatch(AIConnectersGet({}));
+    };
     const fields = aiAgentFields[selectedAgent as keyof typeof aiAgentFields];
     const columns: ColumnsType<AiAgentRecord> = [
         {
@@ -203,6 +218,15 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
             title: "API Key",
             dataIndex: "apiKey",
             key: "apiKey",
+            render: (apiKey: string) => {
+                if (!apiKey) return "-";
+
+                return (
+                    <Tooltip title={apiKey}>
+                        {"*".repeat(Math.max(apiKey.length - 4, 8)) + apiKey.slice(-4)}
+                    </Tooltip>
+                );
+            },
         },
         {
             title: "Deployment Name",
@@ -219,37 +243,36 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
             title: "Action",
             key: "action",
             align: "center",
-            width: 90,
-            render: (_) => (
-                <Popconfirm
-                    title="Delete AI Agent"
-                    description="Are you sure you want to delete this AI Agent?"
-                    okText="Delete"
-                    cancelText="Cancel"
-                >
-                    <Tooltip title="Delete">
+            render: (_, record) => (
+                <Space>
+                    <Tooltip title="Edit">
                         <Button
-                            danger
                             type="text"
-                            icon={<DeleteOutlined />}
+                            icon={<EditOutlined />}
+                            onClick={() => handleEdit(record)}
                         />
                     </Tooltip>
-                </Popconfirm>
+                    <Popconfirm
+                        title="Delete AI Agent"
+                        description="Are you sure you want to delete this AI Agent?"
+                        okText="Delete"
+                        cancelText="Cancel"
+                        onConfirm={() => handleDelete(record)}
+                    >
+                        <Tooltip title="Delete">
+                            <Button
+                                danger
+                                type="text"
+                                icon={<DeleteOutlined />}
+                            />
+                        </Tooltip>
+                    </Popconfirm>
+                </Space>
             ),
-        },
+        }
     ];
 
-    useEffect(() => {
-        const selected = aiAgents.find(
-            (item: any) => item.key === selectedAgent
-        );
 
-        if (selected) {
-            form.setFieldsValue({
-                apiKey: selected.apiKey,
-            });
-        }
-    }, [selectedAgent, aiAgents]);
 
     const current =
         aiAgents.find((item: any) => item.key === selectedAgent) ||
@@ -259,28 +282,28 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
     const handleSave = async () => {
         const values = await form.validateFields();
 
-        if (current.agentId) {
-            const payload = {
-                agent_id: current.agentId,
-                agent_name: current.name,
-                api_key: values.apiKey,
-            }
-            dispatch(
-                aiconnecterUpdate({ payload })
-            );
-        } else {
-            const payload = {
-                agent_id: "",
-                agent_name: current.name,
-                api_key: values.apiKey,
-                created_by: "",
-                created_date: "",
-                is_active: true,
-            }
-            dispatch(
-                aiconnecterCreate({ payload })
-            );
+        const payload = {
+            agent_id: "",
+            agent_name: current.name,
+            api_key: values.apiKey,
+            created_by: "",
+            created_date: "",
+            is_active: true,
         }
+        dispatch(
+            aiconnecterCreate({ payload })
+        );
+
+
+        dispatch(AIConnectersGet({}));
+    };
+
+    const handleDelete = (record: AiAgentRecord) => {
+        const payload = {
+            agent_id: record.key,
+        };
+
+        dispatch(aiconnecterDelete({ payload }));
 
         dispatch(AIConnectersGet({}));
     };
@@ -648,14 +671,129 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                     columns={columns}
                     dataSource={aiAgentData}
                     bordered
-                    pagination={{
-                        pageSize: 10,
-                        showSizeChanger: false,
-                    }}
+                    pagination={false}
                     scroll={{
-                        x: 1300,
+                        x: "max-content",
+                        y: 400,
                     }}
                 />
+            </Modal>
+            <Modal
+                title={
+                    <span
+                        style={{
+                            color: "#0F52BA",
+                            fontSize: 20,
+                            fontWeight: 700,
+                        }}
+                    >
+                        Edit AI Agent
+                    </span>
+                }
+                open={editOpen}
+                onCancel={() => setEditOpen(false)}
+                footer={[
+                    <Button
+                        key="cancel"
+                        size="large"
+                        onClick={() => setEditOpen(false)}
+                    >
+                        Cancel
+                    </Button>,
+                    <Button
+                        key="update"
+                        type="primary"
+                        size="large"
+                        onClick={() => editForm.submit()}
+                        style={{
+                            background: "#0F52BA",
+                            borderColor: "#0F52BA",
+                            fontWeight: 600,
+                        }}
+                    >
+                        Update
+                    </Button>,
+                ]}
+                width={700}
+                centered
+                destroyOnClose
+            >
+                <style>
+                    {`
+        .edit-agent-modal .ant-form-item-label > label{
+            color:#222 !important;
+            font-weight:600 !important;
+            font-size:14px;
+        }
+
+        .edit-agent-modal .ant-input,
+        .edit-agent-modal .ant-input-password{
+            border-radius:8px !important;
+            height:42px;
+        }
+    `}
+                </style>
+
+                <Form
+                    form={editForm}
+                    layout="vertical"
+                    className="edit-agent-modal"
+                    onFinish={handleUpdate}
+                >
+                    <Row gutter={16}>
+                        <Col span={24}>
+                            <Form.Item
+                                name="apiKey"
+                                label="API Key"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Please enter API Key",
+                                    },
+                                ]}
+                            >
+                                <Input.Password
+                                    placeholder="Enter API Key"
+                                    prefix={<KeyOutlined />}
+                                    iconRender={(visible) =>
+                                        visible ? (
+                                            <EyeTwoTone />
+                                        ) : (
+                                            <EyeInvisibleOutlined />
+                                        )
+                                    }
+                                />
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                name="model"
+                                label="Model"
+                            >
+                                <Input placeholder="Enter Model" />
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={12}>
+                            <Form.Item
+                                name="deploymentName"
+                                label="Deployment Name"
+                            >
+                                <Input placeholder="Enter Deployment Name" />
+                            </Form.Item>
+                        </Col>
+
+                        <Col span={24}>
+                            <Form.Item
+                                name="endpoint"
+                                label="Endpoint URL"
+                            >
+                                <Input placeholder="https://example.openai.azure.com/" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                </Form>
             </Modal>
         </div>
     );

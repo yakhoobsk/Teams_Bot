@@ -12,7 +12,7 @@ const SettingsView = () => {
     const items = [
 
 
-        { key: "Database", label: "Database Connectors", children: <DatabaseConnectors activeTab={activeTab} /> },
+        { key: "Database", label: "Database Connectors", children: <DatabaseConnectors activeTab={activeTab} type="Datahub" /> },
         { key: "RestAPI", label: "REST API Connectors", children: <RestApiManagement activeTab={activeTab} type="Datahub" /> },
         // { key: "TeamsConfiguration", label: "Teams Configuration", children: <TeamConfiguration activeTab={activeTab} /> },
     ];

@@ -295,7 +295,7 @@ export default function MainLayout({ children }: Props) {
                         }}
                         style={{
                             position: "absolute",
-                            bottom: 25,
+                            bottom: 15,
                             left: 15,
                             right: 15,
 
@@ -316,7 +316,7 @@ export default function MainLayout({ children }: Props) {
                                 }}
                                 onClick={handleLogout}
                                 style={{
-                                    marginTop: 14,
+                                    marginTop: 10,
                                     cursor: "pointer",
                                     height: 42,
                                     borderRadius: 12,
@@ -379,19 +379,24 @@ export default function MainLayout({ children }: Props) {
                 {/* HEADER */}
                 <Header
                     style={{
-                        margin: 20,
+                        position: "fixed",
+                        top: 0,
+                        left: collapsed ? 100 : 280, // Adjust according to your Sider width
+                        right: 0,
+                        zIndex: 1000,
+
                         height: 80,
-                        borderRadius: 24,
-                        background:
-                            "rgba(255,255,255,0.9)",
+
+                        background: "rgba(255,255,255,0.9)",
                         backdropFilter: "blur(20px)",
+
                         display: "flex",
                         alignItems: "center",
-                        justifyContent:
-                            "space-between",
+                        justifyContent: "space-between",
                         padding: "0 25px",
-                        boxShadow:
-                            "0 8px 25px rgba(0,0,0,.08)",
+
+                        boxShadow: "0 8px 25px rgba(0,0,0,.08)",
+                        transition: "all 0.2s ease",
                     }}
                 >
                     <div
@@ -437,27 +442,13 @@ export default function MainLayout({ children }: Props) {
                             </div>
                         </motion.div>
                     </div>
-
-                    {/* <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 25,
-                        }}
-                    >
-
-
-                        <Avatar
-                            size={45}
-                            icon={<UserOutlined />}
-                        />
-                    </div> */}
                 </Header>
 
                 {/* CONTENT */}
                 <Content
                     style={{
                         padding: 20,
+                        marginTop: 80,
                     }}
                 >
                     <motion.div
@@ -474,8 +465,8 @@ export default function MainLayout({ children }: Props) {
                             borderRadius: 30,
 
                             padding: 30,
-                            boxShadow:
-                                "0 10px 30px rgba(0,0,0,.06)",
+                            // boxShadow:
+                            //     "0 10px 30px rgba(0,0,0,.06)",
                         }}
                     >
                         {children}

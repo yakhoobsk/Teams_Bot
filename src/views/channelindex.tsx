@@ -1,19 +1,20 @@
 import { Tabs } from "antd";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import UserManagement from ".";
-import GroupManagement from "./groups";
+import Channels from "./channels";
+import UserAlertsTable from "./individualchannel";
 
 
-const Management = () => {
+const ChannelIndex = () => {
 
-    const [activeTab, setActiveTab] = useState("usermanagemnt");
+    const [activeTab, setActiveTab] = useState("Channels");
 
     const items = [
 
 
-        { key: "usermanagemnt", label: "User Management", children: <UserManagement activeTab={activeTab} /> },
-        { key: "GroupManagement", label: "Group Management", children: <GroupManagement activeTab={activeTab} /> },
+        { key: "Channels", label: "Channels Alerts", children: <Channels /> },
+        { key: "Individual", label: "Individual Alerts", children: <UserAlertsTable /> },
+        // { key: "TeamsConfiguration", label: "Teams Configuration", children: <TeamConfiguration activeTab={activeTab} /> },
     ];
 
     useEffect(() => {
@@ -88,4 +89,4 @@ const Management = () => {
     );
 };
 
-export default Management;
+export default ChannelIndex;

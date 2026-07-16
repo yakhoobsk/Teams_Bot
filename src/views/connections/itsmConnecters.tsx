@@ -201,7 +201,7 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                         24,
                                 }}
                             >
-                                <Text strong>
+                                <Text strong style={{ fontSize: 16, color: "#222222" }}>
                                     Connector
                                     Status
                                 </Text>
@@ -224,7 +224,17 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                 }
                             >
                                 <Form.Item
-                                    label="Instance URL"
+                                    label={
+                                        <span
+                                            style={{
+                                                color: "#222222",
+                                                fontWeight: 600,
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            Instance URL
+                                        </span>
+                                    }
                                     name="instance_url"
                                 >
                                     <Input
@@ -234,7 +244,17 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                 </Form.Item>
 
                                 <Form.Item
-                                    label="Username"
+                                    label={
+                                        <span
+                                            style={{
+                                                color: "#222222",
+                                                fontWeight: 600,
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            Username
+                                        </span>
+                                    }
                                     name="username"
                                 >
                                     <Input
@@ -244,7 +264,17 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                 </Form.Item>
 
                                 <Form.Item
-                                    label="API Token"
+                                    label={
+                                        <span
+                                            style={{
+                                                color: "#222222",
+                                                fontWeight: 600,
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            API Token
+                                        </span>
+                                    }
                                     name="token"
                                 >
                                     <Input.Password
@@ -367,7 +397,7 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                         24,
                                 }}
                             >
-                                <Text strong>
+                                <Text strong style={{ fontSize: 16, color: "#222222" }}>
                                     Connector
                                     Status
                                 </Text>
@@ -387,7 +417,17 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                 }
                             >
                                 <Form.Item
-                                    label="Organization URL"
+                                    label={
+                                        <span
+                                            style={{
+                                                color: "#222222",
+                                                fontWeight: 600,
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            Organization URL
+                                        </span>
+                                    }
                                     name="instance_url"
                                 >
                                     <Input
@@ -397,7 +437,17 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                 </Form.Item>
 
                                 <Form.Item
-                                    label="Username"
+                                    label={
+                                        <span
+                                            style={{
+                                                color: "#222222",
+                                                fontWeight: 600,
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            Username
+                                        </span>
+                                    }
                                     name="username"
                                 >
                                     <Input
@@ -407,7 +457,17 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                 </Form.Item>
 
                                 <Form.Item
-                                    label="PAT Token"
+                                    label={
+                                        <span
+                                            style={{
+                                                color: "#222222",
+                                                fontWeight: 600,
+                                                fontSize: 14,
+                                            }}
+                                        >
+                                            PAT Token
+                                        </span>
+                                    }
                                     name="token"
                                 >
                                     <Input.Password

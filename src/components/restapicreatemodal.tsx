@@ -30,19 +30,34 @@ const CreateRestApiModal: React.FC<CreateRestApiModalProps> = ({
     initialValues,
 }) => {
     const [form] = Form.useForm();
+    const httpMethod = Form.useWatch("http_method", form);
 
     const handleFinish = (values: any) => {
         const payload = {
-            ...values,
+            api_name: values.api_name || "null",
+            base_url: values.base_url || "null",
+            http_method: values.http_method || "null",
+            resource_path: values.resource_path || "null",
+            authentication_type: values.authentication_type || "null",
+            username: values.username || "null",
+            password: values.password || "null",
+
             request_headers: values.request_headers
                 ? JSON.parse(values.request_headers)
-                : {},
+                : "null",
+
             request_parameters: values.request_parameters
                 ? JSON.parse(values.request_parameters)
-                : {},
+                : "null",
+
             request_body: values.request_body
                 ? JSON.parse(values.request_body)
-                : {},
+                : "null",
+
+            response_format: values.response_format || "null",
+            timeout_seconds: values.timeout_seconds ?? "null",
+            retry_count: values.retry_count ?? "null",
+            is_status: values.is_status ? 1 : 0,
         };
 
         onSubmit(payload);
@@ -190,6 +205,8 @@ textarea::placeholder,
                     form={form}
                     layout="vertical"
                     initialValues={{
+                        http_method: "GET",
+                        authentication_type: "Basic",
                         timeout_seconds: 60,
                         retry_count: 3,
                         is_status: true,
@@ -251,9 +268,6 @@ textarea::placeholder,
                                 <Select placeholder="Select HTTP Method">
                                     <Option value="GET">GET</Option>
                                     <Option value="POST">POST</Option>
-                                    <Option value="PUT">PUT</Option>
-                                    <Option value="PATCH">PATCH</Option>
-                                    <Option value="DELETE">DELETE</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
@@ -273,11 +287,7 @@ textarea::placeholder,
                                 name="authentication_type"
                             >
                                 <Select placeholder="Select Authentication">
-                                    <Option value="None">None</Option>
                                     <Option value="Basic">Basic</Option>
-                                    <Option value="Bearer">Bearer</Option>
-                                    <Option value="API_KEY">API Key</Option>
-                                    <Option value="OAuth2">OAuth2</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
@@ -293,121 +303,122 @@ textarea::placeholder,
 
                         <Col span={24}>
                             <Form.Item
-                                label="Password / Token"
-                                name="password_token"
+                                label="Password"
+                                name="password"
                             >
-                                <Input.Password placeholder="Enter Password or Token" />
+                                <Input.Password placeholder="Enter Password" />
                             </Form.Item>
                         </Col>
-
-                        <Col span={24}>
-                            <Form.Item
-                                label="Request Headers (JSON)"
-                                name="request_headers"
-                                rules={[
-                                    {
-                                        validator: validateJSON,
-                                    },
-                                ]}
-                            >
-                                <TextArea
-                                    rows={4}
-                                    placeholder={`{
+                        {httpMethod === "POST" && (
+                            <>
+                                <Col span={24}>
+                                    <Form.Item
+                                        label="Request Headers (JSON)"
+                                        name="request_headers"
+                                        rules={[
+                                            {
+                                                validator: validateJSON,
+                                            },
+                                        ]}
+                                    >
+                                        <TextArea
+                                            rows={4}
+                                            placeholder={`{
   "Content-Type":"application/json"
 }`}
-                                />
-                            </Form.Item>
-                        </Col>
+                                        />
+                                    </Form.Item>
+                                </Col>
 
-                        <Col span={24}>
-                            <Form.Item
-                                label="Request Parameters (JSON)"
-                                name="request_parameters"
-                                rules={[
-                                    {
-                                        validator: validateJSON,
-                                    },
-                                ]}
-                            >
-                                <TextArea
-                                    rows={4}
-                                    placeholder={`{
+                                <Col span={24}>
+                                    <Form.Item
+                                        label="Request Parameters (JSON)"
+                                        name="request_parameters"
+                                        rules={[
+                                            {
+                                                validator: validateJSON,
+                                            },
+                                        ]}
+                                    >
+                                        <TextArea
+                                            rows={4}
+                                            placeholder={`{
   "page":1
 }`}
-                                />
-                            </Form.Item>
-                        </Col>
+                                        />
+                                    </Form.Item>
+                                </Col>
 
-                        <Col span={24}>
-                            <Form.Item
-                                label="Request Body (JSON)"
-                                name="request_body"
-                                rules={[
-                                    {
-                                        validator: validateJSON,
-                                    },
-                                ]}
-                            >
-                                <TextArea
-                                    rows={6}
-                                    placeholder={`{
+                                <Col span={24}>
+                                    <Form.Item
+                                        label="Request Body (JSON)"
+                                        name="request_body"
+                                        rules={[
+                                            {
+                                                validator: validateJSON,
+                                            },
+                                        ]}
+                                    >
+                                        <TextArea
+                                            rows={6}
+                                            placeholder={`{
   "name":"John"
 }`}
-                                />
-                            </Form.Item>
-                        </Col>
+                                        />
+                                    </Form.Item>
+                                </Col>
 
-                        <Col span={12}>
-                            <Form.Item
-                                label="Response Format"
-                                name="response_format"
-                            >
-                                <Select placeholder="Select Response Format">
-                                    <Option value="JSON">JSON</Option>
-                                    <Option value="XML">XML</Option>
-                                    <Option value="TEXT">TEXT</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
+                                <Col span={12}>
+                                    <Form.Item
+                                        label="Response Format"
+                                        name="response_format"
+                                    >
+                                        <Select placeholder="Select Response Format">
+                                            <Option value="JSON">JSON</Option>
+                                            <Option value="XML">XML</Option>
+                                            <Option value="TEXT">TEXT</Option>
+                                        </Select>
+                                    </Form.Item>
+                                </Col>
 
-                        <Col span={6}>
-                            <Form.Item
-                                label="Timeout (Seconds)"
-                                name="timeout_seconds"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "Enter Timeout",
-                                    },
-                                ]}
-                            >
-                                <InputNumber
-                                    min={1}
-                                    style={{ width: "100%" }}
-                                    placeholder="60"
-                                />
-                            </Form.Item>
-                        </Col>
+                                <Col span={6}>
+                                    <Form.Item
+                                        label="Timeout (Seconds)"
+                                        name="timeout_seconds"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message: "Enter Timeout",
+                                            },
+                                        ]}
+                                    >
+                                        <InputNumber
+                                            min={1}
+                                            style={{ width: "100%" }}
+                                            placeholder="60"
+                                        />
+                                    </Form.Item>
+                                </Col>
 
-                        <Col span={6}>
-                            <Form.Item
-                                label="Retry Count"
-                                name="retry_count"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: "Enter Retry Count",
-                                    },
-                                ]}
-                            >
-                                <InputNumber
-                                    min={0}
-                                    style={{ width: "100%" }}
-                                    placeholder="3"
-                                />
-                            </Form.Item>
-                        </Col>
-
+                                <Col span={6}>
+                                    <Form.Item
+                                        label="Retry Count"
+                                        name="retry_count"
+                                        rules={[
+                                            {
+                                                required: true,
+                                                message: "Enter Retry Count",
+                                            },
+                                        ]}
+                                    >
+                                        <InputNumber
+                                            min={0}
+                                            style={{ width: "100%" }}
+                                            placeholder="3"
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            </>)}
                         <Col span={24}>
                             <Form.Item
                                 label="Status"

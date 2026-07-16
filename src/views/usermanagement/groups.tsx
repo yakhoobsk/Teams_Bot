@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Button,
     Card,
@@ -24,6 +24,8 @@ import {
     TeamOutlined,
     UsergroupAddOutlined,
 } from "@ant-design/icons";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { GroupsCreate, GroupsDelete, GroupsGet, GroupsUpdate, UsersGet } from "../../redux/Services/connectersServices";
 
 const { Title, Text } = Typography;
 
@@ -40,65 +42,128 @@ interface GroupFormValues {
     active: boolean;
 }
 
-const memberOptions = [
-    "John Smith",
-    "Robert",
-    "David",
-    "Michael",
-    "Emma",
-    "Sophia",
-    "Olivia",
-    "William",
-    "James",
-    "Daniel",
-];
 
-export default function GroupManagement(): React.ReactElement {
+export default function GroupManagement({ activeTab }: { activeTab: string }): React.ReactElement {
     const [form] = Form.useForm<GroupFormValues>();
-
+    const [editingRecord, setEditingRecord] = useState<any>(null);
     const [open, setOpen] = useState<boolean>(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const dispatch = useAppDispatch();
+    const groupResponse = useAppSelector((state) => state.connecters.GroupsGets);
+    const userspage = useAppSelector((state) => state.connecters?.usersget);
+    const [pagination, setPagination] = useState({ page: 1, limit: 10 });
+    const [userOptions, setUserOptions] = useState<any[]>([]);
+    const [loadingUsers, setLoadingUsers] = useState(false);
 
-    const [groups, setGroups] = useState<GroupData[]>([
-        {
-            id: 1,
-            groupName: "Product",
-            groupMembers: ["John Smith", "Emma", "David"],
-            active: true,
-        },
-        {
-            id: 2,
-            groupName: "Service",
-            groupMembers: ["Robert", "Sophia"],
-            active: false,
-        },
-        {
-            id: 3,
-            groupName: "R&D",
-            groupMembers: ["Michael", "Olivia", "William"],
-            active: true,
-        },
-    ]);
+    useEffect(() => {
+        if (activeTab === "GroupManagement") {
+            dispatch(GroupsGet({}));
+        }
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (activeTab === "GroupManagement") {
+            const payload = {
+                search_by_filter: "All",
+                search: "",
+            };
+
+            setLoadingUsers(true);
+
+            dispatch(
+                UsersGet({
+                    Payload: payload,
+                    pagnation: pagination,
+                })
+            );
+        }
+    }, [pagination]);
+
+    useEffect(() => {
+        if (!userspage?.[0]?.results) return;
+
+        const newUsers = userspage[0].results.map((user: any) => ({
+            label: `${user.first_name} ${user.last_name}`,
+            value: user.user_id,
+        }));
+
+        setUserOptions((prev) => {
+            const existing = new Set(prev.map((u) => u.value));
+
+            const filtered = newUsers.filter(
+                (u: any) => !existing.has(u.value)
+            );
+
+            return [...prev, ...filtered];
+        });
+
+        setLoadingUsers(false);
+    }, [userspage]);
+
+    const groups: GroupData[] =
+        groupResponse?.Response?.map((item: any) => ({
+            id: Number(item.id),
+            groupId: item.group_id,
+            groupName: item.group_name,
+            groupMembers: (() => {
+                if (!item.members) return [];
+
+                try {
+                    let members = item.members;
+
+                    // Handle values like "\"[\\\"user1\\\",\\\"user2\\\"]\""
+                    while (typeof members === "string") {
+                        members = JSON.parse(members);
+                    }
+
+                    return Array.isArray(members)
+                        ? members
+                        : [String(members)];
+                } catch {
+                    return [String(item.members)];
+                }
+            })(),
+            active: Boolean(item.is_status),
+            description: item.description,
+            createdBy: item.created_by,
+            createdDate: item.created_date,
+            updatedBy: item.updated_by,
+            updatedDate: item.updated_date,
+        })) || [];
+
+
+
 
     const isEditing = editingId !== null;
 
-    const activeCount = groups.filter((item) => item.active).length;
+    const activeCount = groups.filter((item: any) => item.active).length;
     const inactiveCount = groups.length - activeCount;
 
+
+
     const openCreateModal = (): void => {
+        setUserOptions([]);
+
+        setPagination({
+            page: 1,
+            limit: 10,
+        });
         setEditingId(null);
         form.resetFields();
         form.setFieldsValue({ active: true });
         setOpen(true);
     };
 
-    const openEditModal = (record: GroupData): void => {
+    const openEditModal = (record: any): void => {
         setEditingId(record.id);
+        setEditingRecord(record);
+
         form.setFieldsValue({
             groupName: record.groupName,
             groupMembers: record.groupMembers,
             active: record.active,
         });
+
         setOpen(true);
     };
 
@@ -108,54 +173,85 @@ export default function GroupManagement(): React.ReactElement {
         form.resetFields();
     };
 
-    const onFinish = (values: GroupFormValues): void => {
-        if (editingId !== null) {
-            setGroups((prev) =>
-                prev.map((item) =>
-                    item.id === editingId
-                        ? {
-                            ...item,
-                            ...values,
-                        }
-                        : item
-                )
-            );
+    const onFinish = async (values: GroupFormValues) => {
+        try {
+            if (editingRecord) {
+                const payload = {
+                    group_id: editingRecord.groupId,
+                    group_name: values.groupName,
+                    description:
+                        editingRecord.description || "Updated group description",
+                    members: values.groupMembers,
+                    is_status: values.active ? 1 : 0,
+                    updated_by: "praveen@easystepin.com",
+                };
 
-            message.success("Group updated successfully");
-        } else {
-            setGroups((prev) => [
-                ...prev,
-                {
-                    id: Date.now(),
-                    ...values,
-                },
-            ]);
+                await dispatch(GroupsUpdate({ payload })).unwrap();
 
-            message.success("Group created successfully");
+                message.success("Group updated successfully");
+            } else {
+                const payload = {
+                    group_name: values.groupName,
+                    description: "Group for integration team members",
+                    members: values.groupMembers,
+                    is_status: values.active,
+                    created_by: "praveen@easystepin.com",
+                };
+
+                await dispatch(GroupsCreate({ payload })).unwrap();
+
+                message.success("Group created successfully");
+            }
+
+            dispatch(GroupsGet({}));
+
+            closeModal();
+        } catch {
+            message.error("Operation failed");
         }
-
-        closeModal();
     };
 
-    const toggleStatus = (id: number, active: boolean): void => {
-        setGroups((prev) =>
-            prev.map((item) =>
-                item.id === id
-                    ? {
-                        ...item,
-                        active,
-                    }
-                    : item
-            )
-        );
+    const toggleStatus = async (record: any, active: boolean) => {
+        try {
+            const payload = {
+                group_id: record.groupId,
+                group_name: record.groupName,
+                description: record.description,
+                members: record.groupMembers,
+                is_status: active ? 1 : 0,
+                updated_by: "praveen@easystepin.com",
+            };
 
-        message.success(active ? "Group activated" : "Group deactivated");
+            await dispatch(GroupsUpdate({ payload })).unwrap();
+
+            dispatch(GroupsGet({}));
+
+            message.success(
+                active
+                    ? "Group activated successfully"
+                    : "Group deactivated successfully"
+            );
+        } catch {
+            message.error("Failed to update status");
+        }
     };
 
-    const deleteGroup = (id: number): void => {
-        setGroups((prev) => prev.filter((item) => item.id !== id));
-        message.success("Group deleted successfully");
+    const deleteGroup = async (record: any) => {
+        try {
+            const payload = {
+                group_id: record.groupId,
+            };
+
+            await dispatch(GroupsDelete({ payload })).unwrap();
+
+            dispatch(GroupsGet({}));
+
+            message.success("Group deleted successfully");
+        } catch {
+            message.error("Failed to delete group");
+        }
     };
+
 
     const columns: ColumnsType<GroupData> = useMemo(
         () => [
@@ -210,7 +306,7 @@ export default function GroupManagement(): React.ReactElement {
                             checked={active}
                             checkedChildren="Active"
                             unCheckedChildren="Inactive"
-                            onChange={(checked) => toggleStatus(record.id, checked)}
+                            onChange={(checked) => toggleStatus(record, checked)}
                         />
                         <Tag color={active ? "success" : "default"}>
                             {active ? "Active" : "Inactive"}
@@ -448,13 +544,23 @@ export default function GroupManagement(): React.ReactElement {
                         </Col>
                     </Row>
 
-                    <Table
-                        rowKey="id"
-                        columns={columns}
-                        dataSource={groups}
-                        pagination={false}
-                        scroll={{ x: 800 }}
-                    />
+                    <Card
+                        bodyStyle={{
+                            padding: 20,
+                            overflow: "hidden",
+                        }}
+                    >
+                        <Table
+                            rowKey="groupId"
+                            columns={columns}
+                            dataSource={groups}
+                            pagination={false}
+                            scroll={{
+                                x: "max-content",
+                                y: 450,
+                            }}
+                        />
+                    </Card>
                 </Card>
             </div>
 
@@ -509,10 +615,27 @@ export default function GroupManagement(): React.ReactElement {
                             size="large"
                             placeholder="Select group members"
                             allowClear
-                            options={memberOptions.map((member) => ({
-                                label: member,
-                                value: member,
-                            }))}
+                            showSearch
+                            loading={loadingUsers}
+                            options={userOptions}
+                            onPopupScroll={(e) => {
+                                const target = e.target as HTMLDivElement;
+
+                                if (
+                                    target.scrollTop + target.clientHeight >=
+                                    target.scrollHeight - 5
+                                ) {
+                                    if (
+                                        pagination.page <
+                                        Number(userspage?.[0]?.totalPages)
+                                    ) {
+                                        setPagination((prev) => ({
+                                            ...prev,
+                                            page: prev.page + 1,
+                                        }));
+                                    }
+                                }
+                            }}
                         />
                     </Form.Item>
 

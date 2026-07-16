@@ -10,11 +10,12 @@ import {
     Button,
     Modal,
     Form,
-    Select,
     Space,
     message,
+    Tooltip,
 } from "antd";
 import {
+    EditOutlined,
     PlusOutlined,
     SearchOutlined,
     UserAddOutlined,
@@ -22,8 +23,9 @@ import {
 } from "@ant-design/icons";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { UsersGet } from "../../redux/Services/connectersServices";
+import { userCreate, UsersGet, UserUpdate } from "../../redux/Services/connectersServices";
 import AppPagination from "../../components/AppPagination";
+import type { ColumnsType } from "antd/es/table";
 
 const { Title, Text } = Typography;
 
@@ -33,6 +35,7 @@ type UserRow = {
     usermail: string;
     role: string;
     active: boolean;
+    isBoomiUser: boolean;
 };
 
 type AddUserFormValues = {
@@ -43,23 +46,25 @@ type AddUserFormValues = {
     active: boolean;
 };
 
-const UserManagement = () => {
+const UserManagement = ({ activeTab }: { activeTab: string }) => {
     const dispatch = useAppDispatch();
     const userspage = useAppSelector((state) => state.connecters?.usersget);
-
+    const [isEdit, setIsEdit] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
     const [form] = Form.useForm<AddUserFormValues>();
     const [pagination, setPagination] = useState({ page: 1, limit: 10 });
     const [search, setSearch] = useState("");
     const [addUserOpen, setAddUserOpen] = useState(false);
-    const [addedUsers, setAddedUsers] = useState<UserRow[]>([]);
 
     useEffect(() => {
-        const payload = {
-            search_by_filter: "All",
-            search: search,
-        };
+        if (activeTab === "usermanagemnt") {
+            const payload = {
+                search_by_filter: "All",
+                search: search,
+            };
+            dispatch(UsersGet({ Payload: payload, pagnation: pagination }));
+        }
 
-        dispatch(UsersGet({ Payload: payload, pagnation: pagination }));
     }, [dispatch, pagination, search]);
 
     const handlePagination = (page: number, limit: number) => {
@@ -81,36 +86,113 @@ const UserManagement = () => {
         usermail: item.user_id,
         role: item.type,
         active: item.is_boomi_user === "true",
+        isBoomiUser: item.is_boomi_user === "true",
     }));
 
-    const tableUsers = [...addedUsers, ...users];
+    const tableUsers = users;
 
     const openAddUser = () => {
+        setIsEdit(false);
+        setSelectedUser(null);
         form.resetFields();
-        form.setFieldsValue({ active: true });
         setAddUserOpen(true);
     };
-
     const closeAddUser = () => {
         form.resetFields();
         setAddUserOpen(false);
     };
 
-    const handleAddUser = (values: AddUserFormValues) => {
-        const newUser: UserRow = {
-            id: Date.now(),
-            userName: `${values.firstName} ${values.lastName}`,
-            usermail: values.email,
-            role: values.role,
-            active: values.active,
-        };
 
-        setAddedUsers((prev) => [newUser, ...prev]);
-        message.success("User added successfully");
-        closeAddUser();
+
+
+    const handleAddUser = async (values: AddUserFormValues) => {
+        try {
+            const payload = {
+                boomi_user_id: "",
+                id: "",
+                user_id: values.email,
+                last_name: values.lastName,
+                first_name: values.firstName,
+                accountid: "",
+                is_boomi_user: "false",
+                type: "User",
+            };
+
+            await dispatch(
+                userCreate({
+                    payload,
+                })
+            ).unwrap();
+
+            message.success("User created successfully");
+
+            dispatch(
+                UsersGet({
+                    Payload: {
+                        search_by_filter: "All",
+                        search,
+                    },
+                    pagnation: pagination,
+                })
+            );
+
+            closeAddUser();
+        } catch (error: any) {
+            message.error(error?.message || "Failed to create user");
+        }
     };
 
-    const columns = [
+    const handleUpdateUser = async (values: AddUserFormValues) => {
+        try {
+            const payload = {
+                boomi_user_id: selectedUser?.id,
+                user_id: values.email,
+                first_name: values.firstName,
+                last_name: values.lastName,
+                accountid: "",
+                is_boomi_user: "false",
+                type: "User",
+            };
+
+            await dispatch(
+                UserUpdate({
+                    payload,
+                })
+            ).unwrap();
+
+            message.success("User updated successfully");
+
+            dispatch(
+                UsersGet({
+                    Payload: {
+                        search_by_filter: "All",
+                        search,
+                    },
+                    pagnation: pagination,
+                })
+            );
+
+            closeAddUser();
+        } catch (error: any) {
+            message.error(error?.message || "Failed to update user");
+        }
+    };
+    const handleEdit = (record: UserRow) => {
+        setIsEdit(true);
+        setSelectedUser(record);
+
+        const [firstName, ...last] = record.userName.split(" ");
+
+        form.setFieldsValue({
+            firstName,
+            lastName: last.join(" "),
+            email: record.usermail,
+        });
+
+        setAddUserOpen(true);
+    };
+
+    const columns: ColumnsType<UserRow> = [
         {
             title: "User ID",
             dataIndex: "id",
@@ -180,6 +262,36 @@ const UserManagement = () => {
                 </Tag>
             ),
         },
+        {
+            title: "Actions",
+            key: "actions",
+            width: 140,
+            align: "center",
+            render: (_: any, record: UserRow) => (
+                <Space size="middle">
+                    <Tooltip
+                        title={
+                            record.isBoomiUser
+                                ? "Boomi users cannot be edited"
+                                : "Edit User"
+                        }
+                    >
+                        <Button
+                            type="text"
+                            icon={<EditOutlined />}
+                            disabled={record.isBoomiUser}
+                            style={{
+                                color: record.isBoomiUser ? "#bfbfbf" : "#1677ff",
+                                fontSize: 18,
+                            }}
+                            onClick={() => handleEdit(record)}
+                        />
+                    </Tooltip>
+
+
+                </Space>
+            ),
+        }
     ];
 
     return (
@@ -309,7 +421,7 @@ const UserManagement = () => {
                         <Input
                             placeholder="Search users..."
                             allowClear
-                            size="large"
+                            size="small"
                             prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
                             onChange={(e) => handleSearch(e.target.value)}
                         />
@@ -341,7 +453,7 @@ const UserManagement = () => {
             </Card>
 
             <Modal
-                title="Add User"
+                title={isEdit ? "Update User" : "Add User"}
                 open={addUserOpen}
                 onCancel={closeAddUser}
                 footer={null}
@@ -351,7 +463,13 @@ const UserManagement = () => {
                 <Form
                     form={form}
                     layout="vertical"
-                    onFinish={handleAddUser}
+                    onFinish={(values) => {
+                        if (isEdit) {
+                            handleUpdateUser(values);
+                        } else {
+                            handleAddUser(values);
+                        }
+                    }}
                     initialValues={{ active: true }}
                     style={{ marginTop: 18 }}
                 >
@@ -400,41 +518,9 @@ const UserManagement = () => {
                         <Input size="large" placeholder="Enter user mail" />
                     </Form.Item>
 
-                    <Form.Item
-                        name="role"
-                        label={
-                            <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                                Role
-                            </span>
-                        }
-                        rules={[{ required: true, message: "Please select role" }]}
-                    >
-                        <Select
-                            size="large"
-                            placeholder="Select role"
-                            options={[
-                                { label: "Admin", value: "Admin" },
-                                { label: "User", value: "User" },
-                                { label: "Developer", value: "Developer" },
-                                { label: "Manager", value: "Manager" },
-                            ]}
-                        />
-                    </Form.Item>
 
-                    <Form.Item name="active" label={
-                        <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                            Status
-                        </span>
-                    } valuePropName="checked">
-                        <Select
-                            size="large"
-                            placeholder="Select status"
-                            options={[
-                                { label: "Active", value: true },
-                                { label: "Inactive", value: false },
-                            ]}
-                        />
-                    </Form.Item>
+
+
 
                     <Row justify="end" gutter={12}>
                         <Col>
@@ -445,14 +531,14 @@ const UserManagement = () => {
                             <Button
                                 type="primary"
                                 htmlType="submit"
-                                icon={<PlusOutlined />}
+                                icon={isEdit ? <EditOutlined /> : <PlusOutlined />}
                                 style={{
                                     background: "#2563eb",
                                     borderColor: "#2563eb",
                                     fontWeight: 600,
                                 }}
                             >
-                                Add User
+                                {isEdit ? "Update User" : "Add User"}
                             </Button>
                         </Col>
                     </Row>

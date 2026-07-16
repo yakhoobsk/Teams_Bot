@@ -72,7 +72,7 @@ const databaseData = [
 
 
 
-const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
+const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: string }) => {
     const [selectedDb, setSelectedDb] = useState("azure");
     const dispatch = useAppDispatch()
     const database = useAppSelector((state) => state.connecters?.databaseget);
@@ -81,7 +81,10 @@ const DatabaseConnectors = ({ activeTab }: { activeTab: string }) => {
     const [openDatabaseModal, setOpenDatabaseModal] = useState(false);
     useEffect(() => {
         if (activeTab === "Database") {
-            dispatch(DataBaseConnectersGet({}));
+            const payload = {
+                type: type
+            }
+            dispatch(DataBaseConnectersGet(payload));
         }
     }, [activeTab, dispatch]);
 

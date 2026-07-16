@@ -1,0 +1,239 @@
+.channel-modal .ant-modal-content {
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.channel-modal .ant-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.section {
+    background: #fafafa;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.section h3 {
+    margin: 0 0 16px;
+    color: #1677ff;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.alert-box {
+    background: #fff;
+    border: 1px solid #eee;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+/* Form Label Color */
+.channel-modal .ant-form-item-label>label {
+    color: #000000 !important;
+    /* Black */
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Required Star */
+.channel-modal .ant-form-item-required::before {
+    color: #ff4d4f !important;
+}
+
+/* Placeholder Color */
+.channel-modal input::placeholder,
+.channel-modal textarea::placeholder {
+    color: #8c8c8c;
+}
+
+/* Select Placeholder */
+.channel-modal .ant-select-selection-placeholder {
+    color: #8c8c8c !important;
+}
+
+.alerts-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.overall-alerts {
+    margin-top: 20px;
+}
+
+.alerts-grid .ant-checkbox-wrapper {
+    margin: 0 !important;
+    padding: 10px 18px;
+    border: 1px solid #d9d9d9;
+    border-radius: 999px;
+    background: #fafafa;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.alerts-grid .ant-checkbox-wrapper:hover {
+    background: #e6f4ff;
+    border-color: #1677ff;
+}
+
+.alerts-grid .ant-checkbox-wrapper-checked {
+    background: #1677ff;
+    color: #fff;
+    border-color: #1677ff;
+}
+
+.checkbox-gap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+}
+
+.checkbox-gap .ant-checkbox-wrapper {
+    margin: 0 !important;
+}
+
+.group-alerts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.group-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.group-card:hover {
+    border-color: #1677ff;
+    box-shadow: 0 6px 18px rgba(22, 119, 255, 0.12);
+}
+
+.group-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #f5f8ff;
+    border-bottom: 1px solid #edf2ff;
+}
+
+.group-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #1677ff;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+}
+
+.group-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.group-card-body {
+    padding: 16px;
+}
+
+.checkbox-chip-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.alert-chip {
+    margin: 0 !important;
+    padding: 8px 14px;
+    border: 1px solid #d9d9d9;
+    border-radius: 20px;
+    background: #fafafa;
+    transition: all 0.25s;
+}
+
+.alert-chip:hover {
+    border-color: #1677ff;
+    background: #e6f4ff;
+}
+
+.alert-chip.ant-checkbox-wrapper-checked {
+    background: #1677ff;
+    color: #fff;
+    border-color: #1677ff;
+}
+
+.user-card .group-icon {
+    background: #52c41a;
+}
+
+.group-card .group-icon {
+    background: #1677ff;
+}
+
+.group-alerts-scroll {
+    max-height: 250px;
+    /* Adjust as needed */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+/* Custom Scrollbar */
+.group-alerts-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.group-alerts-scroll::-webkit-scrollbar-track {
+    background: #f5f5f5;
+    border-radius: 10px;
+}
+
+.group-alerts-scroll::-webkit-scrollbar-thumb {
+    background: #1677ff;
+    border-radius: 10px;
+}
+
+.group-alerts-scroll::-webkit-scrollbar-thumb:hover {
+    background: #0958d9;
+}
+
+.user-alerts-scroll {
+    max-height: 250px;
+    /* Change height as needed */
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+}
+
+/* Scrollbar */
+.user-alerts-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+
+.user-alerts-scroll::-webkit-scrollbar-track {
+    background: #f5f5f5;
+    border-radius: 10px;
+}
+
+.user-alerts-scroll::-webkit-scrollbar-thumb {
+    background: #0958d9;
+    border-radius: 10px;
+}
+
+.user-alerts-scroll::-webkit-scrollbar-thumb:hover {
+    background: #0958d9;
+}

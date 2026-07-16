@@ -1,7 +1,8 @@
-import AlertChannelConfiguration from "../views/channels";
+import ChannelIndex from "../views/channelindex";
 
-const ChannelsPage = () => {
 
-    return (<AlertChannelConfiguration />);
+const ChannelsPages = () => {
+
+    return (<ChannelIndex />);
 }
-export default ChannelsPage; 
+export default ChannelsPages; 

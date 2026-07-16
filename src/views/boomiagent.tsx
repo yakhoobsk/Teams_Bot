@@ -339,10 +339,8 @@ export default function AgentConfiguration(): React.ReactElement {
     return (
         <div
             style={{
-                minHeight: "100vh",
                 padding: 32,
-                background:
-                    "linear-gradient(180deg, #f8fafc 0%, #eef2f7 45%, #f8fafc 100%)",
+                background: "linear-gradient(180deg, #f8fafc 0%, #eef2f7 45%, #f8fafc 100%)",
             }}
         >
             <div style={{ marginBottom: 24 }}>
