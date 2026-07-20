@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { AIConnectersGet, DataBaseConnectersGet, GroupsGet, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigDashboardGet, TeamsconfigGet, UsersGet } from "../Services/connectersServices";
+import { AIConnectersGet, DataBaseConnectersGet, GroupsGet, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigDashboardGet, TeamsconfigGet, UsersGet, UserswithoutpagnationGet } from "../Services/connectersServices";
 
 
 
@@ -14,6 +14,7 @@ interface ConnectersState {
     restapiconnectersget: any;
     GroupsGets: any;
     error: string | null;
+    Userswithoutpagnation: any;
 }
 
 const initialState: ConnectersState = {
@@ -27,6 +28,7 @@ const initialState: ConnectersState = {
     restapiconnectersget: null,
     GroupsGets: null,
     error: null,
+    Userswithoutpagnation: null,
 };
 
 const ConnectersSlice = createSlice({
@@ -160,6 +162,21 @@ const ConnectersSlice = createSlice({
             })
 
             .addCase(UsersGet.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(UserswithoutpagnationGet.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+
+            .addCase(UserswithoutpagnationGet.fulfilled, (state, action) => {
+                state.loading = false;
+                state.Userswithoutpagnation = action.payload;
+            })
+
+            .addCase(UserswithoutpagnationGet.rejected, (state, action: any) => {
                 state.loading = false;
                 state.error = action.payload;
             })

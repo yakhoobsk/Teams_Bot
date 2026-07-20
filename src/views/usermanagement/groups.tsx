@@ -13,7 +13,6 @@ import {
     Table,
     Tag,
     Typography,
-    message,
     Input,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
@@ -25,7 +24,8 @@ import {
     UsergroupAddOutlined,
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { GroupsCreate, GroupsDelete, GroupsGet, GroupsUpdate, UsersGet } from "../../redux/Services/connectersServices";
+import { GroupsCreate, GroupsDelete, GroupsGet, GroupsUpdate, UserswithoutpagnationGet } from "../../redux/Services/connectersServices";
+import { showSnackbar } from "../../utils/snackbar";
 
 const { Title, Text } = Typography;
 
@@ -50,10 +50,9 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
     const [editingId, setEditingId] = useState<number | null>(null);
     const dispatch = useAppDispatch();
     const groupResponse = useAppSelector((state) => state.connecters.GroupsGets);
-    const userspage = useAppSelector((state) => state.connecters?.usersget);
-    const [pagination, setPagination] = useState({ page: 1, limit: 10 });
-    const [userOptions, setUserOptions] = useState<any[]>([]);
-    const [loadingUsers, setLoadingUsers] = useState(false);
+    const userspage = useAppSelector((state) => state.connecters?.Userswithoutpagnation);
+    console.log("groupResponse", userspage);
+
 
     useEffect(() => {
         if (activeTab === "GroupManagement") {
@@ -63,42 +62,14 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
     useEffect(() => {
         if (activeTab === "GroupManagement") {
-            const payload = {
-                search_by_filter: "All",
-                search: "",
-            };
-
-            setLoadingUsers(true);
 
             dispatch(
-                UsersGet({
-                    Payload: payload,
-                    pagnation: pagination,
-                })
+                UserswithoutpagnationGet({})
             );
         }
-    }, [pagination]);
+    }, [dispatch, activeTab]);
 
-    useEffect(() => {
-        if (!userspage?.[0]?.results) return;
 
-        const newUsers = userspage[0].results.map((user: any) => ({
-            label: `${user.first_name} ${user.last_name}`,
-            value: user.user_id,
-        }));
-
-        setUserOptions((prev) => {
-            const existing = new Set(prev.map((u) => u.value));
-
-            const filtered = newUsers.filter(
-                (u: any) => !existing.has(u.value)
-            );
-
-            return [...prev, ...filtered];
-        });
-
-        setLoadingUsers(false);
-    }, [userspage]);
 
     const groups: GroupData[] =
         groupResponse?.Response?.map((item: any) => ({
@@ -142,12 +113,6 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
 
     const openCreateModal = (): void => {
-        setUserOptions([]);
-
-        setPagination({
-            page: 1,
-            limit: 10,
-        });
         setEditingId(null);
         form.resetFields();
         form.setFieldsValue({ active: true });
@@ -188,7 +153,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
                 await dispatch(GroupsUpdate({ payload })).unwrap();
 
-                message.success("Group updated successfully");
+                showSnackbar("success", "Group updated successfully");
             } else {
                 const payload = {
                     group_name: values.groupName,
@@ -200,14 +165,15 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
                 await dispatch(GroupsCreate({ payload })).unwrap();
 
-                message.success("Group created successfully");
+                showSnackbar("success", "Group created successfully");
             }
 
             dispatch(GroupsGet({}));
 
+            showSnackbar("success", "Group created successfully");
             closeModal();
         } catch {
-            message.error("Operation failed");
+            showSnackbar("error", "Operation failed");
         }
     };
 
@@ -226,13 +192,14 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
             dispatch(GroupsGet({}));
 
-            message.success(
+            showSnackbar(
+                "success",
                 active
                     ? "Group activated successfully"
                     : "Group deactivated successfully"
             );
         } catch {
-            message.error("Failed to update status");
+            showSnackbar("error", "Failed to update status");
         }
     };
 
@@ -246,9 +213,9 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
             dispatch(GroupsGet({}));
 
-            message.success("Group deleted successfully");
+            showSnackbar("success", "Group deleted successfully");
         } catch {
-            message.error("Failed to delete group");
+            showSnackbar("error", "Failed to delete group");
         }
     };
 
@@ -597,7 +564,6 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                     </Form.Item>
 
                     <Form.Item
-                        name="groupMembers"
                         label={
                             <span
                                 style={{
@@ -608,34 +574,25 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                                 Group Members
                             </span>
                         }
-                        rules={[{ required: true, message: "Please select group members" }]}
+                        name="groupMembers"
+                        rules={[
+                            {
+                                required: true,
+                                message: "Please select group members",
+                            },
+                        ]}
                     >
                         <Select
                             mode="multiple"
-                            size="large"
-                            placeholder="Select group members"
-                            allowClear
                             showSearch
-                            loading={loadingUsers}
-                            options={userOptions}
-                            onPopupScroll={(e) => {
-                                const target = e.target as HTMLDivElement;
+                            placeholder="Select Group Members"
+                            optionFilterProp="label"
+                            options={userspage?.map((user: any) => ({
+                                label: `${user.first_name} ${user.last_name}`,
+                                value: user.user_id,
+                            }))}
+                            maxTagCount="responsive"
 
-                                if (
-                                    target.scrollTop + target.clientHeight >=
-                                    target.scrollHeight - 5
-                                ) {
-                                    if (
-                                        pagination.page <
-                                        Number(userspage?.[0]?.totalPages)
-                                    ) {
-                                        setPagination((prev) => ({
-                                            ...prev,
-                                            page: prev.page + 1,
-                                        }));
-                                    }
-                                }
-                            }}
                         />
                     </Form.Item>
 

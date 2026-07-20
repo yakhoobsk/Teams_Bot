@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import {
     Card,
@@ -20,7 +20,9 @@ import {
     ThunderboltOutlined,
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
-
+import { Input, } from "antd";
+import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, RestApiConnectersGet } from "../redux/Services/connectersServices";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 const { Title, Text } = Typography;
 
 type AgentCardProps = {
@@ -40,15 +42,173 @@ type AgentCardProps = {
 export default function AgentConfiguration(): React.ReactElement {
     const [boomiDataHubActive, setBoomiDataHubActive] = useState<boolean>(true);
     const [customDataHubActive, setCustomDataHubActive] = useState<boolean>(false);
+    const [boomiIntegrationActive, setBoomiIntegrationActive] = useState<boolean>(true);
+    const [customIntegrationActive, setCustomIntegrationActive] = useState<boolean>(false);
+    const dispatch = useAppDispatch();
+    const AiAgents = useAppSelector((state) => state.connecters?.aiagentget?.[0]?.agents) || [];
+    const databaseConnectors = useAppSelector((state) => state.connecters?.databaseget?.[0]?.Connectors) || [];
+    const restApiConnectors = useAppSelector((state) => state.connecters?.restapiconnectersget?.Response) || [];
+    const ticketConnectors = useAppSelector((state) => state.connecters?.itsmget?.Response) || [];
+    const [activeTab, setActiveTab] = useState("datahub");
+    const [databaseId, setDatabaseId] = useState("");
+    const [aiAgentId, setAiAgentId] = useState("");
+    const [restApiId, setRestApiId] = useState("");
+    const [ticketId, setTicketId] = useState("");
+    const [boomiRestApi, setBoomiRestApi] = useState("");
+    const [boomiUserName, setBoomiUserName] = useState("");
+    const [boomiPassword, setBoomiPassword] = useState("");
+    const [boomiMethod, setBoomiMethod] = useState("");
+    useEffect(() => {
+        dispatch(ITSMConnectersGet({}));
+        dispatch(AIConnectersGet({}));
+    }, [dispatch]);
 
-    const [boomiIntegrationActive, setBoomiIntegrationActive] =
-        useState<boolean>(true);
-    const [customIntegrationActive, setCustomIntegrationActive] =
-        useState<boolean>(false);
+    useEffect(() => {
+        dispatch(RestApiConnectersGet({ type: activeTab === "datahub" ? "Datahub" : "Integration", }));
+        dispatch(DataBaseConnectersGet({ database_type: activeTab === "datahub" ? "Datahub" : "Integrations", }));
+    }, [dispatch, activeTab]);
 
+
+    const handleTabChange = (key: string) => {
+        setActiveTab(key);
+    };
+    // create or update 
+
+    const buildPayload = (
+        type: "datahub" | "integration",
+        isBoomi: boolean
+    ) => {
+
+        const selectedDb = databaseConnectors.find(
+            (x: any) => x.connector_id === databaseId
+        );
+
+        const selectedAi = AiAgents.find(
+            (x: any) => x.agent_id === aiAgentId
+        );
+
+
+
+        const selectedTicket = ticketConnectors.find(
+            (x: any) => x.ticket_id === ticketId
+        );
+
+        return {
+
+            Type: `${type} agent`,
+
+            company_name: "EasyStepin",
+
+            connector: "Teams",
+
+            team_id: "",
+
+            status: isBoomi ? "active" : "inactive",
+
+            type_status: isBoomi ? "true" : "false",
+
+            is_active: isBoomi ? "1" : "0",
+
+            created_by: "",
+            updated_by: "",
+            created_date: "",
+            updated_date: "",
+
+            // ---------------- BOOMI ----------------
+
+            rest_api_name: isBoomi
+                ? boomiRestApi
+                : "",
+
+            rest_api_details: isBoomi
+                ? [
+                    {
+                        api_name: boomiRestApi,
+                        username: boomiUserName,
+                        password_token: boomiPassword,
+                        http_method: boomiMethod,
+                    }
+                ]
+                : [],
+
+            // ---------------- CUSTOM ----------------
+
+            database_name: !isBoomi
+                ? selectedDb?.connector_name || ""
+                : "",
+
+            ai_agent: !isBoomi
+                ? selectedAi?.agent_name || ""
+                : "",
+
+            ticket_system: !isBoomi
+                ? selectedTicket?.ticket_name || ""
+                : "",
+
+            database_details: !isBoomi
+                ? (selectedDb ? [selectedDb] : [])
+                : [],
+
+            ai_agent_details: !isBoomi
+                ? (selectedAi ? [selectedAi] : [])
+                : [],
+
+            ticket_details: !isBoomi
+                ? (selectedTicket ? [selectedTicket] : [])
+                : [],
+
+        };
+    };
+
+    const handleSaveIntegration = () => {
+        if (boomiIntegrationActive) {
+            const payload = buildPayload("integration", true);
+            console.log(payload)
+        } else {
+            const payload = buildPayload("integration", false);
+            console.log(payload)
+        }
+    };
+    const handleSaveDataHub = () => {
+        if (boomiDataHubActive) {
+            const payload = buildPayload("datahub", true);
+            console.log(payload)
+        } else {
+            const payload = buildPayload("datahub", false);
+            console.log(payload)
+        }
+    };
     const renderSelectField = (
         label: string,
-        placeholder: string
+        placeholder: string,
+        options: { label: string; value: string }[],
+        value: string,
+        onChange: (value: string) => void
+    ) => (
+        <div>
+            <Text style={{
+                display: "block",
+                marginBottom: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#334155",
+            }}>{label}</Text>
+
+            <Select
+                size="large"
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+                options={options}
+                style={{ width: "100%" }}
+            />
+        </div>
+    );
+    const renderTextField = (
+        label: string,
+        placeholder: string,
+        value?: string,
+        onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
     ): React.ReactElement => (
         <div>
             <Text
@@ -63,9 +223,16 @@ export default function AgentConfiguration(): React.ReactElement {
                 {label}
             </Text>
 
-            <Select size="large" placeholder={placeholder} style={{ width: "100%" }} />
+            <Input
+                size="large"
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+                style={{ width: "100%" }}
+            />
         </div>
     );
+
 
     const AgentCard = ({
         title,
@@ -81,7 +248,7 @@ export default function AgentConfiguration(): React.ReactElement {
         delay = 0,
     }: AgentCardProps): React.ReactElement => (
         <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay }}
             style={{ height: "100%" }}
@@ -207,6 +374,13 @@ export default function AgentConfiguration(): React.ReactElement {
                         size="large"
                         block
                         icon={saveIcon}
+                        onClick={() => {
+                            if (activeTab === "datahub") {
+                                handleSaveDataHub();
+                            } else {
+                                handleSaveIntegration();
+                            }
+                        }}
                         style={{
                             marginTop: 24,
                             height: 46,
@@ -240,8 +414,36 @@ export default function AgentConfiguration(): React.ReactElement {
                         setBoomiDataHubActive(checked);
                         if (checked) setCustomDataHubActive(false);
                     }}
+                    delay={0.08}
                 >
-                    {renderSelectField("REST API Connection", "Select REST API")}
+                    <Row gutter={[16, 18]}>
+                        <Col xs={24} sm={12}>
+                            {renderTextField("REST API ", " REST API", boomiRestApi,
+                                (e) => setBoomiRestApi(e.target.value))}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderTextField(
+                                "User Name",
+                                "User Name",
+                                boomiUserName,
+                                (e) => setBoomiUserName(e.target.value)
+                            )}                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderTextField(
+                                "Password",
+                                "Password",
+                                boomiPassword,
+                                (e) => setBoomiPassword(e.target.value)
+                            )}                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderTextField(
+                                "Method",
+                                "Method",
+                                boomiMethod,
+                                (e) => setBoomiMethod(e.target.value)
+                            )}
+                        </Col>
+                    </Row>
                 </AgentCard>
             </Col>
 
@@ -263,16 +465,47 @@ export default function AgentConfiguration(): React.ReactElement {
                 >
                     <Row gutter={[16, 18]}>
                         <Col xs={24} sm={12}>
-                            {renderSelectField("Database Connection", "Select Database")}
+                            {renderSelectField(
+                                "Database Connection",
+                                "Select Database",
+                                databaseConnectors.map((item: any) => ({
+                                    label: item.connector_name,
+                                    value: item.connector_id,
+                                })),
+                                databaseId,
+                                setDatabaseId
+                            )}                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("AI Agent Connection", "Select AI Agent", AiAgents.map((item: any) => ({
+                                label: item.agent_name,
+                                value: item.agent_id,
+                            })),
+                                aiAgentId,
+                                setAiAgentId)}
                         </Col>
                         <Col xs={24} sm={12}>
-                            {renderSelectField("AI Agent Connection", "Select AI Agent")}
+                            {renderSelectField(
+                                "Ticket Connection",
+                                "Select Ticket Connection",
+                                ticketConnectors.map((item: any) => ({
+                                    label: item.ticket_name,
+                                    value: item.ticket_id,
+                                })),
+                                ticketId,
+                                setTicketId
+                            )}
                         </Col>
                         <Col xs={24} sm={12}>
-                            {renderSelectField("Ticket Connection", "Select Ticket Connection")}
-                        </Col>
-                        <Col xs={24} sm={12}>
-                            {renderSelectField("REST API Connection", "Select REST API")}
+                            {renderSelectField(
+                                "REST API Connection",
+                                "Select REST API",
+                                restApiConnectors.map((item: any) => ({
+                                    label: item.api_name,
+                                    value: item.rest_api_id,
+                                })),
+                                restApiId,
+                                setRestApiId
+                            )}
                         </Col>
                     </Row>
                 </AgentCard>
@@ -297,7 +530,34 @@ export default function AgentConfiguration(): React.ReactElement {
                         if (checked) setCustomIntegrationActive(false);
                     }}
                 >
-                    {renderSelectField("REST API Connection", "Select REST API")}
+                    <Row gutter={[16, 18]}>
+                        <Col xs={24} sm={12}>
+                            {renderTextField("REST API ", " REST API", boomiRestApi,
+                                (e) => setBoomiRestApi(e.target.value))}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderTextField(
+                                "User Name",
+                                "User Name",
+                                boomiUserName,
+                                (e) => setBoomiUserName(e.target.value)
+                            )}                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderTextField(
+                                "Password",
+                                "Password",
+                                boomiPassword,
+                                (e) => setBoomiPassword(e.target.value)
+                            )}                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderTextField(
+                                "Method",
+                                "Method",
+                                boomiMethod,
+                                (e) => setBoomiMethod(e.target.value)
+                            )}
+                        </Col>
+                    </Row>
                 </AgentCard>
             </Col>
 
@@ -319,16 +579,47 @@ export default function AgentConfiguration(): React.ReactElement {
                 >
                     <Row gutter={[16, 18]}>
                         <Col xs={24} sm={12}>
-                            {renderSelectField("Database Connection", "Select Database")}
+                            {renderSelectField(
+                                "Database Connection",
+                                "Select Database",
+                                databaseConnectors.map((item: any) => ({
+                                    label: item.connector_name,
+                                    value: item.connector_id,
+                                })),
+                                databaseId,
+                                setDatabaseId
+                            )}                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderSelectField("AI Agent Connection", "Select AI Agent", AiAgents.map((item: any) => ({
+                                label: item.agent_name,
+                                value: item.agent_id,
+                            })),
+                                aiAgentId,
+                                setAiAgentId)}
                         </Col>
                         <Col xs={24} sm={12}>
-                            {renderSelectField("AI Agent Connection", "Select AI Agent")}
+                            {renderSelectField(
+                                "Ticket Connection",
+                                "Select Ticket Connection",
+                                ticketConnectors.map((item: any) => ({
+                                    label: item.ticket_name,
+                                    value: item.ticket_id,
+                                })),
+                                ticketId,
+                                setTicketId
+                            )}
                         </Col>
                         <Col xs={24} sm={12}>
-                            {renderSelectField("Ticket Connection", "Select Ticket Connection")}
-                        </Col>
-                        <Col xs={24} sm={12}>
-                            {renderSelectField("REST API Connection", "Select REST API")}
+                            {renderSelectField(
+                                "REST API Connection",
+                                "Select REST API",
+                                restApiConnectors.map((item: any) => ({
+                                    label: item.api_name,
+                                    value: item.rest_api_id,
+                                })),
+                                restApiId,
+                                setRestApiId
+                            )}
                         </Col>
                     </Row>
                 </AgentCard>
@@ -363,7 +654,8 @@ export default function AgentConfiguration(): React.ReactElement {
                 bodyStyle={{ padding: 24 }}
             >
                 <Tabs
-                    defaultActiveKey="datahub"
+                    activeKey={activeTab}
+                    onChange={handleTabChange}
                     size="large"
                     items={[
                         {

@@ -387,6 +387,24 @@ export const RestApiConnectersDelete = createAsyncThunk("RestApiConnecters/Delet
 );
 
 
+// restapi connectors
+
+export const TeamsconfigrationGet = createAsyncThunk(
+    "TeamsconfigrationGet/get",
+    async (_: any, { rejectWithValue }) => {
+
+        try {
+            const response = await boomiApi.post("/teams_bot/restconfigure/fetch");
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || "Fetch failed"
+            );
+        }
+    }
+);
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -402,6 +420,25 @@ export const UsersGet = createAsyncThunk(
     ) => {
         try {
             const response = await boomiApi.post(urlGenarator(`/teams_bot/boomi_user/pagenation_get`, pagnation), Payload);
+
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || "Fetch failed"
+            );
+        }
+    }
+);
+
+
+export const UserswithoutpagnationGet = createAsyncThunk(
+    "UserswithoutpagnationGet/get",
+    async (
+        _: any,
+        { rejectWithValue }
+    ) => {
+        try {
+            const response = await boomiApi.post(`/teams_bot/userfetch/get`);
 
             return response.data;
         } catch (error: any) {

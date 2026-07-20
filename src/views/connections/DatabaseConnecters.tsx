@@ -43,32 +43,7 @@ interface DatabaseRecord {
     host: string;
 }
 
-const databaseData = [
-    {
-        key: "1",
-        name: "Azure SQL",
-        database: "EmployeeDB",
-        server: "azure.database.windows.net",
-        port: "1433",
-        username: "admin",
-        password: "********",
-        schema: "dbo",
-        warehouse: "-",
-        host: "-",
-    },
-    {
-        key: "2",
-        name: "Snowflake",
-        database: "SalesDB",
-        server: "-",
-        port: "-",
-        username: "snow_user",
-        password: "********",
-        schema: "PUBLIC",
-        warehouse: "COMPUTE_WH",
-        host: "-",
-    },
-];
+
 
 
 
@@ -82,7 +57,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
     useEffect(() => {
         if (activeTab === "Database") {
             const payload = {
-                type: type
+                database_type: type
             }
             dispatch(DataBaseConnectersGet(payload));
         }
@@ -587,12 +562,22 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
             >
                 <Table
                     bordered
-                    rowKey="key"
+                    rowKey="connector_id"
                     columns={columns}
-                    dataSource={databaseData}
-                    pagination={{
-                        pageSize: 10,
-                    }}
+                    dataSource={connectors.map((item: any) => ({
+                        key: item.connector_id,
+                        connector_id: item.connector_id,
+                        name: item.connector_name,
+                        database: item.schema_name,
+                        server: item.connection_url,
+                        port: item.class_name,
+                        username: item.user_name,
+                        password: item.password,
+                        schema: item.schema_name,
+                        warehouse: "-",
+                        host: item.connection_url,
+                    }))}
+                    pagination={false}
                     scroll={{
                         x: 1600,
                     }}

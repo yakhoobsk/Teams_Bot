@@ -196,10 +196,8 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
             endpoint: values.endpoint,
         };
 
-        dispatch(aiconnecterUpdate({ payload }));
-
+        dispatch(aiconnecterUpdate({ payload })).unwrap();
         setEditOpen(false);
-
         dispatch(AIConnectersGet({}));
     };
     const fields = aiAgentFields[selectedAgent as keyof typeof aiAgentFields];
@@ -292,9 +290,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
         }
         dispatch(
             aiconnecterCreate({ payload })
-        );
-
-
+        ).unwrap();
         dispatch(AIConnectersGet({}));
     };
 
