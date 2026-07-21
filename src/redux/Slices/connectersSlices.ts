@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { AIConnectersGet, DataBaseConnectersGet, GroupsGet, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigDashboardGet, TeamsconfigGet, UsersGet, UserswithoutpagnationGet } from "../Services/connectersServices";
+import { AIConnectersGet, ChannelsUser, DataBaseConnectersGet, GroupsGet, IndividualUser, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigDashboardGet, TeamsconfigGet, TeamsconfigrationGet, UsersGet, UserswithoutpagnationGet } from "../Services/connectersServices";
 
 
 
@@ -15,6 +15,9 @@ interface ConnectersState {
     GroupsGets: any;
     error: string | null;
     Userswithoutpagnation: any;
+    TeamsconfigrationGets: any;
+    IndividualUsers: any;
+    ChannelsUsers: any;
 }
 
 const initialState: ConnectersState = {
@@ -29,6 +32,9 @@ const initialState: ConnectersState = {
     GroupsGets: null,
     error: null,
     Userswithoutpagnation: null,
+    TeamsconfigrationGets: null,
+    IndividualUsers: null,
+    ChannelsUsers: null,
 };
 
 const ConnectersSlice = createSlice({
@@ -146,7 +152,49 @@ const ConnectersSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+            .addCase(TeamsconfigrationGet.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
 
+            .addCase(TeamsconfigrationGet.fulfilled, (state, action) => {
+                state.loading = false;
+                state.TeamsconfigrationGets = action.payload;
+            })
+
+            .addCase(TeamsconfigrationGet.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(IndividualUser.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+
+            .addCase(IndividualUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.IndividualUsers = action.payload;
+            })
+
+            .addCase(IndividualUser.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(ChannelsUser.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+
+            .addCase(ChannelsUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.ChannelsUsers = action.payload;
+            })
+
+            .addCase(ChannelsUser.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
 
             ///////////////////////////////////////////////////////////////////////////
             // usermanagment

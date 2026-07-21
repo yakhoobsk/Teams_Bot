@@ -19,7 +19,6 @@ const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
 
 const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
-    console.log("Active Tab in AI Agent Connectors:", activeTab);
 
     const screens = useBreakpoint();
     const isMobile = !screens.md;

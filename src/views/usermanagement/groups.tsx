@@ -51,23 +51,16 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
     const dispatch = useAppDispatch();
     const groupResponse = useAppSelector((state) => state.connecters.GroupsGets);
     const userspage = useAppSelector((state) => state.connecters?.Userswithoutpagnation);
-    console.log("groupResponse", userspage);
 
 
     useEffect(() => {
         if (activeTab === "GroupManagement") {
             dispatch(GroupsGet({}));
-        }
-    }, [dispatch]);
-
-    useEffect(() => {
-        if (activeTab === "GroupManagement") {
-
             dispatch(
                 UserswithoutpagnationGet({})
             );
         }
-    }, [dispatch, activeTab]);
+    }, [dispatch]);
 
 
 

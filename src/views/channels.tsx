@@ -1,5 +1,5 @@
 // src/ChannelsPage.tsx
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Table,
     Button,
@@ -12,13 +12,20 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-    EditOutlined,
     DeleteOutlined,
     BellOutlined,
     TeamOutlined,
     AlertOutlined,
 } from "@ant-design/icons";
 import ChannelsPage from "../components/channelcreate";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { ChannelsDelete, ChannelsUser } from "../redux/Services/connectersServices";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import dayjs from "dayjs";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 const { Option } = Select;
 
 interface ChannelData {
@@ -26,39 +33,90 @@ interface ChannelData {
     teamName: string;
     channelName: string;
     notificationType: string;
+    Type: string;
     members?: string[];
     groups?: string[];
     alerts: string[];
     schedule: string;
 }
 
-const data: ChannelData[] = [
-    {
-        key: "1",
-        teamName: "Team Alpha",
-        channelName: "General",
-        notificationType: "Individual",
-        members: ["Alice", "Bob", "Charlie", "David"],
-        alerts: ["MDM", "Tickets", "Atom"],
-        schedule: "Weekly",
-    },
-    {
-        key: "2",
-        teamName: "Team Beta",
-        channelName: "Ops",
-        notificationType: "Group",
-        groups: ["OpsGroup", "SupportGroup", "InfraGroup"],
-        alerts: ["Longrun", "Atom"],
-        schedule: "Daily",
-    },
-];
+
 
 
 
 const Channels: React.FC = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
-
+    const dispatch = useAppDispatch()
     const [form] = Form.useForm();
+    const [tableData, setTableData] = useState<ChannelData[]>([]);
+    const channelsget = useAppSelector((state) => state.connecters?.ChannelsUsers) || [];
+    console.log(channelsget)
+    useEffect(() => {
+        dispatch(ChannelsUser({}));
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (channelsget?.Response?.length) {
+            const weekDays = [
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+            ];
+
+            const mappedData: ChannelData[] = channelsget.Response.map((item: any) => {
+                // UTC -> IST
+                const istTime = dayjs
+                    .utc(
+                        `2000-01-01 ${String(item.schedule_hours).padStart(2, "0")}:${String(item.schedule_minutes).padStart(2, "0")}`,
+                        "YYYY-MM-DD HH:mm"
+                    )
+                    .tz("Asia/Kolkata")
+                    .format("hh:mm A");
+
+                const scheduleParts: string[] = [];
+
+                if (item.schedule_days_of_month) {
+                    scheduleParts.push(`Day ${item.schedule_days_of_month}`);
+                }
+
+                if (item.schedule_days_of_week !== undefined && item.schedule_days_of_week !== null) {
+                    scheduleParts.push(
+                        weekDays[Number(item.schedule_days_of_week)] ?? item.schedule_days_of_week
+                    );
+                }
+
+                scheduleParts.push(istTime);
+
+                return {
+                    key: item.id,
+                    teamName: item.team_display_name,
+                    channelName: item.channel_display_name,
+                    notificationType: item.membership_type,
+                    Type: item.type,
+
+                    members:
+                        item.group_members?.map(
+                            (m: any) => `${m.userId} (${m.role})`
+                        ) || [],
+
+                    groups: item.group_name ? [item.group_name] : [],
+
+                    alerts: item.channel_alert
+                        ? JSON.parse(item.channel_alert)
+                        : [],
+
+                    schedule: scheduleParts.join(" • "),
+                };
+            });
+
+            setTableData(mappedData);
+        }
+    }, [channelsget]);
+
 
     const showModal = (record?: ChannelData) => {
         if (record) {
@@ -98,46 +156,67 @@ const Channels: React.FC = () => {
             key: "channelName",
             responsive: ["sm", "md", "lg"],
         },
+        {
+            title: "Type",
+            dataIndex: "Type",
+            key: "Type",
+            responsive: ["sm", "md", "lg"],
+        },
 
         {
-            title: "Members ",
+            title: "Members",
             key: "membersGroups",
             responsive: ["sm", "md", "lg"],
             render: (_, record) => {
                 if (record.members) {
                     const shown = record.members.slice(0, 2);
                     const hidden = record.members.length - shown.length;
+
                     return (
                         <Space wrap>
-                            {shown.map((m) => (
-                                <Tag key={m}>{m}</Tag>
-                            ))}
+                            {shown.map((m) => {
+                                const isOwner = m.toLowerCase().includes("(owner)");
+
+                                return (
+                                    <Tag
+                                        key={m}
+                                        color={isOwner ? "volcano" : "geekblue"}
+                                    >
+                                        {m}
+                                    </Tag>
+                                );
+                            })}
+
                             {hidden > 0 && (
                                 <Tooltip title={record.members.slice(2).join(", ")}>
-                                    <Tag>+{hidden}...</Tag>
+                                    <Tag color="purple">+{hidden}...</Tag>
                                 </Tooltip>
                             )}
                         </Space>
                     );
                 }
+
                 if (record.groups) {
                     const shown = record.groups.slice(0, 2);
                     const hidden = record.groups.length - shown.length;
+
                     return (
                         <Space wrap>
                             {shown.map((g) => (
-                                <Tag color="blue" key={g}>
+                                <Tag color="cyan" key={g}>
                                     {g}
                                 </Tag>
                             ))}
+
                             {hidden > 0 && (
                                 <Tooltip title={record.groups.slice(2).join(", ")}>
-                                    <Tag color="blue">+{hidden}...</Tag>
+                                    <Tag color="cyan">+{hidden}...</Tag>
                                 </Tooltip>
                             )}
                         </Space>
                     );
                 }
+
                 return null;
             },
         },
@@ -177,17 +256,16 @@ const Channels: React.FC = () => {
             responsive: ["xs", "sm", "md", "lg"],
             render: (_, record) => (
                 <Space>
-                    <Tooltip title="Edit Channel">
-                        <Button
-                            shape="circle"
-                            type="default"
-                            icon={<EditOutlined />}
-                            onClick={() => showModal(record)}
-                        />
-                    </Tooltip>
+
                     <Popconfirm
                         title="Are you sure to delete this channel?"
-                        onConfirm={() => console.log("Delete", record.key)}
+                        onConfirm={() =>
+                            dispatch(
+                                ChannelsDelete({
+                                    id: Number(record.key),
+                                })
+                            )
+                        }
                     >
                         <Button
                             shape="circle"
@@ -242,7 +320,7 @@ const Channels: React.FC = () => {
             </div>
             <Table
                 columns={columns}
-                dataSource={data}
+                dataSource={tableData}
                 pagination={false}
                 rowKey="key"
                 scroll={{ x: "max-content" }}

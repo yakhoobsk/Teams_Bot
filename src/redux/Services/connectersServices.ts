@@ -84,7 +84,7 @@ export const GroupsGet = createAsyncThunk(
     async (_: any, { rejectWithValue }) => {
 
         try {
-            const response = await boomiApi.get("/teams_bot/group/Get_group");
+            const response = await boomiApi.post("/teams_bot/group/Get_group");
             return response.data;
         } catch (error: any) {
             return rejectWithValue(
@@ -394,7 +394,7 @@ export const TeamsconfigrationGet = createAsyncThunk(
     async (_: any, { rejectWithValue }) => {
 
         try {
-            const response = await boomiApi.post("/teams_bot/restconfigure/fetch");
+            const response = await boomiApi.get("/teams_bot/Temas_Configuration/get_teams");
             return response.data;
         } catch (error: any) {
             return rejectWithValue(
@@ -404,6 +404,125 @@ export const TeamsconfigrationGet = createAsyncThunk(
     }
 );
 
+export const TeamsconfigrationUpdate = createAsyncThunk("Teamsconfigration/Update", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Temas_Configuration/Create_Team", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+    }
+}
+);
+
+
+//  individual user
+export const IndividualUser = createAsyncThunk(
+    "Individualuser/get",
+    async (_: any, { rejectWithValue }) => {
+
+        try {
+            const response = await boomiApi.post("/teams_bot/Individual/Get");
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || "Fetch failed"
+            );
+        }
+    }
+);
+
+export const IndividualuserUpdate = createAsyncThunk("IndividualuserUpdate/Update", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Individual/Update", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+    }
+}
+);
+
+export const IndividualuserCreate = createAsyncThunk("IndividualuserCreate/Create", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Individual/Insert", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+    }
+}
+);
+
+export const IndividualuserDelete = createAsyncThunk("Individualuser/Delete", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Individual/Delete", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+    }
+}
+);
+
+// channels and alerts
+export const ChannelsUser = createAsyncThunk(
+    "Channels/get",
+    async (_: any, { rejectWithValue }) => {
+
+        try {
+            const response = await boomiApi.post("/teams_bot/channels/detailsget");
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || "Fetch failed"
+            );
+        }
+    }
+);
+
+
+
+export const ChannelsDelete = createAsyncThunk("Channels/Delete", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/channels/delete", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+    }
+}
+);
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

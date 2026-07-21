@@ -21,7 +21,7 @@ import {
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import { Input, } from "antd";
-import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, RestApiConnectersGet } from "../redux/Services/connectersServices";
+import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigrationGet, TeamsconfigrationUpdate } from "../redux/Services/connectersServices";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 const { Title, Text } = Typography;
 
@@ -50,14 +50,29 @@ export default function AgentConfiguration(): React.ReactElement {
     const restApiConnectors = useAppSelector((state) => state.connecters?.restapiconnectersget?.Response) || [];
     const ticketConnectors = useAppSelector((state) => state.connecters?.itsmget?.Response) || [];
     const [activeTab, setActiveTab] = useState("datahub");
-    const [databaseId, setDatabaseId] = useState("");
-    const [aiAgentId, setAiAgentId] = useState("");
-    const [restApiId, setRestApiId] = useState("");
-    const [ticketId, setTicketId] = useState("");
+    // DataHub Custom
+    const [datahubDatabaseId, setDatahubDatabaseId] = useState("");
+    const [datahubAiAgentId, setDatahubAiAgentId] = useState("");
+    const [datahubTicketId, setDatahubTicketId] = useState("");
+    const [datahubRestApiId, setDatahubRestApiId] = useState("");
+
+    // Integration Custom
+    const [integrationDatabaseId, setIntegrationDatabaseId] = useState("");
+    const [integrationAiAgentId, setIntegrationAiAgentId] = useState("");
+    const [integrationTicketId, setIntegrationTicketId] = useState("");
+    const [integrationRestApiId, setIntegrationRestApiId] = useState("");
     const [boomiRestApi, setBoomiRestApi] = useState("");
     const [boomiUserName, setBoomiUserName] = useState("");
     const [boomiPassword, setBoomiPassword] = useState("");
     const [boomiMethod, setBoomiMethod] = useState("");
+    const configget = useAppSelector((state) => state.connecters?.TeamsconfigrationGets) || [];
+
+    useEffect(() => {
+
+        dispatch(TeamsconfigrationGet({}));
+
+    }, [dispatch]);
+
     useEffect(() => {
         dispatch(ITSMConnectersGet({}));
         dispatch(AIConnectersGet({}));
@@ -68,6 +83,128 @@ export default function AgentConfiguration(): React.ReactElement {
         dispatch(DataBaseConnectersGet({ database_type: activeTab === "datahub" ? "Datahub" : "Integrations", }));
     }, [dispatch, activeTab]);
 
+
+    useEffect(() => {
+        const configs = configget?.[0]?.Teams_Configuration;
+
+        if (!configs?.length) return;
+
+        // DataHub Boomi
+        const datahubBoomi = configs.find(
+            (x: any) => x.type === "datahub agent"
+        );
+
+        // DataHub Custom
+        const datahubCustom = configs.find(
+            (x: any) => x.type === "datahub custom"
+        );
+
+        // Integration Boomi
+        const integrationBoomi = configs.find(
+            (x: any) => x.type === "integrations agent"
+        );
+
+        // Integration Custom
+        const integrationCustom = configs.find(
+            (x: any) => x.type === "integrations custom"
+        );
+
+        // ---------------- DATAHUB BOOMI ----------------
+
+        if (datahubBoomi) {
+
+            setBoomiDataHubActive(datahubBoomi.status === "active");
+            setCustomDataHubActive(datahubBoomi.status !== "active");
+
+            setBoomiRestApi(datahubBoomi.rest_api_name || "");
+
+            if (datahubBoomi.rest_api_details) {
+                const rest =
+                    typeof datahubBoomi.rest_api_details === "string"
+                        ? JSON.parse(datahubBoomi.rest_api_details)
+                        : datahubBoomi.rest_api_details;
+
+                setBoomiUserName(rest.username || "");
+                setBoomiPassword(rest.password || "");
+                setBoomiMethod(rest.method || "");
+            }
+        }
+
+        // ---------------- DATAHUB CUSTOM ----------------
+
+        if (datahubCustom) {
+            const db = databaseConnectors.find(
+                (item: any) => item.connector_name === datahubCustom.database_name
+            );
+
+            const ai = AiAgents.find(
+                (item: any) => item.agent_name === datahubCustom.ai_agent
+            );
+
+            const ticket = ticketConnectors.find(
+                (item: any) => item.ticket_name === datahubCustom.ticket_system
+            );
+
+            const rest = restApiConnectors.find(
+                (item: any) => item.api_name === datahubCustom.rest_api_name
+            );
+            setDatahubDatabaseId(db?.connector_id || "");
+            setDatahubAiAgentId(ai?.agent_id || "");
+            setDatahubTicketId(ticket?.ticket_id || "");
+            setDatahubRestApiId(rest?.rest_api_id || "");
+        }
+        // ---------------- INTEGRATION BOOMI ----------------
+
+        if (integrationBoomi) {
+
+            setBoomiIntegrationActive(integrationBoomi.status === "active");
+            setCustomIntegrationActive(integrationBoomi.status !== "active");
+
+            setBoomiRestApi(integrationBoomi.rest_api_name || "");
+
+            if (integrationBoomi.rest_api_details) {
+                const rest =
+                    typeof integrationBoomi.rest_api_details === "string"
+                        ? JSON.parse(integrationBoomi.rest_api_details)
+                        : integrationBoomi.rest_api_details;
+
+                setBoomiUserName(rest.username || "");
+                setBoomiPassword(rest.password || "");
+                setBoomiMethod(rest.method || "");
+            }
+        }
+
+        // ---------------- INTEGRATION CUSTOM ----------------
+
+        if (integrationCustom) {
+            const db = databaseConnectors.find(
+                (item: any) => item.connector_name === integrationCustom.database_name
+            );
+
+            const ai = AiAgents.find(
+                (item: any) => item.agent_name === integrationCustom.ai_agent
+            );
+
+            const ticket = ticketConnectors.find(
+                (item: any) => item.ticket_name === integrationCustom.ticket_system
+            );
+
+            const rest = restApiConnectors.find(
+                (item: any) => item.api_name === integrationCustom.rest_api_name
+            );
+            setIntegrationDatabaseId(db?.connector_id || "");
+            setIntegrationAiAgentId(ai?.agent_id || "");
+            setIntegrationTicketId(ticket?.ticket_id || "");
+            setIntegrationRestApiId(rest?.rest_api_id || "");
+        }
+
+    }, [
+        configget,
+        databaseConnectors,
+        AiAgents,
+        ticketConnectors,
+        restApiConnectors
+    ]);
 
     const handleTabChange = (key: string) => {
         setActiveTab(key);
@@ -80,18 +217,37 @@ export default function AgentConfiguration(): React.ReactElement {
     ) => {
 
         const selectedDb = databaseConnectors.find(
-            (x: any) => x.connector_id === databaseId
+            (x: any) =>
+                x.connector_id ===
+                (type === "datahub"
+                    ? datahubDatabaseId
+                    : integrationDatabaseId)
         );
 
         const selectedAi = AiAgents.find(
-            (x: any) => x.agent_id === aiAgentId
+            (x: any) =>
+                x.agent_id ===
+                (type === "datahub"
+                    ? datahubAiAgentId
+                    : integrationAiAgentId)
         );
-
-
 
         const selectedTicket = ticketConnectors.find(
-            (x: any) => x.ticket_id === ticketId
+            (x: any) =>
+                x.ticket_id ===
+                (type === "datahub"
+                    ? datahubTicketId
+                    : integrationTicketId)
         );
+
+        const selectedRest = restApiConnectors.find(
+            (x: any) =>
+                x.rest_api_id ===
+                (type === "datahub"
+                    ? datahubRestApiId
+                    : integrationRestApiId)
+        );
+        console.log(selectedRest)
 
         return {
 
@@ -163,21 +319,25 @@ export default function AgentConfiguration(): React.ReactElement {
     const handleSaveIntegration = () => {
         if (boomiIntegrationActive) {
             const payload = buildPayload("integration", true);
-            console.log(payload)
+            dispatch(TeamsconfigrationUpdate({ payload }));
+
         } else {
             const payload = buildPayload("integration", false);
-            console.log(payload)
+            dispatch(TeamsconfigrationUpdate({ payload }));
         }
     };
     const handleSaveDataHub = () => {
         if (boomiDataHubActive) {
             const payload = buildPayload("datahub", true);
-            console.log(payload)
+            dispatch(TeamsconfigrationUpdate({ payload }));
         } else {
             const payload = buildPayload("datahub", false);
-            console.log(payload)
+            dispatch(TeamsconfigrationUpdate({ payload }));
         }
     };
+
+
+
     const renderSelectField = (
         label: string,
         placeholder: string,
@@ -472,17 +632,24 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.connector_name,
                                     value: item.connector_id,
                                 })),
-                                databaseId,
-                                setDatabaseId
-                            )}                        </Col>
-                        <Col xs={24} sm={12}>
-                            {renderSelectField("AI Agent Connection", "Select AI Agent", AiAgents.map((item: any) => ({
-                                label: item.agent_name,
-                                value: item.agent_id,
-                            })),
-                                aiAgentId,
-                                setAiAgentId)}
+                                datahubDatabaseId,
+                                setDatahubDatabaseId
+                            )}
                         </Col>
+
+                        <Col xs={24} sm={12}>
+                            {renderSelectField(
+                                "AI Agent Connection",
+                                "Select AI Agent",
+                                AiAgents.map((item: any) => ({
+                                    label: item.agent_name,
+                                    value: item.agent_id,
+                                })),
+                                datahubAiAgentId,
+                                setDatahubAiAgentId
+                            )}
+                        </Col>
+
                         <Col xs={24} sm={12}>
                             {renderSelectField(
                                 "Ticket Connection",
@@ -491,10 +658,11 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.ticket_name,
                                     value: item.ticket_id,
                                 })),
-                                ticketId,
-                                setTicketId
+                                datahubTicketId,
+                                setDatahubTicketId
                             )}
                         </Col>
+
                         <Col xs={24} sm={12}>
                             {renderSelectField(
                                 "REST API Connection",
@@ -503,8 +671,8 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.api_name,
                                     value: item.rest_api_id,
                                 })),
-                                restApiId,
-                                setRestApiId
+                                datahubRestApiId,
+                                setDatahubRestApiId
                             )}
                         </Col>
                     </Row>
@@ -586,17 +754,24 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.connector_name,
                                     value: item.connector_id,
                                 })),
-                                databaseId,
-                                setDatabaseId
-                            )}                        </Col>
-                        <Col xs={24} sm={12}>
-                            {renderSelectField("AI Agent Connection", "Select AI Agent", AiAgents.map((item: any) => ({
-                                label: item.agent_name,
-                                value: item.agent_id,
-                            })),
-                                aiAgentId,
-                                setAiAgentId)}
+                                datahubDatabaseId,
+                                setDatahubDatabaseId
+                            )}
                         </Col>
+
+                        <Col xs={24} sm={12}>
+                            {renderSelectField(
+                                "AI Agent Connection",
+                                "Select AI Agent",
+                                AiAgents.map((item: any) => ({
+                                    label: item.agent_name,
+                                    value: item.agent_id,
+                                })),
+                                datahubAiAgentId,
+                                setDatahubAiAgentId
+                            )}
+                        </Col>
+
                         <Col xs={24} sm={12}>
                             {renderSelectField(
                                 "Ticket Connection",
@@ -605,10 +780,11 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.ticket_name,
                                     value: item.ticket_id,
                                 })),
-                                ticketId,
-                                setTicketId
+                                datahubTicketId,
+                                setDatahubTicketId
                             )}
                         </Col>
+
                         <Col xs={24} sm={12}>
                             {renderSelectField(
                                 "REST API Connection",
@@ -617,8 +793,8 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.api_name,
                                     value: item.rest_api_id,
                                 })),
-                                restApiId,
-                                setRestApiId
+                                datahubRestApiId,
+                                setDatahubRestApiId
                             )}
                         </Col>
                     </Row>
