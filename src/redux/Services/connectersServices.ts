@@ -441,7 +441,7 @@ export const IndividualUser = createAsyncThunk(
 export const IndividualuserUpdate = createAsyncThunk("IndividualuserUpdate/Update", async ({ payload }: any, { rejectWithValue }) => {
     try {
 
-        const response = await boomiApi.post("/teams_bot/Individual/Update", payload);
+        const response = await boomiApi.put("/teams_bot/Individual/Update", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
         } else if (response?.data?.Status_Response === "Success") {
