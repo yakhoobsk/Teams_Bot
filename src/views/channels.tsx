@@ -37,6 +37,7 @@ interface ChannelData {
     groups?: string[];
     alerts: string[];
     schedule: string;
+    id: any;
 }
 
 
@@ -89,6 +90,7 @@ const Channels: React.FC = () => {
 
                 return {
                     key: item.id,
+                    id: item.id,
                     teamName: item.team_display_name,
                     channelName: item.channel_display_name,
                     notificationType: item.membership_type,
@@ -255,13 +257,21 @@ const Channels: React.FC = () => {
 
                     <Popconfirm
                         title="Are you sure to delete this channel?"
-                        onConfirm={() =>
-                            dispatch(
-                                ChannelsDelete({
-                                    id: Number(record.key),
-                                })
-                            )
-                        }
+                        onConfirm={async () => {
+                            try {
+                                await dispatch(
+                                    ChannelsDelete({
+                                        payload: {
+                                            id: record.key,
+                                        },
+                                    })
+                                ).unwrap();
+
+                                dispatch(ChannelsUser({}));
+                            } catch (error) {
+                                console.error(error);
+                            }
+                        }}
                     >
                         <Button
                             shape="circle"
