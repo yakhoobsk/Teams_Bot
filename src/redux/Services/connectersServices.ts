@@ -505,7 +505,22 @@ export const ChannelsUser = createAsyncThunk(
     }
 );
 
+export const ChannelsCreate = createAsyncThunk("ChannelsCreate/Create", async ({ payload }: any, { rejectWithValue }) => {
+    try {
 
+        const response = await boomiApi.post("/teams_bot/channels/insert", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+    }
+}
+);
 
 export const ChannelsDelete = createAsyncThunk("Channels/Delete", async ({ payload }: any, { rejectWithValue }) => {
     try {

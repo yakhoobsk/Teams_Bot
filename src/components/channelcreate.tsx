@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Modal, Form, Input, Checkbox, Select, Row, Col, DatePicker, TimePicker,
     Radio,
@@ -9,6 +9,8 @@ import type { FormInstance } from "antd/es/form";
 
 import dayjs from "dayjs";
 import "./channelspage.css";
+import { ChannelsCreate, ChannelsUser, GroupsGet, UserswithoutpagnationGet } from "../redux/Services/connectersServices";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 const { Option } = Select;
 
 const alertsOptions = ["MDM", "LongRun", "Atom", "Tickets"];
@@ -39,28 +41,38 @@ const monthWeeks = [
 
 const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) => {
     const selectedSchedule = Form.useWatch("scheduleType", form);
-    const users = ["User1", "User2", "User3"];
-
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
     const [roles, setRoles] = useState<Record<string, string>>({});
-
+    const dispatch = useAppDispatch();
+    const userspage = useAppSelector((state) => state.connecters?.Userswithoutpagnation);
     const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
     const [selectedMembers, setSelectedMembers] = useState<
         Record<string, string[]>
     >({});
-
-    const groups = [
-        {
-            name: "GroupA",
-            members: ["John", "David", "Peter"],
-        },
-        {
-            name: "GroupB",
-            members: ["Alex", "Rahul", "Kiran"],
-        },
-    ];
+    const groupResponse = useAppSelector((state) => state.connecters.GroupsGets);
 
 
+    const parseMembers = (members: any): string[] => {
+        if (!members) return [];
+
+        try {
+            let parsed = JSON.parse(members);
+
+
+            while (typeof parsed === "string") {
+                parsed = JSON.parse(parsed);
+            }
+
+            return Array.isArray(parsed) ? parsed : [parsed];
+        } catch {
+            return [];
+        }
+    };
+
+    useEffect(() => {
+        dispatch(UserswithoutpagnationGet({}));
+        dispatch(GroupsGet({}));
+    }, [dispatch]);
 
 
     const convertToUTC = (time: any) => {
@@ -137,35 +149,32 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
 
 
 
+
     const groupsPayload = selectedGroups.map((groupName) => ({
         groupname: groupName,
-        members:
-            (selectedMembers[groupName] || []).map((member) => ({
-                userId: member,
-                role: roles[member] || "member",
-            })),
+        members: (selectedMembers[groupName] || []).map((member) => ({
+            userId: member,
+            role: roles[member] || "member",
+        })),
     }));
-
-
     const handleSubmit = (values: any) => {
-        const teamMembers = [
-            ...(values.individualUsers || []).map((userId: string) => ({
-                userId,
-                role: roles[userId] || "member",
-            })),
-            ...Object.entries(selectedMembers).flatMap(([, members]) =>
 
+        const groupMembers = Object.entries(selectedMembers).flatMap(
+            ([, members]) =>
                 (members as string[]).map((member) => ({
                     userId: member,
                     role: roles[member] || "member",
                 }))
+        );
 
-            ),
+        const individualMembers = selectedUsers.map((userId) => ({
+            userId,
+            role: roles[userId] || "member",
+        }));
 
-        ];
+        const teamMembers = [...individualMembers, ...groupMembers];
 
 
-        const channelMembers = [...teamMembers];
         const payload = {
             teamDisplayName: values.teamDisplayName,
             teamDescription: values.teamDescription,
@@ -174,22 +183,22 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
 
             groups: groupsPayload,
 
-            type: values.datahubIntegration?.toLowerCase(),
+            type: values.Type?.toLowerCase(),
 
             channelDisplayName: values.channelDisplayName,
             channelDescription: values.channelDescription,
-            membershipType: "private",
+
+            membershipType: values.security?.toLowerCase(),
 
             channelAlert: values.overallChannelAlerts || [],
 
-            channelMembers,
+            channelMembers: teamMembers,
 
             Schedule: buildSchedule(values),
         };
+        dispatch(ChannelsCreate({ payload })).unwrap()
+        dispatch(ChannelsUser({}));
 
-        console.log(payload);
-
-        console.log(payload);
     };
 
     return (
@@ -214,18 +223,27 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="individualUsers" label=" Users">
+                            <Form.Item name="individualUsers" label="Users">
                                 <Select
                                     mode="multiple"
                                     value={selectedUsers}
                                     placeholder="Select Users"
-                                    onChange={setSelectedUsers}
-                                    options={users.map((u) => ({ label: u, value: u }))}
+                                    maxTagCount="responsive"
+                                    options={userspage?.map((user: any) => ({
+                                        label: `${user.first_name} ${user.last_name}`,
+                                        value: user.user_id,
+                                    }))}
+                                    onChange={(value) => {
+                                        setSelectedUsers(value);
+                                        form.setFieldsValue({
+                                            individualUsers: value,
+                                        });
+                                    }}
                                     dropdownRender={() => (
-                                        <div style={{ padding: 8, maxHeight: 250, overflow: "auto" }}>
-                                            {users.map((user) => (
+                                        <div style={{ padding: 8, maxHeight: 300, overflow: "auto" }}>
+                                            {userspage?.map((user: any) => (
                                                 <div
-                                                    key={user}
+                                                    key={user.user_id}
                                                     style={{
                                                         marginBottom: 12,
                                                         borderBottom: "1px solid #f0f0f0",
@@ -233,27 +251,33 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                                     }}
                                                 >
                                                     <Checkbox
-                                                        checked={selectedUsers.includes(user)}
+                                                        checked={selectedUsers.includes(user.user_id)}
                                                         onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setSelectedUsers([...selectedUsers, user]);
-                                                            } else {
-                                                                setSelectedUsers(selectedUsers.filter((u) => u !== user));
-                                                            }
+                                                            const updatedUsers = e.target.checked
+                                                                ? [...selectedUsers, user.user_id]
+                                                                : selectedUsers.filter(
+                                                                    (id) => id !== user.user_id
+                                                                );
+
+                                                            setSelectedUsers(updatedUsers);
+
+                                                            form.setFieldsValue({
+                                                                individualUsers: updatedUsers,
+                                                            });
                                                         }}
                                                     >
-                                                        {user}
+                                                        {user.first_name} {user.last_name}
                                                     </Checkbox>
 
-                                                    {selectedUsers.includes(user) && (
+                                                    {selectedUsers.includes(user.user_id) && (
                                                         <Radio.Group
                                                             style={{ marginLeft: 24, marginTop: 8 }}
-                                                            value={roles[user] || "member"}
+                                                            value={roles[user.user_id] || "member"}
                                                             onChange={(e) =>
-                                                                setRoles({
-                                                                    ...roles,
-                                                                    [user]: e.target.value,
-                                                                })
+                                                                setRoles((prev) => ({
+                                                                    ...prev,
+                                                                    [user.user_id]: e.target.value,
+                                                                }))
                                                             }
                                                         >
                                                             <Space direction="vertical">
@@ -270,15 +294,26 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item
-                                name="groupUsers"
-                                label="Groups"
-                                rules={[{ required: true, message: "Please select groups" }]}
-                            >
+                            <Form.Item name="groupUsers" label="groups">
                                 <Select
+                                    style={{ width: "100%" }}
+                                    dropdownStyle={{
+                                        width: 410,
+                                    }}
                                     mode="multiple"
                                     value={selectedGroups}
                                     placeholder="Select Groups"
+                                    maxTagCount="responsive"
+                                    options={(groupResponse?.Response || []).map((group: any) => ({
+                                        label: group.group_name,
+                                        value: group.group_name,
+                                    }))}
+                                    onChange={(value) => {
+                                        setSelectedGroups(value);
+                                        form.setFieldsValue({
+                                            groupUsers: value,
+                                        });
+                                    }}
                                     tagRender={(props) => (
                                         <span
                                             style={{
@@ -294,73 +329,90 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                     dropdownRender={() => (
                                         <div style={{ padding: 10, maxHeight: 350, overflow: "auto" }}>
                                             <Collapse ghost>
-                                                {groups.map((group) => (
-                                                    <Collapse.Panel
-                                                        header={
-                                                            <Checkbox
-                                                                checked={selectedGroups.includes(group.name)}
-                                                                onChange={(e) => {
-                                                                    if (e.target.checked) {
-                                                                        setSelectedGroups([...selectedGroups, group.name]);
-                                                                    } else {
-                                                                        setSelectedGroups(
-                                                                            selectedGroups.filter((g) => g !== group.name)
-                                                                        );
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {group.name}
-                                                            </Checkbox>
-                                                        }
-                                                        key={group.name}
-                                                    >
-                                                        {group.members.map((member) => (
-                                                            <div
-                                                                key={member}
-                                                                style={{
-                                                                    marginBottom: 12,
-                                                                    paddingLeft: 20,
-                                                                }}
-                                                            >
-                                                                <Checkbox
-                                                                    checked={
-                                                                        selectedMembers[group.name]?.includes(member) || false
-                                                                    }
-                                                                    onChange={(e) => {
-                                                                        const members = selectedMembers[group.name] || [];
+                                                {(groupResponse?.Response || []).map((group: any) => {
+                                                    const members = parseMembers(group.members);
 
-                                                                        setSelectedMembers({
-                                                                            ...selectedMembers,
-                                                                            [group.name]: e.target.checked
-                                                                                ? [...members, member]
-                                                                                : members.filter((m) => m !== member),
+                                                    return (
+                                                        <Collapse.Panel
+                                                            key={group.group_id}
+                                                            header={
+                                                                <Checkbox
+                                                                    checked={selectedGroups.includes(group.group_name)}
+                                                                    onChange={(e) => {
+                                                                        const updatedGroups = e.target.checked
+                                                                            ? [...selectedGroups, group.group_name]
+                                                                            : selectedGroups.filter(
+                                                                                (g) => g !== group.group_name
+                                                                            );
+
+                                                                        setSelectedGroups(updatedGroups);
+
+                                                                        form.setFieldsValue({
+                                                                            groupUsers: updatedGroups,
                                                                         });
                                                                     }}
                                                                 >
-                                                                    {member}
+                                                                    {group.group_name}
                                                                 </Checkbox>
-
-                                                                {(selectedMembers[group.name] || []).includes(member) && (
-                                                                    <Radio.Group
-                                                                        style={{ marginLeft: 20, marginTop: 8 }}
-                                                                        value={roles[member] || "member"}
-                                                                        onChange={(e) =>
-                                                                            setRoles({
-                                                                                ...roles,
-                                                                                [member]: e.target.value,
-                                                                            })
+                                                            }
+                                                        >
+                                                            {members.map((member: string) => (
+                                                                <div
+                                                                    key={member}
+                                                                    style={{
+                                                                        marginBottom: 12,
+                                                                        paddingLeft: 20,
+                                                                    }}
+                                                                >
+                                                                    <Checkbox
+                                                                        checked={
+                                                                            selectedMembers[group.group_name]?.includes(member) ||
+                                                                            false
                                                                         }
+                                                                        onChange={(e) => {
+                                                                            const groupMembers =
+                                                                                selectedMembers[group.group_name] || [];
+
+                                                                            setSelectedMembers({
+                                                                                ...selectedMembers,
+                                                                                [group.group_name]: e.target.checked
+                                                                                    ? [...groupMembers, member]
+                                                                                    : groupMembers.filter(
+                                                                                        (m) => m !== member
+                                                                                    ),
+                                                                            });
+                                                                        }}
                                                                     >
-                                                                        <Space>
-                                                                            <Radio value="owner">Owner</Radio>
-                                                                            <Radio value="member">Member</Radio>
-                                                                        </Space>
-                                                                    </Radio.Group>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                    </Collapse.Panel>
-                                                ))}
+                                                                        {member}
+                                                                    </Checkbox>
+
+                                                                    {(selectedMembers[group.group_name] || []).includes(
+                                                                        member
+                                                                    ) && (
+                                                                            <Radio.Group
+                                                                                value={roles[member] || "member"}
+                                                                                onChange={(e) =>
+                                                                                    setRoles((prev) => ({
+                                                                                        ...prev,
+                                                                                        [member]: e.target.value,
+                                                                                    }))
+                                                                                }
+                                                                                style={{
+                                                                                    marginLeft: 20,
+                                                                                    marginTop: 8,
+                                                                                }}
+                                                                            >
+                                                                                <Space>
+                                                                                    <Radio value="owner">Owner</Radio>
+                                                                                    <Radio value="member">Member</Radio>
+                                                                                </Space>
+                                                                            </Radio.Group>
+                                                                        )}
+                                                                </div>
+                                                            ))}
+                                                        </Collapse.Panel>
+                                                    );
+                                                })}
                                             </Collapse>
                                         </div>
                                     )}
@@ -401,7 +453,23 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                 </Select>
                             </Form.Item>
                         </Col>
-
+                        <Col span={12}>
+                            <Form.Item
+                                label="Type"
+                                name="Type"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: "Please select Type",
+                                    },
+                                ]}
+                            >
+                                <Select placeholder="Select Type">
+                                    <Option value="datahub">datahub</Option>
+                                    <Option value="integration">integration</Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
                     </Row>
 
                     <Form.Item
