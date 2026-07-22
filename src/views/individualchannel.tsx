@@ -37,14 +37,14 @@ interface UserPermission {
 
 const UserAlertsTable: React.FC = () => {
     const [data, setData] = useState<UserPermission[]>([]);
-    const [userPermissions, setUserPermissions] = useState<UserPermission[]>([]);
-    console.log(userPermissions)
     const dispatch = useAppDispatch()
     const individualuser = useAppSelector((state) => state.connecters?.IndividualUsers) || [];
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+
     useEffect(() => {
         dispatch(IndividualUser({}));
+
     }, [dispatch]);
 
 
@@ -205,12 +205,14 @@ const UserAlertsTable: React.FC = () => {
         key: string,
         value: "datahub" | "integration"
     ) => {
-        setUserPermissions((prev) =>
+        setData((prev) =>
             prev.map((item) =>
                 item.key === key
                     ? {
                         ...item,
                         type: value,
+                        longrun: value === "datahub" ? false : item.longrun,
+                        mdm: value === "integration" ? false : item.mdm,
                     }
                     : item
             )
@@ -486,6 +488,7 @@ const UserAlertsTable: React.FC = () => {
             render: (_, record) => (
                 <Checkbox
                     checked={record.mdm}
+                    disabled={record.type === "integration"}
                     onChange={(e) =>
                         handleCheckbox(record.key, "mdm", e.target.checked)
                     }
@@ -499,6 +502,7 @@ const UserAlertsTable: React.FC = () => {
             render: (_, record) => (
                 <Checkbox
                     checked={record.longrun}
+                    disabled={record.type === "datahub"}
                     onChange={(e) =>
                         handleCheckbox(record.key, "longrun", e.target.checked)
                     }

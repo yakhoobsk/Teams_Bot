@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     Modal,
     Form,
@@ -10,6 +10,8 @@ import {
     Col,
     Button,
 } from "antd";
+import { UserswithoutpagnationGet } from "../redux/Services/connectersServices";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 
 interface Props {
     open: boolean;
@@ -26,6 +28,15 @@ const NotificationModal: React.FC<Props> = ({
 }) => {
     const [form] = Form.useForm();
     const scheduleType = Form.useWatch("schedule_type", form);
+    const userspage = useAppSelector((state) => state.connecters?.Userswithoutpagnation);
+    const dispatch = useAppDispatch()
+    const selectedType = Form.useWatch("type", form);
+    useEffect(() => {
+        dispatch(
+            UserswithoutpagnationGet({})
+        );
+    }, [dispatch]);
+
     const handleFinish = (values: any) => {
 
         const payload = {
@@ -84,7 +95,15 @@ const NotificationModal: React.FC<Props> = ({
                                 { type: "email", message: "Invalid Email" },
                             ]}
                         >
-                            <Input placeholder="Enter Email" />
+                            <Select
+                                showSearch
+                                placeholder="Select user"
+                                optionFilterProp="label"
+                                options={userspage?.map((user: any) => ({
+                                    label: `${user.first_name} ${user.last_name} (${user.user_id})`,
+                                    value: user.user_id, // email
+                                }))}
+                            />
                         </Form.Item>
                     </Col>
 
@@ -308,7 +327,8 @@ const NotificationModal: React.FC<Props> = ({
                                         valuePropName="checked"
                                         noStyle
                                     >
-                                        <Checkbox>Long Run</Checkbox>
+                                        <Checkbox disabled={selectedType === "Datahub"}>
+                                            Long Run</Checkbox>
                                     </Form.Item>
                                 </Col>
 
@@ -318,7 +338,8 @@ const NotificationModal: React.FC<Props> = ({
                                         valuePropName="checked"
                                         noStyle
                                     >
-                                        <Checkbox>MDM</Checkbox>
+                                        <Checkbox disabled={selectedType === "Integration"}>
+                                            MDM</Checkbox>
                                     </Form.Item>
                                 </Col>
 
