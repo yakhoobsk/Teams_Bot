@@ -7,6 +7,7 @@ import {
 } from "antd";
 import type { FormInstance } from "antd/es/form";
 
+import dayjs from "dayjs";
 import "./channelspage.css";
 const { Option } = Select;
 
@@ -60,68 +61,120 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
     ];
 
 
+
+
+    const convertToUTC = (time: any) => {
+        const utcTime = dayjs(time)
+            .tz("Asia/Kolkata")
+            .utc();
+
+        return {
+            hours: utcTime.format("H"),
+            minutes: utcTime.format("m"),
+        };
+    };
+
     const buildSchedule = (values: any) => {
         switch (values.scheduleType) {
+            case "Daily": {
+                const utc = convertToUTC(values.dailyTime);
 
-            case "Daily":
                 return {
                     years: "",
                     months: "",
                     daysOfMonth: "",
                     daysOfWeek: "",
-                    hours: values.dailyTime?.hour()?.toString() || "",
-                    minutes: values.dailyTime?.minute()?.toString() || "",
+                    hours: utc.hours,
+                    minutes: utc.minutes,
                 };
+            }
 
-            case "Weekly":
+            case "Weekly": {
+                const utc = convertToUTC(values.weeklyTime);
+
                 return {
                     years: "",
                     months: "",
                     daysOfMonth: "",
                     daysOfWeek: weekDays.indexOf(values.weeklyDay).toString(),
-                    hours: values.weeklyTime?.hour()?.toString() || "",
-                    minutes: values.weeklyTime?.minute()?.toString() || "",
+                    hours: utc.hours,
+                    minutes: utc.minutes,
                 };
+            }
 
-            case "Monthly":
+            case "Monthly": {
+                const utc = convertToUTC(values.monthlyTime);
+
                 return {
                     years: "",
                     months: "",
-                    daysOfMonth: values.monthlyWeek,
+                    daysOfMonth: (
+                        monthWeeks.indexOf(values.monthlyWeek) + 1
+                    ).toString(),
                     daysOfWeek: weekDays.indexOf(values.monthlyDay).toString(),
-                    hours: values.monthlyTime?.hour()?.toString() || "",
-                    minutes: values.monthlyTime?.minute()?.toString() || "",
+                    hours: utc.hours,
+                    minutes: utc.minutes,
                 };
+            }
 
-            case "Custom":
+            case "Custom": {
+                const utc = convertToUTC(values.customTime);
+
                 return {
                     years: "",
                     months: "",
                     dates: values.customDates || [],
-                    hours: values.customTime?.hour()?.toString() || "",
-                    minutes: values.customTime?.minute()?.toString() || "",
+                    hours: utc.hours,
+                    minutes: utc.minutes,
                 };
+            }
 
             default:
                 return {};
         }
     };
 
+
+
+
+    const groupsPayload = selectedGroups.map((groupName) => ({
+        groupname: groupName,
+        members:
+            (selectedMembers[groupName] || []).map((member) => ({
+                userId: member,
+                role: roles[member] || "member",
+            })),
+    }));
+
+
     const handleSubmit = (values: any) => {
+        const teamMembers = [
+            ...(values.individualUsers || []).map((userId: string) => ({
+                userId,
+                role: roles[userId] || "member",
+            })),
+            ...Object.entries(selectedMembers).flatMap(([, members]) =>
+
+                (members as string[]).map((member) => ({
+                    userId: member,
+                    role: roles[member] || "member",
+                }))
+
+            ),
+
+        ];
+
+
+        const channelMembers = [...teamMembers];
         const payload = {
             teamDisplayName: values.teamDisplayName,
             teamDescription: values.teamDescription,
 
-            teamMembers: [
-                ...(values.individualUsers || []).map((userId: string) => ({
-                    userId,
-                    role: "member",
-                })),
-                ...(values.groupUsers || []).map((userId: string) => ({
-                    userId,
-                    role: "owner",
-                })),
-            ],
+            teamMembers,
+
+            groups: groupsPayload,
+
+            type: values.datahubIntegration?.toLowerCase(),
 
             channelDisplayName: values.channelDisplayName,
             channelDescription: values.channelDescription,
@@ -129,21 +182,12 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
 
             channelAlert: values.overallChannelAlerts || [],
 
-            channelMembers: [
-                ...(values.channelUsers || []).map((userId: string) => ({
-                    userId,
-                    role: "member",
-                })),
-                ...(values.channelGroups || []).map((userId: string) => ({
-                    userId,
-                    role: "owner",
-                })),
-            ],
-
-
+            channelMembers,
 
             Schedule: buildSchedule(values),
         };
+
+        console.log(payload);
 
         console.log(payload);
     };

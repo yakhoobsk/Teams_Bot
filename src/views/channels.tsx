@@ -1,4 +1,3 @@
-// src/ChannelsPage.tsx
 import React, { useEffect, useState } from "react";
 import {
     Table,
@@ -41,16 +40,13 @@ interface ChannelData {
 }
 
 
-
-
-
 const Channels: React.FC = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const dispatch = useAppDispatch()
     const [form] = Form.useForm();
     const [tableData, setTableData] = useState<ChannelData[]>([]);
     const channelsget = useAppSelector((state) => state.connecters?.ChannelsUsers) || [];
-    console.log(channelsget)
+
     useEffect(() => {
         dispatch(ChannelsUser({}));
     }, [dispatch]);
@@ -68,7 +64,7 @@ const Channels: React.FC = () => {
             ];
 
             const mappedData: ChannelData[] = channelsget.Response.map((item: any) => {
-                // UTC -> IST
+
                 const istTime = dayjs
                     .utc(
                         `2000-01-01 ${String(item.schedule_hours).padStart(2, "0")}:${String(item.schedule_minutes).padStart(2, "0")}`,
