@@ -157,7 +157,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
             role: roles[member] || "member",
         })),
     }));
-    const handleSubmit = (values: any) => {
+    const handleSubmit = async (values: any) => {
 
         const groupMembers = Object.entries(selectedMembers).flatMap(
             ([, members]) =>
@@ -196,9 +196,16 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
 
             Schedule: buildSchedule(values),
         };
-        dispatch(ChannelsCreate({ payload })).unwrap()
-        dispatch(ChannelsUser({}));
 
+        try {
+            const result = await dispatch(ChannelsCreate({ payload })).unwrap();
+            if (result?.Status_Response !== "Failure") {
+                dispatch(ChannelsUser({}));
+                onCancel();
+            }
+        } catch {
+            // error toast already shown by the ChannelsCreate thunk
+        }
     };
 
     return (
@@ -339,13 +346,25 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                                                 <Checkbox
                                                                     checked={selectedGroups.includes(group.group_name)}
                                                                     onChange={(e) => {
-                                                                        const updatedGroups = e.target.checked
+                                                                        const isChecked = e.target.checked;
+
+                                                                        const updatedGroups = isChecked
                                                                             ? [...selectedGroups, group.group_name]
                                                                             : selectedGroups.filter(
                                                                                 (g) => g !== group.group_name
                                                                             );
 
                                                                         setSelectedGroups(updatedGroups);
+
+                                                                        setSelectedMembers((prev) => {
+                                                                            const next = { ...prev };
+                                                                            if (isChecked) {
+                                                                                next[group.group_name] = members;
+                                                                            } else {
+                                                                                delete next[group.group_name];
+                                                                            }
+                                                                            return next;
+                                                                        });
 
                                                                         form.setFieldsValue({
                                                                             groupUsers: updatedGroups,

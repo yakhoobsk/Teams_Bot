@@ -35,9 +35,173 @@ type AgentCardProps = {
     icon: ReactNode;
     saveIcon: ReactNode;
     onToggle: (checked: boolean) => void;
+    onSave: () => void;
     children: ReactNode;
     delay?: number;
 };
+
+function AgentCard({
+    title,
+    description,
+    category,
+    active,
+    color,
+    lightColor,
+    icon,
+    saveIcon,
+    onToggle,
+    onSave,
+    children,
+    delay = 0,
+}: AgentCardProps): React.ReactElement {
+    return (
+        <motion.div
+            initial={false}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay }}
+            style={{ height: "100%" }}
+        >
+            <Card
+                hoverable
+                bordered={false}
+                style={{
+                    height: "100%",
+                    borderRadius: 16,
+                    overflow: "hidden",
+                    background: "#ffffff",
+                    border: active ? `1px solid ${color}` : "1px solid #e5e7eb",
+                    boxShadow: active
+                        ? `0 18px 42px ${color}24`
+                        : "0 10px 30px rgba(15, 23, 42, 0.07)",
+                    transition: "all 0.25s ease",
+                }}
+                bodyStyle={{ padding: 0 }}
+            >
+                <div
+                    style={{
+                        padding: 24,
+                        background: active
+                            ? `linear-gradient(135deg, ${color}, ${lightColor})`
+                            : "#f8fafc",
+                        color: active ? "#ffffff" : "#0f172a",
+                        borderBottom: active ? "none" : "1px solid #eef2f7",
+                    }}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 16,
+                            alignItems: "flex-start",
+                        }}
+                    >
+                        <Space align="start" size={14}>
+                            <div
+                                style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 12,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: 22,
+                                    background: active ? "rgba(255,255,255,0.18)" : `${color}14`,
+                                    color: active ? "#ffffff" : color,
+                                }}
+                            >
+                                {icon}
+                            </div>
+
+                            <div>
+                                <Space size={8} wrap>
+                                    <div
+                                        style={{
+                                            fontSize: 18,
+                                            fontWeight: 700,
+                                            lineHeight: 1.25,
+                                        }}
+                                    >
+                                        {title}
+                                    </div>
+
+                                    <Tag
+                                        color={active ? "green" : "default"}
+                                        style={{
+                                            borderRadius: 999,
+                                            marginInlineEnd: 0,
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        {active ? "Active" : "Inactive"}
+                                    </Tag>
+                                </Space>
+
+                                <div
+                                    style={{
+                                        marginTop: 6,
+                                        fontSize: 13,
+                                        lineHeight: 1.5,
+                                        color: active ? "rgba(255,255,255,0.82)" : "#64748b",
+                                    }}
+                                >
+                                    {description}
+                                </div>
+
+                                <div
+                                    style={{
+                                        marginTop: 12,
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        color: active ? "rgba(255,255,255,0.78)" : "#64748b",
+                                        textTransform: "uppercase",
+                                        letterSpacing: 0.5,
+                                    }}
+                                >
+                                    {category}
+                                </div>
+                            </div>
+                        </Space>
+
+                        <Switch checked={active} onChange={onToggle} />
+                    </div>
+                </div>
+
+                <div
+                    style={{
+                        padding: 24,
+                        minHeight: 278,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                    }}
+                >
+                    <div>{children}</div>
+
+                    <Button
+                        type="primary"
+                        size="large"
+                        block
+                        icon={saveIcon}
+                        onClick={onSave}
+                        style={{
+                            marginTop: 24,
+                            height: 46,
+                            borderRadius: 10,
+                            fontWeight: 600,
+                            background: color,
+                            borderColor: color,
+                            boxShadow: active ? `0 8px 22px ${color}40` : "none",
+                        }}
+                    >
+                        Save Configuration
+                    </Button>
+                </div>
+            </Card>
+        </motion.div>
+    );
+}
+
+const EMPTY_LIST: any[] = [];
 
 export default function AgentConfiguration(): React.ReactElement {
     const [boomiDataHubActive, setBoomiDataHubActive] = useState<boolean>(true);
@@ -45,10 +209,10 @@ export default function AgentConfiguration(): React.ReactElement {
     const [boomiIntegrationActive, setBoomiIntegrationActive] = useState<boolean>(true);
     const [customIntegrationActive, setCustomIntegrationActive] = useState<boolean>(false);
     const dispatch = useAppDispatch();
-    const AiAgents = useAppSelector((state) => state.connecters?.aiagentget?.[0]?.agents) || [];
-    const databaseConnectors = useAppSelector((state) => state.connecters?.databaseget?.[0]?.Connectors) || [];
-    const restApiConnectors = useAppSelector((state) => state.connecters?.restapiconnectersget?.Response) || [];
-    const ticketConnectors = useAppSelector((state) => state.connecters?.itsmget?.Response) || [];
+    const AiAgents = useAppSelector((state) => state.connecters?.aiagentget?.[0]?.agents) || EMPTY_LIST;
+    const databaseConnectors = useAppSelector((state) => state.connecters?.databaseget?.[0]?.Connectors) || EMPTY_LIST;
+    const restApiConnectors = useAppSelector((state) => state.connecters?.restapiconnectersget?.Response) || EMPTY_LIST;
+    const ticketConnectors = useAppSelector((state) => state.connecters?.itsmget?.Response) || EMPTY_LIST;
     const [activeTab, setActiveTab] = useState("datahub");
     // DataHub Custom
     const [datahubDatabaseId, setDatahubDatabaseId] = useState("");
@@ -61,11 +225,19 @@ export default function AgentConfiguration(): React.ReactElement {
     const [integrationAiAgentId, setIntegrationAiAgentId] = useState("");
     const [integrationTicketId, setIntegrationTicketId] = useState("");
     const [integrationRestApiId, setIntegrationRestApiId] = useState("");
-    const [boomiRestApi, setBoomiRestApi] = useState("");
-    const [boomiUserName, setBoomiUserName] = useState("");
-    const [boomiPassword, setBoomiPassword] = useState("");
-    const [boomiMethod, setBoomiMethod] = useState("");
-    const configget = useAppSelector((state) => state.connecters?.TeamsconfigrationGets) || [];
+
+    // DataHub Boomi
+    const [datahubBoomiRestApi, setDatahubBoomiRestApi] = useState("");
+    const [datahubBoomiUserName, setDatahubBoomiUserName] = useState("");
+    const [datahubBoomiPassword, setDatahubBoomiPassword] = useState("");
+    const [datahubBoomiMethod, setDatahubBoomiMethod] = useState("");
+
+    // Integration Boomi
+    const [integrationBoomiRestApi, setIntegrationBoomiRestApi] = useState("");
+    const [integrationBoomiUserName, setIntegrationBoomiUserName] = useState("");
+    const [integrationBoomiPassword, setIntegrationBoomiPassword] = useState("");
+    const [integrationBoomiMethod, setIntegrationBoomiMethod] = useState("");
+    const configget = useAppSelector((state) => state.connecters?.TeamsconfigrationGets) || EMPTY_LIST;
     useEffect(() => {
 
         dispatch(TeamsconfigrationGet({}));
@@ -125,14 +297,14 @@ export default function AgentConfiguration(): React.ReactElement {
             setBoomiDataHubActive(datahubBoomi.status === "active");
             setCustomDataHubActive(datahubBoomi.status !== "active");
 
-            setBoomiRestApi(datahubBoomi.rest_api_name || "");
+            setDatahubBoomiRestApi(datahubBoomi.rest_api_name || "");
 
             if (datahubBoomi.rest_api_details) {
                 const rest = parseRestApiDetails(datahubBoomi.rest_api_details);
 
-                setBoomiUserName(rest.username || "");
-                setBoomiPassword(rest.password_token || "");
-                setBoomiMethod(rest.http_method || "");
+                setDatahubBoomiUserName(rest.username || "");
+                setDatahubBoomiPassword(rest.password_token || "");
+                setDatahubBoomiMethod(rest.http_method || "");
             }
         }
 
@@ -166,14 +338,14 @@ export default function AgentConfiguration(): React.ReactElement {
             setBoomiIntegrationActive(integrationBoomi.status === "active");
             setCustomIntegrationActive(integrationBoomi.status !== "active");
 
-            setBoomiRestApi(integrationBoomi.rest_api_name || "");
+            setIntegrationBoomiRestApi(integrationBoomi.rest_api_name || "");
 
             if (integrationBoomi.rest_api_details) {
                 const rest = parseRestApiDetails(integrationBoomi.rest_api_details);
 
-                setBoomiUserName(rest.username || "");
-                setBoomiPassword(rest.password_token || "");
-                setBoomiMethod(rest.http_method || "");
+                setIntegrationBoomiUserName(rest.username || "");
+                setIntegrationBoomiPassword(rest.password_token || "");
+                setIntegrationBoomiMethod(rest.http_method || "");
             }
         }
 
@@ -251,6 +423,11 @@ export default function AgentConfiguration(): React.ReactElement {
                     : integrationRestApiId)
         );
         console.log(selectedRest)
+
+        const boomiRestApi = type === "datahub" ? datahubBoomiRestApi : integrationBoomiRestApi;
+        const boomiUserName = type === "datahub" ? datahubBoomiUserName : integrationBoomiUserName;
+        const boomiPassword = type === "datahub" ? datahubBoomiPassword : integrationBoomiPassword;
+        const boomiMethod = type === "datahub" ? datahubBoomiMethod : integrationBoomiMethod;
 
         return {
 
@@ -397,170 +574,6 @@ export default function AgentConfiguration(): React.ReactElement {
     );
 
 
-    const AgentCard = ({
-        title,
-        description,
-        category,
-        active,
-        color,
-        lightColor,
-        icon,
-        saveIcon,
-        onToggle,
-        children,
-        delay = 0,
-    }: AgentCardProps): React.ReactElement => (
-        <motion.div
-            initial={false}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay }}
-            style={{ height: "100%" }}
-        >
-            <Card
-                hoverable
-                bordered={false}
-                style={{
-                    height: "100%",
-                    borderRadius: 16,
-                    overflow: "hidden",
-                    background: "#ffffff",
-                    border: active ? `1px solid ${color}` : "1px solid #e5e7eb",
-                    boxShadow: active
-                        ? `0 18px 42px ${color}24`
-                        : "0 10px 30px rgba(15, 23, 42, 0.07)",
-                    transition: "all 0.25s ease",
-                }}
-                bodyStyle={{ padding: 0 }}
-            >
-                <div
-                    style={{
-                        padding: 24,
-                        background: active
-                            ? `linear-gradient(135deg, ${color}, ${lightColor})`
-                            : "#f8fafc",
-                        color: active ? "#ffffff" : "#0f172a",
-                        borderBottom: active ? "none" : "1px solid #eef2f7",
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            gap: 16,
-                            alignItems: "flex-start",
-                        }}
-                    >
-                        <Space align="start" size={14}>
-                            <div
-                                style={{
-                                    width: 48,
-                                    height: 48,
-                                    borderRadius: 12,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: 22,
-                                    background: active ? "rgba(255,255,255,0.18)" : `${color}14`,
-                                    color: active ? "#ffffff" : color,
-                                }}
-                            >
-                                {icon}
-                            </div>
-
-                            <div>
-                                <Space size={8} wrap>
-                                    <div
-                                        style={{
-                                            fontSize: 18,
-                                            fontWeight: 700,
-                                            lineHeight: 1.25,
-                                        }}
-                                    >
-                                        {title}
-                                    </div>
-
-                                    <Tag
-                                        color={active ? "green" : "default"}
-                                        style={{
-                                            borderRadius: 999,
-                                            marginInlineEnd: 0,
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        {active ? "Active" : "Inactive"}
-                                    </Tag>
-                                </Space>
-
-                                <div
-                                    style={{
-                                        marginTop: 6,
-                                        fontSize: 13,
-                                        lineHeight: 1.5,
-                                        color: active ? "rgba(255,255,255,0.82)" : "#64748b",
-                                    }}
-                                >
-                                    {description}
-                                </div>
-
-                                <div
-                                    style={{
-                                        marginTop: 12,
-                                        fontSize: 12,
-                                        fontWeight: 700,
-                                        color: active ? "rgba(255,255,255,0.78)" : "#64748b",
-                                        textTransform: "uppercase",
-                                        letterSpacing: 0.5,
-                                    }}
-                                >
-                                    {category}
-                                </div>
-                            </div>
-                        </Space>
-
-                        <Switch checked={active} onChange={onToggle} />
-                    </div>
-                </div>
-
-                <div
-                    style={{
-                        padding: 24,
-                        minHeight: 278,
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "space-between",
-                    }}
-                >
-                    <div>{children}</div>
-
-                    <Button
-                        type="primary"
-                        size="large"
-                        block
-                        icon={saveIcon}
-                        onClick={() => {
-                            if (activeTab === "datahub") {
-                                handleSaveDataHub();
-                            } else {
-                                handleSaveIntegration();
-                            }
-                        }}
-                        style={{
-                            marginTop: 24,
-                            height: 46,
-                            borderRadius: 10,
-                            fontWeight: 600,
-                            background: color,
-                            borderColor: color,
-                            boxShadow: active ? `0 8px 22px ${color}40` : "none",
-                        }}
-                    >
-                        Save Configuration
-                    </Button>
-                </div>
-            </Card>
-        </motion.div>
-    );
-
     const dataHubTab = (
         <Row gutter={[24, 24]} align="stretch">
             <Col xs={24} lg={12}>
@@ -577,33 +590,34 @@ export default function AgentConfiguration(): React.ReactElement {
                         setBoomiDataHubActive(checked);
                         if (checked) setCustomDataHubActive(false);
                     }}
+                    onSave={handleSaveDataHub}
                     delay={0.08}
                 >
                     <Row gutter={[16, 18]}>
                         <Col xs={24} sm={12}>
-                            {renderTextField("REST API ", " REST API", boomiRestApi,
-                                (e) => setBoomiRestApi(e.target.value))}
+                            {renderTextField("REST API ", " REST API", datahubBoomiRestApi,
+                                (e) => setDatahubBoomiRestApi(e.target.value))}
                         </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "User Name",
                                 "User Name",
-                                boomiUserName,
-                                (e) => setBoomiUserName(e.target.value)
+                                datahubBoomiUserName,
+                                (e) => setDatahubBoomiUserName(e.target.value)
                             )}                        </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "Password",
                                 "Password",
-                                boomiPassword,
-                                (e) => setBoomiPassword(e.target.value)
+                                datahubBoomiPassword,
+                                (e) => setDatahubBoomiPassword(e.target.value)
                             )}                        </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "Method",
                                 "Method",
-                                boomiMethod,
-                                (e) => setBoomiMethod(e.target.value)
+                                datahubBoomiMethod,
+                                (e) => setDatahubBoomiMethod(e.target.value)
                             )}
                         </Col>
                     </Row>
@@ -624,6 +638,7 @@ export default function AgentConfiguration(): React.ReactElement {
                         setCustomDataHubActive(checked);
                         if (checked) setBoomiDataHubActive(false);
                     }}
+                    onSave={handleSaveDataHub}
                     delay={0.08}
                 >
                     <Row gutter={[16, 18]}>
@@ -700,32 +715,33 @@ export default function AgentConfiguration(): React.ReactElement {
                         setBoomiIntegrationActive(checked);
                         if (checked) setCustomIntegrationActive(false);
                     }}
+                    onSave={handleSaveIntegration}
                 >
                     <Row gutter={[16, 18]}>
                         <Col xs={24} sm={12}>
-                            {renderTextField("REST API ", " REST API", boomiRestApi,
-                                (e) => setBoomiRestApi(e.target.value))}
+                            {renderTextField("REST API ", " REST API", integrationBoomiRestApi,
+                                (e) => setIntegrationBoomiRestApi(e.target.value))}
                         </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "User Name",
                                 "User Name",
-                                boomiUserName,
-                                (e) => setBoomiUserName(e.target.value)
+                                integrationBoomiUserName,
+                                (e) => setIntegrationBoomiUserName(e.target.value)
                             )}                        </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "Password",
                                 "Password",
-                                boomiPassword,
-                                (e) => setBoomiPassword(e.target.value)
+                                integrationBoomiPassword,
+                                (e) => setIntegrationBoomiPassword(e.target.value)
                             )}                        </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "Method",
                                 "Method",
-                                boomiMethod,
-                                (e) => setBoomiMethod(e.target.value)
+                                integrationBoomiMethod,
+                                (e) => setIntegrationBoomiMethod(e.target.value)
                             )}
                         </Col>
                     </Row>
@@ -746,6 +762,7 @@ export default function AgentConfiguration(): React.ReactElement {
                         setCustomIntegrationActive(checked);
                         if (checked) setBoomiIntegrationActive(false);
                     }}
+                    onSave={handleSaveIntegration}
                     delay={0.08}
                 >
                     <Row gutter={[16, 18]}>
@@ -757,8 +774,8 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.connector_name,
                                     value: item.connector_id,
                                 })),
-                                datahubDatabaseId,
-                                setDatahubDatabaseId
+                                integrationDatabaseId,
+                                setIntegrationDatabaseId
                             )}
                         </Col>
 
@@ -770,8 +787,8 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.agent_name,
                                     value: item.agent_id,
                                 })),
-                                datahubAiAgentId,
-                                setDatahubAiAgentId
+                                integrationAiAgentId,
+                                setIntegrationAiAgentId
                             )}
                         </Col>
 
@@ -783,8 +800,8 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.ticket_name,
                                     value: item.ticket_id,
                                 })),
-                                datahubTicketId,
-                                setDatahubTicketId
+                                integrationTicketId,
+                                setIntegrationTicketId
                             )}
                         </Col>
 
@@ -796,8 +813,8 @@ export default function AgentConfiguration(): React.ReactElement {
                                     label: item.api_name,
                                     value: item.rest_api_id,
                                 })),
-                                datahubRestApiId,
-                                setDatahubRestApiId
+                                integrationRestApiId,
+                                setIntegrationRestApiId
                             )}
                         </Col>
                     </Row>

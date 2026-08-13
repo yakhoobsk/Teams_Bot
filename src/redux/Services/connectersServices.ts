@@ -36,7 +36,9 @@ export const aiconnecterCreate = createAsyncThunk("AI/create", async ({ payload 
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Ai failed");
+        const message = error.response?.data?.message || "Ai failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -55,7 +57,9 @@ export const aiconnecterUpdate = createAsyncThunk("AI/Update", async ({ payload 
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Update failed");
+        const message = error.response?.data?.message || "Update failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -73,7 +77,9 @@ export const aiconnecterDelete = createAsyncThunk("update/Delete", async ({ payl
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Delete failed");
+        const message = error.response?.data?.message || "Delete failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -109,7 +115,9 @@ export const GroupsCreate = createAsyncThunk("Groups/create", async ({ payload }
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Group creation failed");
+        const message = error.response?.data?.message || "Group creation failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -128,7 +136,9 @@ export const GroupsUpdate = createAsyncThunk("Groups/Update", async ({ payload }
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Update failed");
+        const message = error.response?.data?.message || "Update failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -146,7 +156,9 @@ export const GroupsDelete = createAsyncThunk("Groups/Delete", async ({ payload }
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Delete failed");
+        const message = error.response?.data?.message || "Delete failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -182,7 +194,9 @@ export const databaseconnecterCreate = createAsyncThunk("database/create", async
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Ai failed");
+        const message = error.response?.data?.message || "Ai failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -201,7 +215,9 @@ export const databaseconnecterUpdate = createAsyncThunk("database/Update", async
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Ai failed");
+        const message = error.response?.data?.message || "Ai failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -238,7 +254,9 @@ export const itsmconnecterCreate = createAsyncThunk("itsm/create", async ({ payl
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Ai failed");
+        const message = error.response?.data?.message || "Ai failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -288,7 +306,9 @@ export const TeamsconfigCreate = createAsyncThunk("Teamsconfig/create", async ({
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Ai failed");
+        const message = error.response?.data?.message || "Ai failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -306,7 +326,9 @@ export const TeamsconfigUpdate = createAsyncThunk("Teamsconfig/Update", async ({
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Ai failed");
+        const message = error.response?.data?.message || "Ai failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -347,7 +369,9 @@ export const RestApiConnectersCreate = createAsyncThunk("RestApiConnecters/creat
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+        const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -364,7 +388,9 @@ export const RestApiConnectersUpdate = createAsyncThunk("RestApiConnecters/Updat
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+        const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -381,7 +407,9 @@ export const RestApiConnectersDelete = createAsyncThunk("RestApiConnecters/Delet
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+        const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -416,7 +444,9 @@ export const TeamsconfigrationUpdate = createAsyncThunk("Teamsconfigration/Updat
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+        const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -450,7 +480,9 @@ export const IndividualuserUpdate = createAsyncThunk("IndividualuserUpdate/Updat
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+        const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -467,7 +499,9 @@ export const IndividualuserCreate = createAsyncThunk("IndividualuserCreate/Creat
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+        const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -484,7 +518,9 @@ export const IndividualuserDelete = createAsyncThunk("Individualuser/Delete", as
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+        const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -517,7 +553,9 @@ export const ChannelsCreate = createAsyncThunk("ChannelsCreate/Create", async ({
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+        const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -534,7 +572,9 @@ export const ChannelsDelete = createAsyncThunk("Channels/Delete", async ({ paylo
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "Rest API failed");
+        const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -594,7 +634,9 @@ export const userCreate = createAsyncThunk("UsersCreate/create", async ({ payloa
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "User creation failed");
+        const message = error.response?.data?.message || "User creation failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -610,7 +652,9 @@ export const UserUpdate = createAsyncThunk("UsersUpdate/update", async ({ payloa
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "User update failed");
+        const message = error.response?.data?.message || "User update failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );
@@ -630,7 +674,9 @@ export const LogoutUser = createAsyncThunk("LogoutUser/user", async (_: any, { r
         }
         return response.data;
     } catch (error: any) {
-        return rejectWithValue(error.response?.data?.message || "LogoutUser failed");
+        const message = error.response?.data?.message || "LogoutUser failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );

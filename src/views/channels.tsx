@@ -52,6 +52,18 @@ const Channels: React.FC = () => {
         dispatch(ChannelsUser({}));
     }, [dispatch]);
 
+    const parseAlerts = (value: any): string[] => {
+        if (!value) return [];
+        if (Array.isArray(value)) return value;
+
+        try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch {
+            return [];
+        }
+    };
+
     useEffect(() => {
         if (channelsget?.Response?.length) {
             const weekDays = [
@@ -88,24 +100,24 @@ const Channels: React.FC = () => {
 
                 scheduleParts.push(istTime);
 
+                const memberList =
+                    item.group_members ?? item.teamMembers ?? item.channelMembers ?? [];
+
                 return {
                     key: item.id,
                     id: item.id,
-                    teamName: item.team_display_name,
-                    channelName: item.channel_display_name,
-                    notificationType: item.membership_type,
+                    teamName: item.team_display_name ?? item.teamDisplayName,
+                    channelName: item.channel_display_name ?? item.channelDisplayName,
+                    notificationType: item.membership_type ?? item.membershipType,
                     Type: item.type,
 
-                    members:
-                        item.group_members?.map(
-                            (m: any) => `${m.userId} (${m.role})`
-                        ) || [],
+                    members: Array.isArray(memberList)
+                        ? memberList.map((m: any) => `${m.userId} (${m.role})`)
+                        : [],
 
                     groups: item.group_name ? [item.group_name] : [],
 
-                    alerts: item.channel_alert
-                        ? JSON.parse(item.channel_alert)
-                        : [],
+                    alerts: parseAlerts(item.channel_alert ?? item.channelAlert),
 
                     schedule: scheduleParts.join(" • "),
                 };
@@ -166,7 +178,7 @@ const Channels: React.FC = () => {
             key: "membersGroups",
             responsive: ["sm", "md", "lg"],
             render: (_, record) => {
-                if (record.members) {
+                if (record.members && record.members.length > 0) {
                     const shown = record.members.slice(0, 2);
                     const hidden = record.members.length - shown.length;
 
@@ -194,7 +206,7 @@ const Channels: React.FC = () => {
                     );
                 }
 
-                if (record.groups) {
+                if (record.groups && record.groups.length > 0) {
                     const shown = record.groups.slice(0, 2);
                     const hidden = record.groups.length - shown.length;
 
