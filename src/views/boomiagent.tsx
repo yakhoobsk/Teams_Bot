@@ -66,7 +66,6 @@ export default function AgentConfiguration(): React.ReactElement {
     const [boomiPassword, setBoomiPassword] = useState("");
     const [boomiMethod, setBoomiMethod] = useState("");
     const configget = useAppSelector((state) => state.connecters?.TeamsconfigrationGets) || [];
-
     useEffect(() => {
 
         dispatch(TeamsconfigrationGet({}));
@@ -83,6 +82,16 @@ export default function AgentConfiguration(): React.ReactElement {
         dispatch(DataBaseConnectersGet({ database_type: activeTab === "datahub" ? "Datahub" : "Integrations", }));
     }, [dispatch, activeTab]);
 
+
+    const parseRestApiDetails = (details: any): any => {
+        try {
+            const parsed = typeof details === "string" ? JSON.parse(details) : details;
+            return Array.isArray(parsed) ? parsed[0] || {} : parsed || {};
+        } catch (error) {
+            console.error("Failed to parse rest_api_details", error);
+            return {};
+        }
+    };
 
     useEffect(() => {
         const configs = configget?.[0]?.Teams_Configuration;
@@ -119,14 +128,11 @@ export default function AgentConfiguration(): React.ReactElement {
             setBoomiRestApi(datahubBoomi.rest_api_name || "");
 
             if (datahubBoomi.rest_api_details) {
-                const rest =
-                    typeof datahubBoomi.rest_api_details === "string"
-                        ? JSON.parse(datahubBoomi.rest_api_details)
-                        : datahubBoomi.rest_api_details;
+                const rest = parseRestApiDetails(datahubBoomi.rest_api_details);
 
                 setBoomiUserName(rest.username || "");
-                setBoomiPassword(rest.password || "");
-                setBoomiMethod(rest.method || "");
+                setBoomiPassword(rest.password_token || "");
+                setBoomiMethod(rest.http_method || "");
             }
         }
 
@@ -163,14 +169,11 @@ export default function AgentConfiguration(): React.ReactElement {
             setBoomiRestApi(integrationBoomi.rest_api_name || "");
 
             if (integrationBoomi.rest_api_details) {
-                const rest =
-                    typeof integrationBoomi.rest_api_details === "string"
-                        ? JSON.parse(integrationBoomi.rest_api_details)
-                        : integrationBoomi.rest_api_details;
+                const rest = parseRestApiDetails(integrationBoomi.rest_api_details);
 
                 setBoomiUserName(rest.username || "");
-                setBoomiPassword(rest.password || "");
-                setBoomiMethod(rest.method || "");
+                setBoomiPassword(rest.password_token || "");
+                setBoomiMethod(rest.http_method || "");
             }
         }
 
@@ -251,7 +254,7 @@ export default function AgentConfiguration(): React.ReactElement {
 
         return {
 
-            Type: `${type} agent`,
+            Type: `${type === "datahub" ? "datahub" : "integrations"} ${isBoomi ? "agent" : "custom"}`,
 
             company_name: "EasyStepin",
 
