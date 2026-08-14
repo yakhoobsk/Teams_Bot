@@ -469,6 +469,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                 <Select placeholder="Select Security">
                                     <Option value="Public">Public</Option>
                                     <Option value="Private">Private</Option>
+
                                 </Select>
                             </Form.Item>
                         </Col>
@@ -484,8 +485,9 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                 ]}
                             >
                                 <Select placeholder="Select Type">
-                                    <Option value="datahub">datahub</Option>
-                                    <Option value="integration">integration</Option>
+                                    <Option value="standard">Standard</Option>
+                                    <Option value="shared">Shared</Option>
+                                    <Option value="Private">Private</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
