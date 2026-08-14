@@ -544,7 +544,7 @@ export const ChannelsUser = createAsyncThunk(
 export const ChannelsCreate = createAsyncThunk("ChannelsCreate/Create", async ({ payload }: any, { rejectWithValue }) => {
     try {
 
-        const response = await boomiApi.post("/teams_bot/channels/insert", payload);
+        const response = await boomiApi.post("/teams_bot/Channel/Create", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
         } else if (response?.data?.Status_Response === "Success") {
