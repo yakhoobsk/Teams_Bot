@@ -70,6 +70,24 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
         }
     };
 
+    const findUser = (member: string) =>
+        userspage?.find((u: any) => u.user_id === member) ||
+        userspage?.find(
+            (u: any) =>
+                u.first_name === member ||
+                `${u.first_name} ${u.last_name}` === member
+        );
+
+    const getUserLabel = (member: string): string => {
+        const user = findUser(member);
+        return user ? `${user.first_name} ${user.last_name}` : member;
+    };
+
+    const resolveUserId = (member: string): string => {
+        const user = findUser(member);
+        return user?.user_id || member;
+    };
+
     useEffect(() => {
         dispatch(UserswithoutpagnationGet({}));
         dispatch(GroupsGet({}));
@@ -154,7 +172,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
     const groupsPayload = selectedGroups.map((groupName) => ({
         groupname: groupName,
         members: (selectedMembers[groupName] || []).map((member) => ({
-            userId: member,
+            userId: resolveUserId(member),
             role: roles[member] || "member",
         })),
     }));
@@ -163,7 +181,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
         const groupMembers = Object.entries(selectedMembers).flatMap(
             ([, members]) =>
                 (members as string[]).map((member) => ({
-                    userId: member,
+                    userId: resolveUserId(member),
                     role: roles[member] || "member",
                 }))
         );
@@ -408,7 +426,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                                                             });
                                                                         }}
                                                                     >
-                                                                        {member}
+                                                                        {getUserLabel(member)}
                                                                     </Checkbox>
 
                                                                     {(selectedMembers[group.group_name] || []).includes(
