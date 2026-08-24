@@ -48,6 +48,9 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
     const [editingRecord, setEditingRecord] = useState<any>(null);
     const [open, setOpen] = useState<boolean>(false);
     const [editingId, setEditingId] = useState<number | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [togglingId, setTogglingId] = useState<number | null>(null);
     const dispatch = useAppDispatch();
     const groupResponse = useAppSelector((state) => state.connecters.GroupsGets);
     const userspage = useAppSelector((state) => state.connecters?.Userswithoutpagnation);
@@ -132,6 +135,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
     };
 
     const onFinish = async (values: GroupFormValues) => {
+        setSaving(true);
         try {
             if (editingRecord) {
                 const payload = {
@@ -162,15 +166,16 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
             }
 
             dispatch(GroupsGet({}));
-
-            showSnackbar("success", "Group created successfully");
             closeModal();
         } catch {
             showSnackbar("error", "Operation failed");
+        } finally {
+            setSaving(false);
         }
     };
 
     const toggleStatus = async (record: any, active: boolean) => {
+        setTogglingId(record.id);
         try {
             const payload = {
                 group_id: record.groupId,
@@ -193,10 +198,13 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
             );
         } catch {
             showSnackbar("error", "Failed to update status");
+        } finally {
+            setTogglingId(null);
         }
     };
 
     const deleteGroup = async (record: any) => {
+        setDeletingId(record.id);
         try {
             const payload = {
                 group_id: record.groupId,
@@ -209,6 +217,8 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
             showSnackbar("success", "Group deleted successfully");
         } catch {
             showSnackbar("error", "Failed to delete group");
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -266,6 +276,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                             checked={active}
                             checkedChildren="Active"
                             unCheckedChildren="Inactive"
+                            loading={togglingId === record.id}
                             onChange={(checked) => toggleStatus(record, checked)}
                         />
                         <Tag color={active ? "success" : "default"}>
@@ -289,10 +300,10 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                             description="Are you sure you want to delete this group?"
                             okText="Delete"
                             cancelText="Cancel"
-                            okButtonProps={{ danger: true }}
-                            onConfirm={() => deleteGroup(record.id)}
+                            okButtonProps={{ danger: true, loading: deletingId === record.id }}
+                            onConfirm={() => deleteGroup(record)}
                         >
-                            <Button danger icon={<DeleteOutlined />}>
+                            <Button danger icon={<DeleteOutlined />} loading={deletingId === record.id}>
                                 Delete
                             </Button>
                         </Popconfirm>
@@ -300,7 +311,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                 ),
             },
         ],
-        []
+        [togglingId, deletingId]
     );
 
     return (
@@ -335,7 +346,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
           .group-management-page .ant-table-thead > tr > th {
             background: #f8fafc !important;
             color: #334155 !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
           }
 
           .group-management-card {
@@ -606,6 +617,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                             <Button
                                 type="primary"
                                 htmlType="submit"
+                                loading={saving}
                                 icon={isEditing ? <EditOutlined /> : <PlusOutlined />}
                                 style={{
                                     background: "#2563eb",

@@ -41,6 +41,8 @@ const UserAlertsTable: React.FC = () => {
     const individualuser = useAppSelector((state) => state.connecters?.IndividualUsers) || [];
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [updatingKey, setUpdatingKey] = useState<string | null>(null);
+    const [deletingKey, setDeletingKey] = useState<string | null>(null);
 
     useEffect(() => {
         dispatch(IndividualUser({}));
@@ -237,7 +239,7 @@ const UserAlertsTable: React.FC = () => {
         );
     };
 
-    const handleEdit = (record: UserPermission) => {
+    const handleEdit = async (record: UserPermission) => {
         const utcTime = dayjs(record.schedule_time, "HH:mm")
             .utc()
             .format("HH");
@@ -268,11 +270,20 @@ const UserAlertsTable: React.FC = () => {
             mdm: record.mdm ? "1" : "0",
             tickets: record.tickets ? "1" : "0",
         };
-        dispatch(IndividualuserUpdate({ payload })).unwrap();
-        dispatch(IndividualUser({}));
+
+        setUpdatingKey(record.key);
+        try {
+            await dispatch(IndividualuserUpdate({ payload })).unwrap();
+            dispatch(IndividualUser({}));
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setUpdatingKey(null);
+        }
     };
 
     const handleDelete = async (record: UserPermission) => {
+        setDeletingKey(record.key);
         try {
             const payload = {
                 id: record.id,
@@ -284,6 +295,8 @@ const UserAlertsTable: React.FC = () => {
             dispatch(IndividualUser({}));
         } catch (error) {
             console.error(error);
+        } finally {
+            setDeletingKey(null);
         }
     };
 
@@ -546,6 +559,7 @@ const UserAlertsTable: React.FC = () => {
                         <Button
                             type="primary"
                             icon={<EditOutlined />}
+                            loading={updatingKey === record.key}
                             onClick={() => handleEdit(record)}
                             style={{
                                 borderRadius: 8,
@@ -567,7 +581,7 @@ const UserAlertsTable: React.FC = () => {
                         description="Are you sure you want to delete this user?"
                         okText="Delete"
                         cancelText="Cancel"
-                        okButtonProps={{ danger: true }}
+                        okButtonProps={{ danger: true, loading: deletingKey === record.key }}
                         onConfirm={() => handleDelete(record)}
                     >
                         <Tooltip title="Delete">
@@ -575,6 +589,7 @@ const UserAlertsTable: React.FC = () => {
                                 type="text"
                                 danger
                                 icon={<DeleteOutlined />}
+                                loading={deletingKey === record.key}
                             />
                         </Tooltip>
                     </Popconfirm>
@@ -646,7 +661,7 @@ const UserAlertsTable: React.FC = () => {
                     columns={columns}
                     dataSource={data}
                     pagination={false}
-                    scroll={{ x: "max-content" }}
+                    scroll={{ x: "max-content", y: 520 }}
                     size="middle"
                 />
                 <NotificationModal

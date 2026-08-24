@@ -36,6 +36,7 @@ type AgentCardProps = {
     saveIcon: ReactNode;
     onToggle: (checked: boolean) => void;
     onSave: () => void;
+    saving?: boolean;
     children: ReactNode;
     delay?: number;
 };
@@ -51,6 +52,7 @@ function AgentCard({
     saveIcon,
     onToggle,
     onSave,
+    saving = false,
     children,
     delay = 0,
 }: AgentCardProps): React.ReactElement {
@@ -182,6 +184,7 @@ function AgentCard({
                         size="large"
                         block
                         icon={saveIcon}
+                        loading={saving}
                         onClick={onSave}
                         style={{
                             marginTop: 24,
@@ -238,6 +241,8 @@ export default function AgentConfiguration(): React.ReactElement {
     const [integrationBoomiPassword, setIntegrationBoomiPassword] = useState("");
     const [integrationBoomiMethod, setIntegrationBoomiMethod] = useState("");
     const configget = useAppSelector((state) => state.connecters?.TeamsconfigrationGets) || EMPTY_LIST;
+    const [savingDataHub, setSavingDataHub] = useState(false);
+    const [savingIntegration, setSavingIntegration] = useState(false);
     useEffect(() => {
 
         dispatch(TeamsconfigrationGet({}));
@@ -311,25 +316,15 @@ export default function AgentConfiguration(): React.ReactElement {
         // ---------------- DATAHUB CUSTOM ----------------
 
         if (datahubCustom) {
-            const db = databaseConnectors.find(
-                (item: any) => item.connector_name === datahubCustom.database_name
-            );
+            const db = parseRestApiDetails(datahubCustom.database_details);
+            const ai = parseRestApiDetails(datahubCustom.ai_agent_details);
+            const ticket = parseRestApiDetails(datahubCustom.ticket_details);
+            const rest = parseRestApiDetails(datahubCustom.rest_api_details);
 
-            const ai = AiAgents.find(
-                (item: any) => item.agent_name === datahubCustom.ai_agent
-            );
-
-            const ticket = ticketConnectors.find(
-                (item: any) => item.ticket_name === datahubCustom.ticket_system
-            );
-
-            const rest = restApiConnectors.find(
-                (item: any) => item.api_name === datahubCustom.rest_api_name
-            );
-            setDatahubDatabaseId(db?.connector_id || "");
-            setDatahubAiAgentId(ai?.agent_id || "");
-            setDatahubTicketId(ticket?.ticket_id || "");
-            setDatahubRestApiId(rest?.rest_api_id || "");
+            setDatahubDatabaseId(db?.connector_name || "");
+            setDatahubAiAgentId(ai?.agent_name || "");
+            setDatahubTicketId(ticket?.ticket_name || "");
+            setDatahubRestApiId(rest?.api_name || "");
         }
         // ---------------- INTEGRATION BOOMI ----------------
 
@@ -352,34 +347,18 @@ export default function AgentConfiguration(): React.ReactElement {
         // ---------------- INTEGRATION CUSTOM ----------------
 
         if (integrationCustom) {
-            const db = databaseConnectors.find(
-                (item: any) => item.connector_name === integrationCustom.database_name
-            );
+            const db = parseRestApiDetails(integrationCustom.database_details);
+            const ai = parseRestApiDetails(integrationCustom.ai_agent_details);
+            const ticket = parseRestApiDetails(integrationCustom.ticket_details);
+            const rest = parseRestApiDetails(integrationCustom.rest_api_details);
 
-            const ai = AiAgents.find(
-                (item: any) => item.agent_name === integrationCustom.ai_agent
-            );
-
-            const ticket = ticketConnectors.find(
-                (item: any) => item.ticket_name === integrationCustom.ticket_system
-            );
-
-            const rest = restApiConnectors.find(
-                (item: any) => item.api_name === integrationCustom.rest_api_name
-            );
-            setIntegrationDatabaseId(db?.connector_id || "");
-            setIntegrationAiAgentId(ai?.agent_id || "");
-            setIntegrationTicketId(ticket?.ticket_id || "");
-            setIntegrationRestApiId(rest?.rest_api_id || "");
+            setIntegrationDatabaseId(db?.connector_name || "");
+            setIntegrationAiAgentId(ai?.agent_name || "");
+            setIntegrationTicketId(ticket?.ticket_name || "");
+            setIntegrationRestApiId(rest?.api_name || "");
         }
 
-    }, [
-        configget,
-        databaseConnectors,
-        AiAgents,
-        ticketConnectors,
-        restApiConnectors
-    ]);
+    }, [configget]);
 
     const handleTabChange = (key: string) => {
         setActiveTab(key);
@@ -393,7 +372,7 @@ export default function AgentConfiguration(): React.ReactElement {
 
         const selectedDb = databaseConnectors.find(
             (x: any) =>
-                x.connector_id ===
+                x.connector_name ===
                 (type === "datahub"
                     ? datahubDatabaseId
                     : integrationDatabaseId)
@@ -401,7 +380,7 @@ export default function AgentConfiguration(): React.ReactElement {
 
         const selectedAi = AiAgents.find(
             (x: any) =>
-                x.agent_id ===
+                x.agent_name ===
                 (type === "datahub"
                     ? datahubAiAgentId
                     : integrationAiAgentId)
@@ -409,7 +388,7 @@ export default function AgentConfiguration(): React.ReactElement {
 
         const selectedTicket = ticketConnectors.find(
             (x: any) =>
-                x.ticket_id ===
+                x.ticket_name ===
                 (type === "datahub"
                     ? datahubTicketId
                     : integrationTicketId)
@@ -417,12 +396,11 @@ export default function AgentConfiguration(): React.ReactElement {
 
         const selectedRest = restApiConnectors.find(
             (x: any) =>
-                x.rest_api_id ===
+                x.api_name ===
                 (type === "datahub"
                     ? datahubRestApiId
                     : integrationRestApiId)
         );
-        console.log(selectedRest)
 
         const boomiRestApi = type === "datahub" ? datahubBoomiRestApi : integrationBoomiRestApi;
         const boomiUserName = type === "datahub" ? datahubBoomiUserName : integrationBoomiUserName;
@@ -454,7 +432,7 @@ export default function AgentConfiguration(): React.ReactElement {
 
             rest_api_name: isBoomi
                 ? boomiRestApi
-                : "",
+                : selectedRest?.api_name || "",
 
             rest_api_details: isBoomi
                 ? [
@@ -465,7 +443,7 @@ export default function AgentConfiguration(): React.ReactElement {
                         http_method: boomiMethod,
                     }
                 ]
-                : [],
+                : (selectedRest ? [selectedRest] : []),
 
             // ---------------- CUSTOM ----------------
 
@@ -496,23 +474,28 @@ export default function AgentConfiguration(): React.ReactElement {
         };
     };
 
-    const handleSaveIntegration = () => {
-        if (boomiIntegrationActive) {
-            const payload = buildPayload("integration", true);
-            dispatch(TeamsconfigrationUpdate({ payload }));
+    const handleSaveIntegration = async () => {
+        const payload = buildPayload("integration", boomiIntegrationActive);
 
-        } else {
-            const payload = buildPayload("integration", false);
-            dispatch(TeamsconfigrationUpdate({ payload }));
+        setSavingIntegration(true);
+        try {
+            await dispatch(TeamsconfigrationUpdate({ payload })).unwrap();
+        } catch {
+            // error toast already shown by the TeamsconfigrationUpdate thunk
+        } finally {
+            setSavingIntegration(false);
         }
     };
-    const handleSaveDataHub = () => {
-        if (boomiDataHubActive) {
-            const payload = buildPayload("datahub", true);
-            dispatch(TeamsconfigrationUpdate({ payload }));
-        } else {
-            const payload = buildPayload("datahub", false);
-            dispatch(TeamsconfigrationUpdate({ payload }));
+    const handleSaveDataHub = async () => {
+        const payload = buildPayload("datahub", boomiDataHubActive);
+
+        setSavingDataHub(true);
+        try {
+            await dispatch(TeamsconfigrationUpdate({ payload })).unwrap();
+        } catch {
+            // error toast already shown by the TeamsconfigrationUpdate thunk
+        } finally {
+            setSavingDataHub(false);
         }
     };
 
@@ -591,6 +574,7 @@ export default function AgentConfiguration(): React.ReactElement {
                         if (checked) setCustomDataHubActive(false);
                     }}
                     onSave={handleSaveDataHub}
+                    saving={savingDataHub}
                     delay={0.08}
                 >
                     <Row gutter={[16, 18]}>
@@ -639,6 +623,7 @@ export default function AgentConfiguration(): React.ReactElement {
                         if (checked) setBoomiDataHubActive(false);
                     }}
                     onSave={handleSaveDataHub}
+                    saving={savingDataHub}
                     delay={0.08}
                 >
                     <Row gutter={[16, 18]}>
@@ -648,7 +633,7 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "Select Database",
                                 databaseConnectors.map((item: any) => ({
                                     label: item.connector_name,
-                                    value: item.connector_id,
+                                    value: item.connector_name,
                                 })),
                                 datahubDatabaseId,
                                 setDatahubDatabaseId
@@ -661,7 +646,7 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "Select AI Agent",
                                 AiAgents.map((item: any) => ({
                                     label: item.agent_name,
-                                    value: item.agent_id,
+                                    value: item.agent_name,
                                 })),
                                 datahubAiAgentId,
                                 setDatahubAiAgentId
@@ -674,7 +659,7 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "Select Ticket Connection",
                                 ticketConnectors.map((item: any) => ({
                                     label: item.ticket_name,
-                                    value: item.ticket_id,
+                                    value: item.ticket_name,
                                 })),
                                 datahubTicketId,
                                 setDatahubTicketId
@@ -687,7 +672,7 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "Select REST API",
                                 restApiConnectors.map((item: any) => ({
                                     label: item.api_name,
-                                    value: item.rest_api_id,
+                                    value: item.api_name,
                                 })),
                                 datahubRestApiId,
                                 setDatahubRestApiId
@@ -716,6 +701,7 @@ export default function AgentConfiguration(): React.ReactElement {
                         if (checked) setCustomIntegrationActive(false);
                     }}
                     onSave={handleSaveIntegration}
+                    saving={savingIntegration}
                 >
                     <Row gutter={[16, 18]}>
                         <Col xs={24} sm={12}>
@@ -763,6 +749,7 @@ export default function AgentConfiguration(): React.ReactElement {
                         if (checked) setBoomiIntegrationActive(false);
                     }}
                     onSave={handleSaveIntegration}
+                    saving={savingIntegration}
                     delay={0.08}
                 >
                     <Row gutter={[16, 18]}>
@@ -772,7 +759,7 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "Select Database",
                                 databaseConnectors.map((item: any) => ({
                                     label: item.connector_name,
-                                    value: item.connector_id,
+                                    value: item.connector_name,
                                 })),
                                 integrationDatabaseId,
                                 setIntegrationDatabaseId
@@ -785,7 +772,7 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "Select AI Agent",
                                 AiAgents.map((item: any) => ({
                                     label: item.agent_name,
-                                    value: item.agent_id,
+                                    value: item.agent_name,
                                 })),
                                 integrationAiAgentId,
                                 setIntegrationAiAgentId
@@ -798,7 +785,7 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "Select Ticket Connection",
                                 ticketConnectors.map((item: any) => ({
                                     label: item.ticket_name,
-                                    value: item.ticket_id,
+                                    value: item.ticket_name,
                                 })),
                                 integrationTicketId,
                                 setIntegrationTicketId
@@ -811,7 +798,7 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "Select REST API",
                                 restApiConnectors.map((item: any) => ({
                                     label: item.api_name,
-                                    value: item.rest_api_id,
+                                    value: item.api_name,
                                 })),
                                 integrationRestApiId,
                                 setIntegrationRestApiId

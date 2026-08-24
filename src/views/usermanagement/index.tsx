@@ -55,6 +55,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
     const [pagination, setPagination] = useState({ page: 1, limit: 10 });
     const [search, setSearch] = useState("");
     const [addUserOpen, setAddUserOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (activeTab === "usermanagemnt") {
@@ -106,6 +107,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
 
 
     const handleAddUser = async (values: AddUserFormValues) => {
+        setSaving(true);
         try {
             const payload = {
                 boomi_user_id: "",
@@ -139,10 +141,13 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
             closeAddUser();
         } catch (error: any) {
             message.error(error?.message || "Failed to create user");
+        } finally {
+            setSaving(false);
         }
     };
 
     const handleUpdateUser = async (values: AddUserFormValues) => {
+        setSaving(true);
         try {
             const payload = {
                 boomi_user_id: selectedUser?.id,
@@ -175,6 +180,8 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
             closeAddUser();
         } catch (error: any) {
             message.error(error?.message || "Failed to update user");
+        } finally {
+            setSaving(false);
         }
     };
     const handleEdit = (record: UserRow) => {
@@ -326,7 +333,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
           .user-management-page .ant-table-thead > tr > th {
             background: #f8fafc !important;
             color: #334155 !important;
-            font-weight: 600 !important;
+            font-weight: 500 !important;
           }
 
           .user-management-card {
@@ -432,7 +439,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                     rowKey="id"
                     columns={columns}
                     dataSource={tableUsers}
-                    scroll={{ x: 900 }}
+                    scroll={{ x: 900, y: 500 }}
                     pagination={false}
                 />
 
@@ -531,6 +538,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                             <Button
                                 type="primary"
                                 htmlType="submit"
+                                loading={saving}
                                 icon={isEdit ? <EditOutlined /> : <PlusOutlined />}
                                 style={{
                                     background: "#2563eb",

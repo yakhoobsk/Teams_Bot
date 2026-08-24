@@ -7,7 +7,7 @@ import { decryptIfNeeded } from "../../utils/cryptoAES";
 const boomiApi = axios.create({
     baseURL: config.BASEURL,
     headers: config.headersCommon,
-    timeout: 20000,
+    timeout: 0,
 });
 
 boomiApi.interceptors.request.use(

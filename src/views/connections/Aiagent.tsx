@@ -53,6 +53,9 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
     const [editOpen, setEditOpen] = useState(false);
     const [editRecord, setEditRecord] = useState<any>(null);
     const [editForm] = Form.useForm();
+    const [saving, setSaving] = useState(false);
+    const [updating, setUpdating] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     useEffect(() => {
         if (activeTab === "AIAgents") {
@@ -185,7 +188,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
         setEditOpen(true);
     };
 
-    const handleUpdate = (values: any) => {
+    const handleUpdate = async (values: any) => {
 
         const payload = {
             agent_id: editRecord.key,
@@ -196,9 +199,16 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
             endpoint: values.endpoint,
         };
 
-        dispatch(aiconnecterUpdate({ payload })).unwrap();
-        setEditOpen(false);
-        dispatch(AIConnectersGet({}));
+        setUpdating(true);
+        try {
+            await dispatch(aiconnecterUpdate({ payload })).unwrap();
+            setEditOpen(false);
+            dispatch(AIConnectersGet({}));
+        } catch {
+            // error toast already shown by the aiconnecterUpdate thunk
+        } finally {
+            setUpdating(false);
+        }
     };
     const fields = aiAgentFields[selectedAgent as keyof typeof aiAgentFields];
     const columns: ColumnsType<AiAgentRecord> = [
@@ -255,6 +265,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                         description="Are you sure you want to delete this AI Agent?"
                         okText="Delete"
                         cancelText="Cancel"
+                        okButtonProps={{ danger: true, loading: deletingId === record.key }}
                         onConfirm={() => handleDelete(record)}
                     >
                         <Tooltip title="Delete">
@@ -262,6 +273,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                                 danger
                                 type="text"
                                 icon={<DeleteOutlined />}
+                                loading={deletingId === record.key}
                             />
                         </Tooltip>
                     </Popconfirm>
@@ -288,20 +300,31 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
             created_date: "",
             is_active: true,
         }
-        dispatch(
-            aiconnecterCreate({ payload })
-        ).unwrap();
-        dispatch(AIConnectersGet({}));
+        setSaving(true);
+        try {
+            await dispatch(aiconnecterCreate({ payload })).unwrap();
+            dispatch(AIConnectersGet({}));
+        } catch {
+            // error toast already shown by the aiconnecterCreate thunk
+        } finally {
+            setSaving(false);
+        }
     };
 
-    const handleDelete = (record: AiAgentRecord) => {
+    const handleDelete = async (record: AiAgentRecord) => {
         const payload = {
             agent_id: record.key,
         };
 
-        dispatch(aiconnecterDelete({ payload }));
-
-        dispatch(AIConnectersGet({}));
+        setDeletingId(record.key);
+        try {
+            await dispatch(aiconnecterDelete({ payload })).unwrap();
+            dispatch(AIConnectersGet({}));
+        } catch {
+            // error toast already shown by the aiconnecterDelete thunk
+        } finally {
+            setDeletingId(null);
+        }
     };
 
     return (
@@ -606,6 +629,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                                 <Button
                                     type="primary"
                                     size="large"
+                                    loading={saving}
                                     onClick={handleSave}
                                     style={{
                                         borderRadius: 12,
@@ -700,6 +724,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                         key="update"
                         type="primary"
                         size="large"
+                        loading={updating}
                         onClick={() => editForm.submit()}
                         style={{
                             background: "#0F52BA",

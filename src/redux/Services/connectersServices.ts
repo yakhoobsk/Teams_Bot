@@ -422,7 +422,7 @@ export const TeamsconfigrationGet = createAsyncThunk(
     async (_: any, { rejectWithValue }) => {
 
         try {
-            const response = await boomiApi.get("/teams_bot/Temas_Configuration/get_teams");
+            const response = await boomiApi.post("/teams_bot/Temas_Configuration/get_teams");
             return response.data;
         } catch (error: any) {
             return rejectWithValue(

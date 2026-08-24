@@ -51,6 +51,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
     const restapiconnectersget = useAppSelector((state) => state.connecters?.restapiconnectersget);
     const dispatch = useAppDispatch();
     const [selectedRecord, setSelectedRecord] = useState<any>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     useEffect(() => {
         if (activeTab === "RestAPI") {
@@ -120,7 +121,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
 
     const handleDelete = async (record: RestApi) => {
         try {
-            setLoading(true);
+            setDeletingId(record.rest_api_id);
 
             const payload = {
                 rest_api_id: record.rest_api_id,
@@ -136,7 +137,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
         } catch (error) {
             console.error("Delete API Error:", error);
         } finally {
-            setLoading(false);
+            setDeletingId(null);
         }
     };
 
@@ -310,6 +311,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                             danger
                             shape="circle"
                             icon={<DeleteOutlined />}
+                            loading={deletingId === record.rest_api_id}
                             onClick={() => handleDelete(record)}
                         />
                     </Tooltip>
@@ -454,7 +456,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                         columns={columns}
                         dataSource={filteredData}
                         bordered
-                        scroll={{ x: 2500 }}
+                        scroll={{ x: 2500, y: 500 }}
                         pagination={false}
                     />
                 </Card>

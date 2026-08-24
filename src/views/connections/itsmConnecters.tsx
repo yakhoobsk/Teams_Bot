@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 import servicenowimg from "../../assets/servicenow.png"
 import Azuredeops from "../../assets/Azuredeops.png"
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { itsmconnecterCreate, ITSMConnectersGet } from "../../redux/Services/connectersServices";
 const { useBreakpoint } = Grid;
 const { Title, Text } = Typography;
@@ -28,6 +28,7 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
     const dispatch = useAppDispatch()
     const itsm = useAppSelector((state) => state.connecters?.itsmget);
     const ticketConnectors = itsm?.Response || itsm?.[0]?.Response || [];
+    const [savingType, setSavingType] = useState<string | null>(null);
 
     useEffect(() => {
         if (activeTab === "Tickets") {
@@ -97,9 +98,15 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                     : "azuredevops",
         };
 
-        dispatch(itsmconnecterCreate({ payload }));
-
-        dispatch(ITSMConnectersGet({}));
+        setSavingType(type);
+        try {
+            await dispatch(itsmconnecterCreate({ payload })).unwrap();
+            dispatch(ITSMConnectersGet({}));
+        } catch {
+            // error toast already shown by the itsmconnecterCreate thunk
+        } finally {
+            setSavingType(null);
+        }
     };
 
     const cardStyle = {
@@ -286,6 +293,7 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                     type="primary"
                                     htmlType="submit"
                                     size="large"
+                                    loading={savingType === "ServiceNow"}
                                     block={
                                         isMobile
                                     }
@@ -479,6 +487,7 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                     type="primary"
                                     htmlType="submit"
                                     size="large"
+                                    loading={savingType === "ADO"}
                                     block={
                                         isMobile
                                     }

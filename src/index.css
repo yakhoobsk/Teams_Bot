@@ -100,7 +100,7 @@ a {
 .ant-btn {
   border-radius: 12px !important;
   height: 50px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .ant-btn-primary {
@@ -108,7 +108,7 @@ a {
       #5b5fc7,
       #7b61ff) !important;
   border: none !important;
-  box-shadow: 0 8px 20px rgba(91, 95, 199, 0.4);
+  box-shadow: 0 4px 12px rgba(91, 95, 199, 0.25);
 }
 
 .ant-btn-primary:hover {
@@ -122,4 +122,50 @@ a {
 
 .ant-typography {
   color: white;
+}
+
+/* Lighten the overall look app-wide: everything below defaulted to
+   heavy (600-700) font-weights, which read as "bold" across the board. */
+h1,
+h2,
+h3,
+h4,
+h5,
+.ant-typography h1,
+.ant-typography h2,
+.ant-typography h3,
+.ant-typography h4,
+.ant-typography h5,
+.ant-modal-title,
+.ant-card-head-title {
+  font-weight: 500 !important;
+}
+
+.ant-typography strong,
+strong,
+b {
+  font-weight: 600 !important;
+}
+
+.ant-btn,
+.ant-table-thead>tr>th,
+.ant-tag,
+.ant-form-item-label>label,
+.ant-select-selection-item,
+.ant-menu-item,
+.ant-tabs-tab {
+  font-weight: 500 !important;
+}
+
+/* Tables: scroll their own body instead of growing the page, with the
+   scrollbar itself hidden while scrolling still works. */
+.ant-table-body,
+.ant-table-content {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ant-table-body::-webkit-scrollbar,
+.ant-table-content::-webkit-scrollbar {
+  display: none;
 }

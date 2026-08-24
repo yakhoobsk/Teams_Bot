@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Modal,
     Form,
@@ -36,6 +36,7 @@ const AddTeamModal: React.FC<Props> = ({
     const connectors = database?.[0]?.Connectors || [];
     const itsm = useAppSelector((state) => state.connecters?.itsmget);
     const ticketConnectors = itsm?.Response || itsm?.[0]?.Response || [];
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
 
@@ -44,7 +45,7 @@ const AddTeamModal: React.FC<Props> = ({
         dispatch(ITSMConnectersGet({}));
 
     }, [dispatch]);
-    const handleFinish = (values: any) => {
+    const handleFinish = async (values: any) => {
         const selectedTicket = ticketConnectors.find(
             (item: any) => item.ticket_name === values.ticket
         );
@@ -69,10 +70,17 @@ const AddTeamModal: React.FC<Props> = ({
             database_details: JSON.stringify(selectedDatabase),
             ai_agent_details: JSON.stringify(selectedAgent),
         };
-        dispatch(TeamsconfigCreate({ payload })).unwrap()
-        dispatch(TeamsconfigGet({}))
 
-        form.resetFields();
+        setSaving(true);
+        try {
+            await dispatch(TeamsconfigCreate({ payload })).unwrap();
+            dispatch(TeamsconfigGet({}));
+            form.resetFields();
+        } catch {
+            // error toast already shown by the TeamsconfigCreate thunk
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -380,6 +388,7 @@ const AddTeamModal: React.FC<Props> = ({
                                 htmlType="submit"
                                 type="primary"
                                 size="large"
+                                loading={saving}
                                 style={{
                                     minWidth: 180,
                                     height: 48,

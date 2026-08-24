@@ -54,6 +54,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
     const connectors = database?.[0]?.Connectors || [];
     const auth = useAppSelector((state) => state.auth?.authotp);
     const [openDatabaseModal, setOpenDatabaseModal] = useState(false);
+    const [saving, setSaving] = useState(false);
     useEffect(() => {
         if (activeTab === "Database") {
             const payload = {
@@ -247,13 +248,19 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
             schema_name: values.schema,
         };
 
-        if (selectedConnector?.connector_id) {
-            dispatch(databaseconnecterUpdate({ payload }));
-        } else {
-            dispatch(databaseconnecterCreate({ payload }));
+        setSaving(true);
+        try {
+            if (selectedConnector?.connector_id) {
+                await dispatch(databaseconnecterUpdate({ payload })).unwrap();
+            } else {
+                await dispatch(databaseconnecterCreate({ payload })).unwrap();
+            }
+            dispatch(DataBaseConnectersGet({}));
+        } catch {
+            // error toast already shown by the databaseconnecter thunks
+        } finally {
+            setSaving(false);
         }
-        dispatch(DataBaseConnectersGet({}));
-
     };
 
     const current =
@@ -530,6 +537,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
                                 <Button
                                     type="primary"
                                     size="large"
+                                    loading={saving}
                                     onClick={handleSave}
                                     style={{
                                         borderRadius: 12,
@@ -564,6 +572,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
                     bordered
                     rowKey="connector_id"
                     columns={columns}
+                    scroll={{ x: 1600, y: 450 }}
                     dataSource={connectors.map((item: any) => ({
                         key: item.connector_id,
                         connector_id: item.connector_id,
@@ -578,9 +587,6 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
                         host: item.connection_url,
                     }))}
                     pagination={false}
-                    scroll={{
-                        x: 1600,
-                    }}
                 />
             </Modal>
         </div>

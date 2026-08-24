@@ -46,6 +46,8 @@ const Channels: React.FC = () => {
     const dispatch = useAppDispatch()
     const [form] = Form.useForm();
     const [tableData, setTableData] = useState<ChannelData[]>([]);
+    const [typeFilter, setTypeFilter] = useState("all");
+    const [deletingId, setDeletingId] = useState<string | null>(null);
     const channelsget = useAppSelector((state) => state.connecters?.ChannelsUsers) || [];
 
     useEffect(() => {
@@ -126,6 +128,13 @@ const Channels: React.FC = () => {
             setTableData(mappedData);
         }
     }, [channelsget]);
+
+    const filteredTableData =
+        typeFilter === "all"
+            ? tableData
+            : tableData.filter(
+                (item) => item.Type === typeFilter || item.Type === "both"
+            );
 
 
     const showModal = (record?: ChannelData) => {
@@ -269,7 +278,9 @@ const Channels: React.FC = () => {
 
                     <Popconfirm
                         title="Are you sure to delete this channel?"
+                        okButtonProps={{ loading: deletingId === record.key }}
                         onConfirm={async () => {
+                            setDeletingId(record.key);
                             try {
                                 await dispatch(
                                     ChannelsDelete({
@@ -282,6 +293,8 @@ const Channels: React.FC = () => {
                                 dispatch(ChannelsUser({}));
                             } catch (error) {
                                 console.error(error);
+                            } finally {
+                                setDeletingId(null);
                             }
                         }}
                     >
@@ -290,6 +303,7 @@ const Channels: React.FC = () => {
                             danger
                             icon={<DeleteOutlined />}
                             size="middle"
+                            loading={deletingId === record.key}
                         />
                     </Popconfirm>
                 </Space>
@@ -323,14 +337,17 @@ const Channels: React.FC = () => {
                     </Space>
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}  >
-                    <Form.Item
-                        name="datahubIntegration"
+                    <Select
+                        placeholder="Select Datahub / Integration"
+                        size="large"
+                        style={{ width: 250 }}
+                        value={typeFilter}
+                        onChange={setTypeFilter}
                     >
-                        <Select placeholder="Select Datahub / Integration" size="large" style={{ width: 250 }} >
-                            <Option value="Public">Datahub</Option>
-                            <Option value="Private">Integration</Option>
-                        </Select>
-                    </Form.Item>
+                        <Option value="all">All</Option>
+                        <Option value="datahub">Datahub</Option>
+                        <Option value="integration">Integration</Option>
+                    </Select>
                     <Button type="primary" onClick={() => showModal()}>
                         + Create Channel
                     </Button>
@@ -338,10 +355,10 @@ const Channels: React.FC = () => {
             </div>
             <Table
                 columns={columns}
-                dataSource={tableData}
+                dataSource={filteredTableData}
                 pagination={false}
                 rowKey="key"
-                scroll={{ x: "max-content" }}
+                scroll={{ x: "max-content", y: 500 }}
             />
             <ChannelsPage
                 open={isModalVisible}

@@ -21,7 +21,7 @@
     margin: 0 0 16px;
     color: #1677ff;
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .alert-box {
@@ -36,7 +36,7 @@
 .channel-modal .ant-form-item-label>label {
     color: #000000 !important;
     /* Black */
-    font-weight: 600;
+    font-weight: 500;
     font-size: 14px;
 }
 
@@ -142,7 +142,7 @@
 
 .group-title {
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 500;
     color: #1f2937;
 }
 

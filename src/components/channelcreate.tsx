@@ -50,6 +50,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
         Record<string, string[]>
     >({});
     const groupResponse = useAppSelector((state) => state.connecters.GroupsGets);
+    const [saving, setSaving] = useState(false);
 
 
     const parseMembers = (members: any): string[] => {
@@ -197,6 +198,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
             Schedule: buildSchedule(values),
         };
 
+        setSaving(true);
         try {
             const result = await dispatch(ChannelsCreate({ payload })).unwrap();
             if (result?.Status_Response !== "Failure") {
@@ -205,6 +207,8 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
             }
         } catch {
             // error toast already shown by the ChannelsCreate thunk
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -213,6 +217,8 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
             open={open}
             width={950}
             okText="Save"
+            confirmLoading={saving}
+            cancelButtonProps={{ disabled: saving }}
             onCancel={onCancel}
             onOk={() => form.validateFields().then(handleSubmit)}>
             <Form form={form} layout="vertical">
@@ -486,9 +492,9 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                 ]}
                             >
                                 <Select placeholder="Select Type">
-
-                                    <Option value="Public">Public</Option>
-                                    <Option value="Private">Private</Option>
+                                    <Option value="both">Both</Option>
+                                    <Option value="datahub">Data Hub</Option>
+                                    <Option value="integration">Integration</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
