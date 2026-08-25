@@ -221,17 +221,20 @@ export default function AgentConfiguration(): React.ReactElement {
     const restApiConnectors = useAppSelector((state) => state.connecters?.restapiconnectersget?.Response) || EMPTY_LIST;
     const ticketConnectors = useAppSelector((state) => state.connecters?.itsmget?.Response) || EMPTY_LIST;
     const [activeTab, setActiveTab] = useState("datahub");
-    // DataHub Custom
-    const [datahubDatabaseId, setDatahubDatabaseId] = useState("");
-    const [datahubAiAgentId, setDatahubAiAgentId] = useState("");
-    const [datahubTicketId, setDatahubTicketId] = useState("");
-    const [datahubRestApiId, setDatahubRestApiId] = useState("");
+    // DataHub Custom - the full connector/agent/ticket record, not just its name,
+    // so the dropdown still shows the right value even if the freshly-fetched
+    // (type-filtered) list doesn't happen to include that record, and saving
+    // doesn't silently drop the field.
+    const [datahubDatabaseRecord, setDatahubDatabaseRecord] = useState<any>(null);
+    const [datahubAiAgentRecord, setDatahubAiAgentRecord] = useState<any>(null);
+    const [datahubTicketRecord, setDatahubTicketRecord] = useState<any>(null);
+    const [datahubRestApiRecord, setDatahubRestApiRecord] = useState<any>(null);
 
     // Integration Custom
-    const [integrationDatabaseId, setIntegrationDatabaseId] = useState("");
-    const [integrationAiAgentId, setIntegrationAiAgentId] = useState("");
-    const [integrationTicketId, setIntegrationTicketId] = useState("");
-    const [integrationRestApiId, setIntegrationRestApiId] = useState("");
+    const [integrationDatabaseRecord, setIntegrationDatabaseRecord] = useState<any>(null);
+    const [integrationAiAgentRecord, setIntegrationAiAgentRecord] = useState<any>(null);
+    const [integrationTicketRecord, setIntegrationTicketRecord] = useState<any>(null);
+    const [integrationRestApiRecord, setIntegrationRestApiRecord] = useState<any>(null);
 
     // DataHub Boomi
     const [datahubBoomiRestApi, setDatahubBoomiRestApi] = useState("");
@@ -284,6 +287,32 @@ export default function AgentConfiguration(): React.ReactElement {
             console.error("Failed to parse rest_api_details", error);
             return {};
         }
+    };
+
+    const hasValue = (record: any): boolean =>
+        !!record && Object.keys(record).length > 0;
+
+    // Makes sure the dropdown can always display the currently-configured
+    // value, even when the freshly-fetched (type-filtered) list doesn't
+    // happen to include it.
+    const withFallbackOption = (
+        options: { label: string; value: string }[],
+        record: any,
+        nameKey: string
+    ) => {
+        const currentName = record?.[nameKey];
+        if (currentName && !options.some((o) => o.value === currentName)) {
+            return [...options, { label: currentName, value: currentName }];
+        }
+        return options;
+    };
+
+    const pickRecord = (list: any[], value: string, nameKey: string, currentRecord: any) => {
+        if (!value) return null;
+        return (
+            list.find((item: any) => item[nameKey] === value) ||
+            (currentRecord?.[nameKey] === value ? currentRecord : { [nameKey]: value })
+        );
     };
 
     useEffect(() => {
@@ -340,10 +369,10 @@ export default function AgentConfiguration(): React.ReactElement {
             const ticket = parseRestApiDetails(datahubCustom.ticket_details);
             const rest = parseRestApiDetails(datahubCustom.rest_api_details);
 
-            setDatahubDatabaseId(db?.connector_name || "");
-            setDatahubAiAgentId(ai?.agent_name || "");
-            setDatahubTicketId(ticket?.ticket_name || "");
-            setDatahubRestApiId(rest?.api_name || "");
+            setDatahubDatabaseRecord(hasValue(db) ? db : null);
+            setDatahubAiAgentRecord(hasValue(ai) ? ai : null);
+            setDatahubTicketRecord(hasValue(ticket) ? ticket : null);
+            setDatahubRestApiRecord(hasValue(rest) ? rest : null);
         }
         // ---------------- INTEGRATION BOOMI ----------------
 
@@ -374,10 +403,10 @@ export default function AgentConfiguration(): React.ReactElement {
             const ticket = parseRestApiDetails(integrationCustom.ticket_details);
             const rest = parseRestApiDetails(integrationCustom.rest_api_details);
 
-            setIntegrationDatabaseId(db?.connector_name || "");
-            setIntegrationAiAgentId(ai?.agent_name || "");
-            setIntegrationTicketId(ticket?.ticket_name || "");
-            setIntegrationRestApiId(rest?.api_name || "");
+            setIntegrationDatabaseRecord(hasValue(db) ? db : null);
+            setIntegrationAiAgentRecord(hasValue(ai) ? ai : null);
+            setIntegrationTicketRecord(hasValue(ticket) ? ticket : null);
+            setIntegrationRestApiRecord(hasValue(rest) ? rest : null);
         }
 
     }, [configget]);
@@ -392,37 +421,10 @@ export default function AgentConfiguration(): React.ReactElement {
         isBoomi: boolean
     ) => {
 
-        const selectedDb = databaseConnectors.find(
-            (x: any) =>
-                x.connector_name ===
-                (type === "datahub"
-                    ? datahubDatabaseId
-                    : integrationDatabaseId)
-        );
-
-        const selectedAi = AiAgents.find(
-            (x: any) =>
-                x.agent_name ===
-                (type === "datahub"
-                    ? datahubAiAgentId
-                    : integrationAiAgentId)
-        );
-
-        const selectedTicket = ticketConnectors.find(
-            (x: any) =>
-                x.ticket_name ===
-                (type === "datahub"
-                    ? datahubTicketId
-                    : integrationTicketId)
-        );
-
-        const selectedRest = restApiConnectors.find(
-            (x: any) =>
-                x.api_name ===
-                (type === "datahub"
-                    ? datahubRestApiId
-                    : integrationRestApiId)
-        );
+        const selectedDb = type === "datahub" ? datahubDatabaseRecord : integrationDatabaseRecord;
+        const selectedAi = type === "datahub" ? datahubAiAgentRecord : integrationAiAgentRecord;
+        const selectedTicket = type === "datahub" ? datahubTicketRecord : integrationTicketRecord;
+        const selectedRest = type === "datahub" ? datahubRestApiRecord : integrationRestApiRecord;
 
         const boomiRestApi = type === "datahub" ? datahubBoomiRestApi : integrationBoomiRestApi;
         const boomiUserName = type === "datahub" ? datahubBoomiUserName : integrationBoomiUserName;
@@ -661,12 +663,19 @@ export default function AgentConfiguration(): React.ReactElement {
                             {renderSelectField(
                                 "Database Connection",
                                 "Select Database",
-                                databaseConnectors.map((item: any) => ({
-                                    label: item.connector_name,
-                                    value: item.connector_name,
-                                })),
-                                datahubDatabaseId,
-                                setDatahubDatabaseId
+                                withFallbackOption(
+                                    databaseConnectors.map((item: any) => ({
+                                        label: item.connector_name,
+                                        value: item.connector_name,
+                                    })),
+                                    datahubDatabaseRecord,
+                                    "connector_name"
+                                ),
+                                datahubDatabaseRecord?.connector_name || "",
+                                (value) =>
+                                    setDatahubDatabaseRecord(
+                                        pickRecord(databaseConnectors, value, "connector_name", datahubDatabaseRecord)
+                                    )
                             )}
                         </Col>
 
@@ -674,12 +683,19 @@ export default function AgentConfiguration(): React.ReactElement {
                             {renderSelectField(
                                 "AI Agent Connection",
                                 "Select AI Agent",
-                                AiAgents.map((item: any) => ({
-                                    label: item.agent_name,
-                                    value: item.agent_name,
-                                })),
-                                datahubAiAgentId,
-                                setDatahubAiAgentId
+                                withFallbackOption(
+                                    AiAgents.map((item: any) => ({
+                                        label: item.agent_name,
+                                        value: item.agent_name,
+                                    })),
+                                    datahubAiAgentRecord,
+                                    "agent_name"
+                                ),
+                                datahubAiAgentRecord?.agent_name || "",
+                                (value) =>
+                                    setDatahubAiAgentRecord(
+                                        pickRecord(AiAgents, value, "agent_name", datahubAiAgentRecord)
+                                    )
                             )}
                         </Col>
 
@@ -687,12 +703,19 @@ export default function AgentConfiguration(): React.ReactElement {
                             {renderSelectField(
                                 "Ticket Connection",
                                 "Select Ticket Connection",
-                                ticketConnectors.map((item: any) => ({
-                                    label: item.ticket_name,
-                                    value: item.ticket_name,
-                                })),
-                                datahubTicketId,
-                                setDatahubTicketId
+                                withFallbackOption(
+                                    ticketConnectors.map((item: any) => ({
+                                        label: item.ticket_name,
+                                        value: item.ticket_name,
+                                    })),
+                                    datahubTicketRecord,
+                                    "ticket_name"
+                                ),
+                                datahubTicketRecord?.ticket_name || "",
+                                (value) =>
+                                    setDatahubTicketRecord(
+                                        pickRecord(ticketConnectors, value, "ticket_name", datahubTicketRecord)
+                                    )
                             )}
                         </Col>
 
@@ -700,12 +723,19 @@ export default function AgentConfiguration(): React.ReactElement {
                             {renderSelectField(
                                 "REST API Connection",
                                 "Select REST API",
-                                restApiConnectors.map((item: any) => ({
-                                    label: item.api_name,
-                                    value: item.api_name,
-                                })),
-                                datahubRestApiId,
-                                setDatahubRestApiId
+                                withFallbackOption(
+                                    restApiConnectors.map((item: any) => ({
+                                        label: item.api_name,
+                                        value: item.api_name,
+                                    })),
+                                    datahubRestApiRecord,
+                                    "api_name"
+                                ),
+                                datahubRestApiRecord?.api_name || "",
+                                (value) =>
+                                    setDatahubRestApiRecord(
+                                        pickRecord(restApiConnectors, value, "api_name", datahubRestApiRecord)
+                                    )
                             )}
                         </Col>
                     </Row>
@@ -787,12 +817,19 @@ export default function AgentConfiguration(): React.ReactElement {
                             {renderSelectField(
                                 "Database Connection",
                                 "Select Database",
-                                databaseConnectors.map((item: any) => ({
-                                    label: item.connector_name,
-                                    value: item.connector_name,
-                                })),
-                                integrationDatabaseId,
-                                setIntegrationDatabaseId
+                                withFallbackOption(
+                                    databaseConnectors.map((item: any) => ({
+                                        label: item.connector_name,
+                                        value: item.connector_name,
+                                    })),
+                                    integrationDatabaseRecord,
+                                    "connector_name"
+                                ),
+                                integrationDatabaseRecord?.connector_name || "",
+                                (value) =>
+                                    setIntegrationDatabaseRecord(
+                                        pickRecord(databaseConnectors, value, "connector_name", integrationDatabaseRecord)
+                                    )
                             )}
                         </Col>
 
@@ -800,12 +837,19 @@ export default function AgentConfiguration(): React.ReactElement {
                             {renderSelectField(
                                 "AI Agent Connection",
                                 "Select AI Agent",
-                                AiAgents.map((item: any) => ({
-                                    label: item.agent_name,
-                                    value: item.agent_name,
-                                })),
-                                integrationAiAgentId,
-                                setIntegrationAiAgentId
+                                withFallbackOption(
+                                    AiAgents.map((item: any) => ({
+                                        label: item.agent_name,
+                                        value: item.agent_name,
+                                    })),
+                                    integrationAiAgentRecord,
+                                    "agent_name"
+                                ),
+                                integrationAiAgentRecord?.agent_name || "",
+                                (value) =>
+                                    setIntegrationAiAgentRecord(
+                                        pickRecord(AiAgents, value, "agent_name", integrationAiAgentRecord)
+                                    )
                             )}
                         </Col>
 
@@ -813,12 +857,19 @@ export default function AgentConfiguration(): React.ReactElement {
                             {renderSelectField(
                                 "Ticket Connection",
                                 "Select Ticket Connection",
-                                ticketConnectors.map((item: any) => ({
-                                    label: item.ticket_name,
-                                    value: item.ticket_name,
-                                })),
-                                integrationTicketId,
-                                setIntegrationTicketId
+                                withFallbackOption(
+                                    ticketConnectors.map((item: any) => ({
+                                        label: item.ticket_name,
+                                        value: item.ticket_name,
+                                    })),
+                                    integrationTicketRecord,
+                                    "ticket_name"
+                                ),
+                                integrationTicketRecord?.ticket_name || "",
+                                (value) =>
+                                    setIntegrationTicketRecord(
+                                        pickRecord(ticketConnectors, value, "ticket_name", integrationTicketRecord)
+                                    )
                             )}
                         </Col>
 
@@ -826,12 +877,19 @@ export default function AgentConfiguration(): React.ReactElement {
                             {renderSelectField(
                                 "REST API Connection",
                                 "Select REST API",
-                                restApiConnectors.map((item: any) => ({
-                                    label: item.api_name,
-                                    value: item.api_name,
-                                })),
-                                integrationRestApiId,
-                                setIntegrationRestApiId
+                                withFallbackOption(
+                                    restApiConnectors.map((item: any) => ({
+                                        label: item.api_name,
+                                        value: item.api_name,
+                                    })),
+                                    integrationRestApiRecord,
+                                    "api_name"
+                                ),
+                                integrationRestApiRecord?.api_name || "",
+                                (value) =>
+                                    setIntegrationRestApiRecord(
+                                        pickRecord(restApiConnectors, value, "api_name", integrationRestApiRecord)
+                                    )
                             )}
                         </Col>
                     </Row>
