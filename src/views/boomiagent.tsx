@@ -219,7 +219,7 @@ export default function AgentConfiguration(): React.ReactElement {
     const [customIntegrationActive, setCustomIntegrationActive] = useState<boolean>(false);
     const dispatch = useAppDispatch();
     const AiAgents = useAppSelector((state) => state.connecters?.aiagentget?.[0]?.agents) || EMPTY_LIST;
-    const databaseConnectors = useAppSelector((state) => state.connecters?.databaseget?.[0]?.Connectors) || EMPTY_LIST;
+    const databaseConnectors = useAppSelector((state) => state.connecters?.databaseget?.Database_Connector) || EMPTY_LIST;
     const restApiConnectors = useAppSelector((state) => state.connecters?.restapiconnectersget?.Response) || EMPTY_LIST;
     const ticketConnectors = useAppSelector((state) => state.connecters?.itsmget?.Response) || EMPTY_LIST;
     const [activeTab, setActiveTab] = useState("datahub");
@@ -273,7 +273,7 @@ export default function AgentConfiguration(): React.ReactElement {
 
     useEffect(() => {
         dispatch(RestApiConnectersGet({ type: activeTab === "datahub" ? "Datahub" : "Integration", }));
-        dispatch(DataBaseConnectersGet({ database_type: activeTab === "datahub" ? "Datahub" : "Integrations", }));
+        dispatch(DataBaseConnectersGet({ database_type: activeTab === "datahub" ? "Datahub" : "Integration", }));
     }, [dispatch, activeTab]);
 
 

@@ -24,7 +24,10 @@ import mysqlImg from "../../assets/mysql.png";
 import postgresImg from "../../assets/pgsql.png";
 import oracleImg from "../../assets/oracle.png";
 import snowflakeImg from "../../assets/snowflake.png";
-import { databaseconnecterCreate, DataBaseConnectersGet, databaseconnecterUpdate } from "../../redux/Services/connectersServices";
+import {
+    databaseconnecterCreate, DataBaseConnectersGet, databaseconnecterDelete,
+    // databaseconnecterUpdate 
+} from "../../redux/Services/connectersServices";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import type { ColumnsType } from "antd/es/table";
 
@@ -32,15 +35,16 @@ const { Title, Text } = Typography;
 
 interface DatabaseRecord {
     key: string;
+    connector_id: string;
     name: string;
     database: string;
+    database_type: string;
+    host: string;
     server: string;
-    port: string;
+    connection_url: string;
     username: string;
     password: string;
-    schema: string;
-    warehouse: string;
-    host: string;
+    is_active: string;
 }
 
 
@@ -51,10 +55,28 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
     const [selectedDb, setSelectedDb] = useState("azure");
     const dispatch = useAppDispatch()
     const database = useAppSelector((state) => state.connecters?.databaseget);
-    const connectors = database?.[0]?.Connectors || [];
+    const connectors = database?.Database_Connector || [];
     const auth = useAppSelector((state) => state.auth?.authotp);
     const [openDatabaseModal, setOpenDatabaseModal] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+
+    const handleDelete = async (connectorId: string) => {
+        setDeletingId(connectorId);
+        try {
+            await dispatch(
+                databaseconnecterDelete({ payload: { connector_id: connectorId } })
+            ).unwrap();
+            const payload = {
+                database_type: type
+            }
+            dispatch(DataBaseConnectersGet(payload));
+        } catch {
+            // error toast already shown by the databaseconnecterDelete thunk
+        } finally {
+            setDeletingId(null);
+        }
+    };
     useEffect(() => {
         if (activeTab === "Database") {
             const payload = {
@@ -109,24 +131,41 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
 
         return {
             ...db,
-            connectorId: apiData?.connector_id || "",
             connection_url: apiData?.connection_url || "",
-            class_name: apiData?.class_name || "",
+            host: apiData?.host || "",
+            server: apiData?.server || "",
             user_name: apiData?.user_name || "",
             password: apiData?.password || "",
-            schema_name: apiData?.schema_name || "",
+            database_schema: apiData?.database_schema || apiData?.database_name || "",
         };
     });
     const columns: ColumnsType<DatabaseRecord> = [
+        {
+            title: "Connector ID",
+            dataIndex: "connector_id",
+            key: "connector_id",
+            width: 130,
+        },
         {
             title: "Name",
             dataIndex: "name",
             key: "name",
         },
         {
-            title: "Database Name",
-            dataIndex: "database",
-            key: "database",
+            title: "database schema",
+            dataIndex: "database_schema",
+            key: "database_schema",
+        },
+        {
+            title: "Type",
+            dataIndex: "database_type",
+            key: "database_type",
+            width: 110,
+        },
+        {
+            title: "Host",
+            dataIndex: "host",
+            key: "host",
         },
         {
             title: "Server",
@@ -134,10 +173,9 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
             key: "server",
         },
         {
-            title: "Port",
-            dataIndex: "port",
-            key: "port",
-            width: 100,
+            title: "Connection URL",
+            dataIndex: "connection_url",
+            key: "connection_url",
         },
         {
             title: "Username",
@@ -150,34 +188,35 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
             key: "password",
         },
         {
-            title: "Schema",
-            dataIndex: "schema",
-            key: "schema",
+            title: "Status",
+            dataIndex: "is_active",
+            key: "is_active",
+            width: 100,
+            render: (value: string) => (value === "1" ? "Active" : "Inactive"),
         },
         {
-            title: "Warehouse",
-            dataIndex: "warehouse",
-            key: "warehouse",
-        },
-        {
-            title: "Host",
-            dataIndex: "host",
-            key: "host",
+            title: "port",
+            dataIndex: "port",
+            key: "port",
         },
         {
             title: "Action",
             key: "action",
             align: "center",
             width: 90,
-            render: (_) => (
+            render: (_, record: any) => (
                 <Popconfirm
                     title="Delete Connector?"
-
+                    okText="Delete"
+                    cancelText="Cancel"
+                    okButtonProps={{ danger: true, loading: deletingId === record.connector_id }}
+                    onConfirm={() => handleDelete(record.connector_id)}
                 >
                     <Button
                         danger
                         type="text"
                         icon={<DeleteOutlined />}
+                        loading={deletingId === record.connector_id}
                     />
                 </Popconfirm>
             ),
@@ -186,7 +225,6 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
 
     const databaseFields = {
         azure: [
-            { name: "database", label: "Database Name" },
             { name: "server", label: "Server" },
             { name: "port", label: "Port" },
             { name: "username", label: "Username" },
@@ -194,7 +232,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
         ],
 
         mysql: [
-            { name: "database", label: "Database Name" },
+            { name: "database_schema", label: "Database Name" },
             { name: "host", label: "Host" },
             { name: "port", label: "Port" },
             { name: "username", label: "Username" },
@@ -202,7 +240,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
         ],
 
         postgres: [
-            { name: "database", label: "Database Name" },
+            { name: "database_schema", label: "Database Name" },
             { name: "host", label: "Host" },
             { name: "port", label: "Port" },
             { name: "username", label: "Username" },
@@ -210,7 +248,6 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
         ],
 
         oracle: [
-            { name: "database", label: "Database Name" },
             { name: "host", label: "Host" },
             { name: "port", label: "Port" },
             { name: "service_name", label: "Service Name" },
@@ -219,7 +256,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
         ],
 
         snowflake: [
-            { name: "database", label: "Database Name" },
+            { name: "database_schema", label: "Database Name" },
             { name: "account", label: "Account" },
             { name: "warehouse", label: "Warehouse" },
             { name: "schema", label: "Schema" },
@@ -231,31 +268,45 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
     const fields = databaseFields[selectedDb as keyof typeof databaseFields];
 
     const handleSave = async () => {
-        const values = await form.validateFields();
+        const values = form.getFieldsValue();
 
         const selectedConnector = connectors.find(
             (item: any) =>
                 item.connector_name.toLowerCase() === current.apiKey.toLowerCase()
         );
 
-        const payload = {
+        const payload: any = {
             Mail_Id: auth?.Mail_Id,
+            connector_id: selectedConnector?.connector_id || "",
             connector_name: current.apiKey,
-            connection_url: values.host,
-            class_name: values.port,
-            user_name: values.username,
-            password: values.password,
-            schema_name: values.schema,
+            connection_url: values.connection_url || "",
+            host: values.host || "",
+            user_name: values.username || "",
+            password: values.password || "",
+            schema_name: values.schema || "",
+            created_by: auth?.Mail_Id || "",
+            updated_by: auth?.Mail_Id || "",
+            is_active: "1",
+            database_schema: values.database_schema || "",
+            server: values.server || "",
+            service_name: values.service_name || "",
+            warehouse: values.warehouse || "",
+            account: values.account || "",
+            database_type: type,
+            port: values.port || "",
         };
 
         setSaving(true);
         try {
             if (selectedConnector?.connector_id) {
-                await dispatch(databaseconnecterUpdate({ payload })).unwrap();
+                await dispatch(databaseconnecterCreate({ payload })).unwrap();
             } else {
                 await dispatch(databaseconnecterCreate({ payload })).unwrap();
             }
-            dispatch(DataBaseConnectersGet({}));
+            const payloads = {
+                database_type: type
+            }
+            dispatch(DataBaseConnectersGet(payloads));
         } catch {
             // error toast already shown by the databaseconnecter thunks
         } finally {
@@ -268,11 +319,11 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
 
     useEffect(() => {
         form.setFieldsValue({
-            host: current.connection_url,
-            port: current.class_name,
+            database_schema: current.database_schema,
+            host: current.host,
+            server: current.server,
             username: current.user_name,
             password: current.password,
-            schema: current.schema_name,
         });
     }, [current, form]);
 
@@ -498,12 +549,6 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
                                                 </span>
                                             }
                                             name={field.name}
-                                            rules={[
-                                                {
-                                                    required: true,
-                                                    message: `Please enter ${field.label}`,
-                                                },
-                                            ]}
                                         >
                                             {field.password ? (
                                                 <Input.Password
@@ -570,14 +615,15 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
                         key: item.connector_id,
                         connector_id: item.connector_id,
                         name: item.connector_name,
-                        database: item.schema_name,
-                        server: item.connection_url,
-                        port: item.class_name,
+                        database_schema: item.database_schema || item.database_name,
+                        database_type: item.database_type,
+                        host: item.host,
+                        server: item.server,
+                        connection_url: item.connection_url,
                         username: item.user_name,
                         password: item.password,
-                        schema: item.schema_name,
-                        warehouse: "-",
-                        host: item.connection_url,
+                        port: item.port,
+                        is_active: item.is_active,
                     }))}
                     pagination={false}
                 />

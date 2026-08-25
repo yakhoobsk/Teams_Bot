@@ -222,6 +222,26 @@ export const databaseconnecterUpdate = createAsyncThunk("database/Update", async
 }
 );
 
+export const databaseconnecterDelete = createAsyncThunk("database/Delete", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Database_connectors/Delete_Connectors", payload);
+
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Delete failed");
+        } else if (response?.data?.Status_Response === "Success") {
+            showSnackbar("success", response?.data?.Status_Message || "Delete successful");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.message || "Delete failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
+    }
+}
+);
+
 
 // itsm connecters
 
