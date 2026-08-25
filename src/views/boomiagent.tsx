@@ -21,6 +21,7 @@ import {
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import { Input, } from "antd";
+import dayjs from "dayjs";
 import { AIConnectersGet, DataBaseConnectersGet, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigrationGet, TeamsconfigrationUpdate } from "../redux/Services/connectersServices";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 const { Title, Text } = Typography;
@@ -185,14 +186,16 @@ function AgentCard({
                         block
                         icon={saveIcon}
                         loading={saving}
+                        disabled={!active}
                         onClick={onSave}
                         style={{
                             marginTop: 24,
                             height: 46,
                             borderRadius: 10,
                             fontWeight: 600,
-                            background: color,
-                            borderColor: color,
+                            background: active ? color : "#e5e7eb",
+                            borderColor: active ? color : "#e5e7eb",
+                            color: active ? "#ffffff" : "#9ca3af",
                             boxShadow: active ? `0 8px 22px ${color}40` : "none",
                         }}
                     >
@@ -205,6 +208,7 @@ function AgentCard({
 }
 
 const EMPTY_LIST: any[] = [];
+const EMPTY_META = { team_id: "", created_by: "", created_date: "" };
 
 export default function AgentConfiguration(): React.ReactElement {
     const [boomiDataHubActive, setBoomiDataHubActive] = useState<boolean>(true);
@@ -241,8 +245,14 @@ export default function AgentConfiguration(): React.ReactElement {
     const [integrationBoomiPassword, setIntegrationBoomiPassword] = useState("");
     const [integrationBoomiMethod, setIntegrationBoomiMethod] = useState("");
     const configget = useAppSelector((state) => state.connecters?.TeamsconfigrationGets) || EMPTY_LIST;
+    const auth = useAppSelector((state) => state.auth?.authotp);
     const [savingDataHub, setSavingDataHub] = useState(false);
     const [savingIntegration, setSavingIntegration] = useState(false);
+
+    const [datahubBoomiMeta, setDatahubBoomiMeta] = useState(EMPTY_META);
+    const [datahubCustomMeta, setDatahubCustomMeta] = useState(EMPTY_META);
+    const [integrationBoomiMeta, setIntegrationBoomiMeta] = useState(EMPTY_META);
+    const [integrationCustomMeta, setIntegrationCustomMeta] = useState(EMPTY_META);
     useEffect(() => {
 
         dispatch(TeamsconfigrationGet({}));
@@ -259,6 +269,12 @@ export default function AgentConfiguration(): React.ReactElement {
         dispatch(DataBaseConnectersGet({ database_type: activeTab === "datahub" ? "Datahub" : "Integrations", }));
     }, [dispatch, activeTab]);
 
+
+    const extractMeta = (config: any) => ({
+        team_id: config?.team_id || "",
+        created_by: config?.created_by || "",
+        created_date: config?.created_date || "",
+    });
 
     const parseRestApiDetails = (details: any): any => {
         try {
@@ -301,6 +317,7 @@ export default function AgentConfiguration(): React.ReactElement {
 
             setBoomiDataHubActive(datahubBoomi.status === "active");
             setCustomDataHubActive(datahubBoomi.status !== "active");
+            setDatahubBoomiMeta(extractMeta(datahubBoomi));
 
             setDatahubBoomiRestApi(datahubBoomi.rest_api_name || "");
 
@@ -316,6 +333,8 @@ export default function AgentConfiguration(): React.ReactElement {
         // ---------------- DATAHUB CUSTOM ----------------
 
         if (datahubCustom) {
+            setDatahubCustomMeta(extractMeta(datahubCustom));
+
             const db = parseRestApiDetails(datahubCustom.database_details);
             const ai = parseRestApiDetails(datahubCustom.ai_agent_details);
             const ticket = parseRestApiDetails(datahubCustom.ticket_details);
@@ -332,6 +351,7 @@ export default function AgentConfiguration(): React.ReactElement {
 
             setBoomiIntegrationActive(integrationBoomi.status === "active");
             setCustomIntegrationActive(integrationBoomi.status !== "active");
+            setIntegrationBoomiMeta(extractMeta(integrationBoomi));
 
             setIntegrationBoomiRestApi(integrationBoomi.rest_api_name || "");
 
@@ -347,6 +367,8 @@ export default function AgentConfiguration(): React.ReactElement {
         // ---------------- INTEGRATION CUSTOM ----------------
 
         if (integrationCustom) {
+            setIntegrationCustomMeta(extractMeta(integrationCustom));
+
             const db = parseRestApiDetails(integrationCustom.database_details);
             const ai = parseRestApiDetails(integrationCustom.ai_agent_details);
             const ticket = parseRestApiDetails(integrationCustom.ticket_details);
@@ -407,15 +429,23 @@ export default function AgentConfiguration(): React.ReactElement {
         const boomiPassword = type === "datahub" ? datahubBoomiPassword : integrationBoomiPassword;
         const boomiMethod = type === "datahub" ? datahubBoomiMethod : integrationBoomiMethod;
 
+        const meta =
+            type === "datahub"
+                ? (isBoomi ? datahubBoomiMeta : datahubCustomMeta)
+                : (isBoomi ? integrationBoomiMeta : integrationCustomMeta);
+
+        const currentUserEmail = auth?.Mail_Id || "";
+        const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
+
         return {
 
             Type: `${type === "datahub" ? "datahub" : "integrations"} ${isBoomi ? "agent" : "custom"}`,
 
-            company_name: "EasyStepin",
+            company_name: "EasyStepIn",
 
-            connector: "Teams",
+            connector: "CN-000001",
 
-            team_id: "",
+            team_id: meta.team_id,
 
             status: isBoomi ? "active" : "inactive",
 
@@ -423,10 +453,10 @@ export default function AgentConfiguration(): React.ReactElement {
 
             is_active: isBoomi ? "1" : "0",
 
-            created_by: "",
-            updated_by: "",
-            created_date: "",
-            updated_date: "",
+            created_by: meta.created_by || currentUserEmail,
+            updated_by: currentUserEmail,
+            created_date: meta.created_date || now,
+            updated_date: now,
 
             // ---------------- BOOMI ----------------
 
