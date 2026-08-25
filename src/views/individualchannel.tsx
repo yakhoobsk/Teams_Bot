@@ -6,9 +6,11 @@ import dayjs from "dayjs";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { IndividualUser, IndividualuserCreate, IndividualuserDelete, IndividualuserUpdate } from "../redux/Services/connectersServices";
 import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import NotificationModal from "../components/Individualcreate";
 
 dayjs.extend(utc);
+dayjs.extend(timezone);
 interface UserPermission {
     key: string;
     name: string;
@@ -49,6 +51,29 @@ const UserAlertsTable: React.FC = () => {
 
     }, [dispatch]);
 
+    // The backend stores hour/minute in UTC (schedules are entered in IST),
+    // so reading them back needs the inverse conversion of what's sent on save.
+    const isValidTimeString = (value: any): boolean =>
+        typeof value === "string" && dayjs(value, "HH:mm", true).isValid();
+
+    const utcHourMinuteToIstTime = (hour: any, minute: any): string | null => {
+        const h = Number(hour);
+        const m = Number(minute);
+        if (!Number.isFinite(h) || !Number.isFinite(m) || h < 0 || h > 23 || m < 0 || m > 59) {
+            return null;
+        }
+        return dayjs.utc().hour(h).minute(m).second(0).tz("Asia/Kolkata").format("HH:mm");
+    };
+
+    const istTimeToUtcHourMinute = (time?: string | null): { hour: string; minute: string } => {
+        if (!isValidTimeString(time)) return { hour: "", minute: "" };
+
+        const [h, m] = (time as string).split(":").map(Number);
+        const utcTime = dayjs().tz("Asia/Kolkata").hour(h).minute(m).second(0).utc();
+
+        return { hour: utcTime.format("HH"), minute: utcTime.format("mm") };
+    };
+
 
     useEffect(() => {
         if (individualuser?.Response?.length) {
@@ -73,18 +98,18 @@ const UserAlertsTable: React.FC = () => {
                         : null,
 
                 schedule_date:
-                    item.schedule_type === "Custom"
+                    item.schedule_type === "Custom" && item.year && item.month && item.day
                         ? `${item.year}-${item.month}-${item.day}`
                         : null,
 
-                schedule_time: `${item.hour}:${item.minute}`,
+                schedule_time: utcHourMinuteToIstTime(item.hour, item.minute),
 
                 customSchedules:
-                    item.schedule_type === "Custom"
+                    item.schedule_type === "Custom" && item.year && item.month && item.day
                         ? [
                             {
                                 date: `${item.year}-${item.month}-${item.day}`,
-                                time: `${item.hour}:${item.minute}`,
+                                time: utcHourMinuteToIstTime(item.hour, item.minute),
                             },
                         ]
                         : [],
@@ -240,31 +265,32 @@ const UserAlertsTable: React.FC = () => {
     };
 
     const handleEdit = async (record: UserPermission) => {
-        const utcTime = dayjs(record.schedule_time, "HH:mm")
-            .utc()
-            .format("HH");
+        const isCustom = record.scheduleType === "custom";
+        const customEntry = record.customSchedules?.[0];
 
-        const utcMinute = dayjs(record.schedule_time, "HH:mm")
-            .utc()
-            .format("mm");
+        const scheduleDate = isCustom ? customEntry?.date : record.schedule_date;
+        const scheduleTime = isCustom ? customEntry?.time : record.schedule_time;
+
+        const { hour, minute } = istTimeToUtcHourMinute(scheduleTime);
+
         const payload = {
             id: record.key,
             username: record.name,
             usermail: record.email,
             type: record.type === "datahub" ? "Datahub" : "Integration",
             schedule_type: record.scheduleType,
-            day: record.schedule_date
-                ? dayjs(record.schedule_date).format("DD")
+            day: scheduleDate
+                ? dayjs(scheduleDate).format("DD")
                 : "",
             week: record.schedule_days_of_week ?? "",
-            month: record.schedule_date
-                ? dayjs(record.schedule_date).format("M")
+            month: scheduleDate
+                ? dayjs(scheduleDate).format("M")
                 : "",
-            year: record.schedule_date
-                ? dayjs(record.schedule_date).format("YYYY")
+            year: scheduleDate
+                ? dayjs(scheduleDate).format("YYYY")
                 : "",
-            hour: utcTime,
-            minute: utcMinute,
+            hour,
+            minute,
             atom: record.atom ? "1" : "0",
             longrun: record.longrun ? "1" : "0",
             mdm: record.mdm ? "1" : "0",
@@ -429,7 +455,11 @@ const UserAlertsTable: React.FC = () => {
                             {(record.customSchedules || []).map((item, index) => (
                                 <Space key={index} style={{ width: "100%" }} align="start">
                                     <DatePicker
-                                        value={item.date ? dayjs(item.date) : null}
+                                        value={
+                                            item.date && dayjs(item.date).isValid()
+                                                ? dayjs(item.date)
+                                                : null
+                                        }
                                         onChange={(date) =>
                                             handleCustomScheduleChange(
                                                 record.key,
@@ -442,7 +472,11 @@ const UserAlertsTable: React.FC = () => {
 
                                     <TimePicker
                                         format="HH:mm"
-                                        value={item.time ? dayjs(item.time, "HH:mm") : null}
+                                        value={
+                                            isValidTimeString(item.time)
+                                                ? dayjs(item.time, "HH:mm")
+                                                : null
+                                        }
                                         onChange={(time) =>
                                             handleCustomScheduleChange(
                                                 record.key,
@@ -477,8 +511,8 @@ const UserAlertsTable: React.FC = () => {
                             format="HH:mm"
                             style={{ width: "100%" }}
                             value={
-                                record.schedule_time
-                                    ? dayjs(record.schedule_time, "HH:mm")
+                                isValidTimeString(record.schedule_time)
+                                    ? dayjs(record.schedule_time as string, "HH:mm")
                                     : null
                             }
                             onChange={(time) =>

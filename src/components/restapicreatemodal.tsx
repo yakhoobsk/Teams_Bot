@@ -35,8 +35,8 @@ const CreateRestApiModal: React.FC<CreateRestApiModalProps> = ({
     const handleFinish = (values: any) => {
         const payload = {
             api_name: values.api_name || "null",
-            base_url: values.base_url || "null",
-            http_method: values.http_method || "null",
+            api: values.base_url || "null",
+            method: values.http_method || "null",
             resource_path: values.resource_path || "null",
             authentication_type: values.authentication_type || "null",
             username: values.username || "null",
@@ -50,7 +50,7 @@ const CreateRestApiModal: React.FC<CreateRestApiModalProps> = ({
                 ? JSON.parse(values.request_parameters)
                 : "null",
 
-            request_body: values.request_body
+            body: values.request_body
                 ? JSON.parse(values.request_body)
                 : "null",
 
@@ -101,28 +101,7 @@ const CreateRestApiModal: React.FC<CreateRestApiModalProps> = ({
         }
     }, [initialValues, open, form]);
 
-    const handleTestConnection = async () => {
-        try {
-            const values = await form.validateFields();
 
-            const payload = {
-                ...values,
-                request_headers: values.request_headers
-                    ? JSON.parse(values.request_headers)
-                    : {},
-                request_parameters: values.request_parameters
-                    ? JSON.parse(values.request_parameters)
-                    : {},
-                request_body: values.request_body
-                    ? JSON.parse(values.request_body)
-                    : {},
-            };
-
-            console.log(payload);
-        } catch (error) {
-            console.log(error);
-        }
-    };
 
     return (
         <>
@@ -175,20 +154,7 @@ textarea::placeholder,
                         Cancel
                     </Button>,
 
-                    !initialValues && (
-                        <Button
-                            key="test"
-                            size="large"
-                            onClick={handleTestConnection}
-                            style={{
-                                borderColor: "#0F52BA",
-                                color: "#0F52BA",
-                                fontWeight: 600,
-                            }}
-                        >
-                            Test Connection
-                        </Button>
-                    ),
+
 
                     <Button
                         key="submit"

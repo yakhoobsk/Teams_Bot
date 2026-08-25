@@ -88,7 +88,45 @@ a {
 
 /* Ant Design Overrides */
 .ant-card {
-  border-radius: 24px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06) !important;
+}
+
+.ant-card:hover {
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.09) !important;
+}
+
+/* Tables: rounded container, calmer header, and a clear hover state so a
+   row of data reads as a row instead of a wall of text. */
+.ant-table-wrapper,
+.ant-table {
+  border-radius: 14px;
+}
+
+.ant-table {
+  overflow: hidden;
+}
+
+.ant-table-thead>tr>th {
+  background: #f8fafc !important;
+  color: #475569;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+.ant-table-tbody>tr>td {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ant-table-tbody>tr:hover>td {
+  background: #f8fafc !important;
+}
+
+.ant-table-tbody>tr:last-child>td {
+  border-bottom: none;
+}
+
+.ant-pagination .ant-pagination-item {
+  border-radius: 8px;
 }
 
 .ant-input,
@@ -98,9 +136,20 @@ a {
 }
 
 .ant-btn {
-  border-radius: 12px !important;
-  height: 50px;
+  border-radius: 10px !important;
   font-weight: 500;
+}
+
+/* Only "large" buttons (the main Save/Create/Submit actions) get the tall
+   50px treatment. Small/default/circle/icon-only buttons (mostly table row
+   actions like Edit/Delete) were being force-stretched to 50px too, which
+   is why tables looked bloated and misaligned. */
+.ant-btn-lg {
+  height: 46px;
+}
+
+.ant-btn-circle {
+  border-radius: 50% !important;
 }
 
 .ant-btn-primary {

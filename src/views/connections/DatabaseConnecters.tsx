@@ -525,14 +525,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
                                     gap: 12,
                                 }}
                             >
-                                <Button
-                                    size="large"
-                                    style={{
-                                        borderRadius: 12,
-                                    }}
-                                >
-                                    Test Connection
-                                </Button>
+
 
                                 <Button
                                     type="primary"

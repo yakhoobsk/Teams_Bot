@@ -69,6 +69,8 @@ function AgentCard({
                 bordered={false}
                 style={{
                     height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
                     borderRadius: 16,
                     overflow: "hidden",
                     background: "#ffffff",
@@ -78,7 +80,7 @@ function AgentCard({
                         : "0 10px 30px rgba(15, 23, 42, 0.07)",
                     transition: "all 0.25s ease",
                 }}
-                bodyStyle={{ padding: 0 }}
+                bodyStyle={{ padding: 0, display: "flex", flexDirection: "column", flex: 1 }}
             >
                 <div
                     style={{
@@ -120,7 +122,7 @@ function AgentCard({
                                     <div
                                         style={{
                                             fontSize: 18,
-                                            fontWeight: 700,
+                                            fontWeight: 600,
                                             lineHeight: 1.25,
                                         }}
                                     >
@@ -132,7 +134,7 @@ function AgentCard({
                                         style={{
                                             borderRadius: 999,
                                             marginInlineEnd: 0,
-                                            fontWeight: 600,
+                                            fontWeight: 500,
                                         }}
                                     >
                                         {active ? "Active" : "Inactive"}
@@ -154,7 +156,7 @@ function AgentCard({
                                     style={{
                                         marginTop: 12,
                                         fontSize: 12,
-                                        fontWeight: 700,
+                                        fontWeight: 600,
                                         color: active ? "rgba(255,255,255,0.78)" : "#64748b",
                                         textTransform: "uppercase",
                                         letterSpacing: 0.5,
@@ -172,7 +174,7 @@ function AgentCard({
                 <div
                     style={{
                         padding: 24,
-                        minHeight: 278,
+                        flex: 1,
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "space-between",
@@ -192,7 +194,7 @@ function AgentCard({
                             marginTop: 24,
                             height: 46,
                             borderRadius: 10,
-                            fontWeight: 600,
+                            fontWeight: 500,
                             background: active ? color : "#e5e7eb",
                             borderColor: active ? color : "#e5e7eb",
                             color: active ? "#ffffff" : "#9ca3af",
@@ -241,12 +243,14 @@ export default function AgentConfiguration(): React.ReactElement {
     const [datahubBoomiUserName, setDatahubBoomiUserName] = useState("");
     const [datahubBoomiPassword, setDatahubBoomiPassword] = useState("");
     const [datahubBoomiMethod, setDatahubBoomiMethod] = useState("");
+    const [datahubBoomiDeploymentId, setDatahubBoomiDeploymentId] = useState("");
 
     // Integration Boomi
     const [integrationBoomiRestApi, setIntegrationBoomiRestApi] = useState("");
     const [integrationBoomiUserName, setIntegrationBoomiUserName] = useState("");
     const [integrationBoomiPassword, setIntegrationBoomiPassword] = useState("");
     const [integrationBoomiMethod, setIntegrationBoomiMethod] = useState("");
+    const [integrationBoomiDeploymentId, setIntegrationBoomiDeploymentId] = useState("");
     const configget = useAppSelector((state) => state.connecters?.TeamsconfigrationGets) || EMPTY_LIST;
     const auth = useAppSelector((state) => state.auth?.authotp);
     const [savingDataHub, setSavingDataHub] = useState(false);
@@ -354,8 +358,9 @@ export default function AgentConfiguration(): React.ReactElement {
                 const rest = parseRestApiDetails(datahubBoomi.rest_api_details);
 
                 setDatahubBoomiUserName(rest.username || "");
-                setDatahubBoomiPassword(rest.password_token || "");
-                setDatahubBoomiMethod(rest.http_method || "");
+                setDatahubBoomiPassword(rest.password || rest.password_token || "");
+                setDatahubBoomiMethod(rest.method || rest.http_method || "");
+                setDatahubBoomiDeploymentId(rest.deployment_id || "");
             }
         }
 
@@ -388,8 +393,9 @@ export default function AgentConfiguration(): React.ReactElement {
                 const rest = parseRestApiDetails(integrationBoomi.rest_api_details);
 
                 setIntegrationBoomiUserName(rest.username || "");
-                setIntegrationBoomiPassword(rest.password_token || "");
-                setIntegrationBoomiMethod(rest.http_method || "");
+                setIntegrationBoomiPassword(rest.password || rest.password_token || "");
+                setIntegrationBoomiMethod(rest.method || rest.http_method || "");
+                setIntegrationBoomiDeploymentId(rest.deployment_id || "");
             }
         }
 
@@ -430,6 +436,7 @@ export default function AgentConfiguration(): React.ReactElement {
         const boomiUserName = type === "datahub" ? datahubBoomiUserName : integrationBoomiUserName;
         const boomiPassword = type === "datahub" ? datahubBoomiPassword : integrationBoomiPassword;
         const boomiMethod = type === "datahub" ? datahubBoomiMethod : integrationBoomiMethod;
+        const boomiDeploymentId = type === "datahub" ? datahubBoomiDeploymentId : integrationBoomiDeploymentId;
 
         const meta =
             type === "datahub"
@@ -469,10 +476,11 @@ export default function AgentConfiguration(): React.ReactElement {
             rest_api_details: isBoomi
                 ? [
                     {
-                        api_name: boomiRestApi,
+                        api: boomiRestApi,
                         username: boomiUserName,
-                        password_token: boomiPassword,
-                        http_method: boomiMethod,
+                        password: boomiPassword,
+                        method: boomiMethod,
+                        deployment_id: boomiDeploymentId,
                     }
                 ]
                 : (selectedRest ? [selectedRest] : []),
@@ -545,7 +553,7 @@ export default function AgentConfiguration(): React.ReactElement {
                 display: "block",
                 marginBottom: 8,
                 fontSize: 13,
-                fontWeight: 600,
+                fontWeight: 500,
                 color: "#334155",
             }}>{label}</Text>
 
@@ -571,7 +579,7 @@ export default function AgentConfiguration(): React.ReactElement {
                     display: "block",
                     marginBottom: 8,
                     fontSize: 13,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     color: "#334155",
                 }}
             >
@@ -610,8 +618,8 @@ export default function AgentConfiguration(): React.ReactElement {
                     delay={0.08}
                 >
                     <Row gutter={[16, 18]}>
-                        <Col xs={24} sm={12}>
-                            {renderTextField("REST API ", " REST API", datahubBoomiRestApi,
+                        <Col xs={24}>
+                            {renderTextField("REST API", "REST API URL", datahubBoomiRestApi,
                                 (e) => setDatahubBoomiRestApi(e.target.value))}
                         </Col>
                         <Col xs={24} sm={12}>
@@ -620,20 +628,30 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "User Name",
                                 datahubBoomiUserName,
                                 (e) => setDatahubBoomiUserName(e.target.value)
-                            )}                        </Col>
+                            )}
+                        </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "Password",
                                 "Password",
                                 datahubBoomiPassword,
                                 (e) => setDatahubBoomiPassword(e.target.value)
-                            )}                        </Col>
+                            )}
+                        </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "Method",
                                 "Method",
                                 datahubBoomiMethod,
                                 (e) => setDatahubBoomiMethod(e.target.value)
+                            )}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderTextField(
+                                "Deployment ID",
+                                "Deployment ID",
+                                datahubBoomiDeploymentId,
+                                (e) => setDatahubBoomiDeploymentId(e.target.value)
                             )}
                         </Col>
                     </Row>
@@ -764,8 +782,8 @@ export default function AgentConfiguration(): React.ReactElement {
                     saving={savingIntegration}
                 >
                     <Row gutter={[16, 18]}>
-                        <Col xs={24} sm={12}>
-                            {renderTextField("REST API ", " REST API", integrationBoomiRestApi,
+                        <Col xs={24}>
+                            {renderTextField("REST API", "REST API URL", integrationBoomiRestApi,
                                 (e) => setIntegrationBoomiRestApi(e.target.value))}
                         </Col>
                         <Col xs={24} sm={12}>
@@ -774,20 +792,30 @@ export default function AgentConfiguration(): React.ReactElement {
                                 "User Name",
                                 integrationBoomiUserName,
                                 (e) => setIntegrationBoomiUserName(e.target.value)
-                            )}                        </Col>
+                            )}
+                        </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "Password",
                                 "Password",
                                 integrationBoomiPassword,
                                 (e) => setIntegrationBoomiPassword(e.target.value)
-                            )}                        </Col>
+                            )}
+                        </Col>
                         <Col xs={24} sm={12}>
                             {renderTextField(
                                 "Method",
                                 "Method",
                                 integrationBoomiMethod,
                                 (e) => setIntegrationBoomiMethod(e.target.value)
+                            )}
+                        </Col>
+                        <Col xs={24} sm={12}>
+                            {renderTextField(
+                                "Deployment ID",
+                                "Deployment ID",
+                                integrationBoomiDeploymentId,
+                                (e) => setIntegrationBoomiDeploymentId(e.target.value)
                             )}
                         </Col>
                     </Row>

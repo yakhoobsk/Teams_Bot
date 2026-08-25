@@ -134,7 +134,7 @@ const NotificationModal: React.FC<Props> = ({
                                     { label: "Daily", value: "Daily" },
                                     { label: "Weekly", value: "Weekly" },
                                     { label: "Monthly", value: "Monthly" },
-                                    { label: "Yearly", value: "Yearly" },
+                                    { label: "Custom", value: "Custom" },
                                 ]}
                             />
                         </Form.Item>

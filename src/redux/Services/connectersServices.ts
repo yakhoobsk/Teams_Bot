@@ -244,7 +244,7 @@ export const ITSMConnectersGet = createAsyncThunk(
 export const itsmconnecterCreate = createAsyncThunk("itsm/create", async ({ payload }: any, { rejectWithValue }) => {
     try {
 
-        const response = await boomiApi.post("/teams_bot/Tickets_Connectors/create", payload);
+        const response = await boomiApi.post("/teams_bot/connectortickets/create", payload);
 
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Ai failed");

@@ -36,21 +36,26 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
         }
     }, [activeTab, dispatch]);
 
+    // Ticket names coming back from the backend aren't consistently
+    // formatted (e.g. "service now\r" vs "Azure DevOps Connector"), so match
+    // by stripping everything but letters/digits instead of an exact string.
+    const normalize = (value: any): string =>
+        String(value || "").replace(/[^a-z0-9]/gi, "").toLowerCase();
+
     const connectors = [
         {
-            key: "ServiceNow",
-            apiKey: "ServiceNow Connector",
+            key: "service now",
+            matchKey: "servicenow",
             form: ServicenowForm,
         },
         {
             key: "ADO",
-            apiKey: "Azure DevOps Connector",
+            matchKey: "azuredevops",
             form: ADOForm,
         },
     ].map((item) => {
-        const apiData = ticketConnectors.find(
-            (x: any) =>
-                x.ticket_name?.toLowerCase() === item.apiKey.toLowerCase()
+        const apiData = ticketConnectors.find((x: any) =>
+            normalize(x.ticket_name).includes(item.matchKey)
         );
 
         return {
@@ -65,7 +70,7 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
 
     useEffect(() => {
         const serviceNow = connectors.find(
-            (x) => x.key === "ServiceNow"
+            (x) => x.key === "service now"
         );
 
         ServicenowForm.setFieldsValue({
@@ -93,9 +98,9 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
             username: values.username,
             access_token: values.token,
             ticket_name:
-                type === "ServiceNow"
-                    ? "servicenow"
-                    : "azuredevops",
+                type === "service now"
+                    ? "service now"
+                    : "Azure DevOps Connector",
         };
 
         setSavingType(type);
@@ -225,7 +230,7 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                 ) =>
                                     saveconnecters(
                                         values,
-                                        "ServiceNow"
+                                        "service now"
                                     )
                                 }
                             >
@@ -293,7 +298,7 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                                     type="primary"
                                     htmlType="submit"
                                     size="large"
-                                    loading={savingType === "ServiceNow"}
+                                    loading={savingType === "service now"}
                                     block={
                                         isMobile
                                     }
