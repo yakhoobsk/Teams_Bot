@@ -133,7 +133,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
             ).unwrap();
 
 
-            dispatch(RestApiConnectersGet({}));
+            dispatch(RestApiConnectersGet({ type: type }));
         } catch (error) {
             console.error("Delete API Error:", error);
         } finally {
@@ -511,7 +511,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                                 ).unwrap();
                             }
 
-                            dispatch(RestApiConnectersGet({}));
+                            dispatch(RestApiConnectersGet({ type: type }));
 
                             setOpenModal(false);
                             setSelectedRecord(null);
