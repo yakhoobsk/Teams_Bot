@@ -11,7 +11,7 @@ import {
     PlusOutlined,
     SearchOutlined,
     ApiOutlined,
-    EditOutlined,
+    // EditOutlined,
     DeleteOutlined,
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
@@ -295,7 +295,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
             fixed: "right",
             render: (_: any, record: any) => (
                 <Space>
-                    <Tooltip title="Edit">
+                    {/* <Tooltip title="Edit">
                         <Button
                             shape="circle"
                             icon={<EditOutlined />}
@@ -304,7 +304,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                                 setOpenModal(true);
                             }}
                         />
-                    </Tooltip>
+                    </Tooltip> */}
 
                     <Tooltip title="Delete">
                         <Button
