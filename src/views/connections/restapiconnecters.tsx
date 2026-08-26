@@ -15,6 +15,7 @@ import {
     DeleteOutlined,
 } from "@ant-design/icons";
 import { motion } from "framer-motion";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import CreateRestApiModal from "../../components/restapicreatemodal";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -49,6 +50,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
     const [openModal, setOpenModal] = useState(false);
     const [loading, setLoading] = useState(false);
     const restapiconnectersget = useAppSelector((state) => state.connecters?.restapiconnectersget);
+    const auth = useAppSelector((state) => state.auth?.authotp);
     const dispatch = useAppDispatch();
     const [selectedRecord, setSelectedRecord] = useState<any>(null);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -473,24 +475,27 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                             setLoading(true);
 
                             if (selectedRecord) {
+                                // `values` here is already the transformed payload built by
+                                // CreateRestApiModal's handleFinish (base_url -> api, http_method
+                                // -> method, request_body -> body), not the raw form fields.
                                 const payload = {
                                     rest_api_id: selectedRecord.rest_api_id,
                                     api_name: values.api_name,
-                                    api: values.base_url,
-                                    method: values.http_method,
+                                    api: values.api,
+                                    method: values.method,
                                     resource_path: values.resource_path,
                                     authentication_type: values.authentication_type,
                                     username: values.username,
-                                    password_token: values.password_token,
+                                    password_token: values.password,
                                     request_headers: values.request_headers,
                                     request_parameters: values.request_parameters,
-                                    body: values.request_body,
+                                    body: values.body,
                                     response_format: values.response_format,
                                     timeout_seconds: values.timeout_seconds,
                                     retry_count: values.retry_count,
                                     is_status: values.is_status ? 1 : 0,
-                                    updated_by: "yakhoob.shaik@easystepin.com",
-                                    updated_date: "2026-07-12 12:00:00",
+                                    updated_by: auth?.Mail_Id || "",
+                                    updated_date: dayjs().format("YYYY-MM-DD HH:mm:ss"),
                                     type: type,
                                 };
 
@@ -501,7 +506,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                             } else {
                                 const payload = {
                                     ...values,
-                                    created_by: "yakhoob.shaik@easystepin.com",
+                                    created_by: auth?.Mail_Id || "",
                                     is_status: values.is_status ? 1 : 0,
                                     type: type,
                                 };

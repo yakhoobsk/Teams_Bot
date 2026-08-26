@@ -456,11 +456,14 @@ export default function AgentConfiguration(): React.ReactElement {
 
             team_id: meta.team_id,
 
-            status: isBoomi ? "active" : "inactive",
+            // Whichever card's Save button was clickable is by definition the
+            // active one (the button is disabled on the inactive card), so the
+            // record being saved here is always the active configuration.
+            status: "active",
 
             type_status: isBoomi ? "true" : "false",
 
-            is_active: isBoomi ? "1" : "0",
+            is_active: "1",
 
             created_by: meta.created_by || currentUserEmail,
             updated_by: currentUserEmail,

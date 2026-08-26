@@ -34,29 +34,29 @@ const CreateRestApiModal: React.FC<CreateRestApiModalProps> = ({
 
     const handleFinish = (values: any) => {
         const payload = {
-            api_name: values.api_name || "null",
-            api: values.base_url || "null",
-            method: values.http_method || "null",
-            resource_path: values.resource_path || "null",
-            authentication_type: values.authentication_type || "null",
-            username: values.username || "null",
-            password: values.password || "null",
+            api_name: values.api_name || "",
+            api: values.base_url || "",
+            method: values.http_method || "",
+            resource_path: values.resource_path || "",
+            authentication_type: values.authentication_type || "",
+            username: values.username || "",
+            password: values.password || "",
 
             request_headers: values.request_headers
                 ? JSON.parse(values.request_headers)
-                : "null",
+                : null,
 
             request_parameters: values.request_parameters
                 ? JSON.parse(values.request_parameters)
-                : "null",
+                : null,
 
             body: values.request_body
                 ? JSON.parse(values.request_body)
-                : "null",
+                : null,
 
-            response_format: values.response_format || "null",
-            timeout_seconds: values.timeout_seconds ?? "null",
-            retry_count: values.retry_count ?? "null",
+            response_format: values.response_format || "",
+            timeout_seconds: values.timeout_seconds ?? "",
+            retry_count: values.retry_count ?? "",
             is_status: values.is_status ? 1 : 0,
         };
 
