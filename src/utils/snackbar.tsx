@@ -1,10 +1,24 @@
-import { notification, Button } from "antd";
+import { notification as staticNotification, Button } from "antd";
+import type { NotificationInstance } from "antd/es/notification/interface";
 import {
     CheckCircleFilled,
     CloseCircleFilled,
     InfoCircleFilled,
     WarningFilled,
 } from "@ant-design/icons";
+
+// antd's static notification.open() can't consume the app's ConfigProvider
+// theme context, and is unreliable when called from outside a component (as
+// happens here - showSnackbar is invoked from redux thunks) - it has to
+// lazily bootstrap its own detached render root, which can drop or delay
+// notifications. SnackbarBridge captures the real, context-aware instance
+// from antd's <App> once it mounts; until then this falls back to the
+// static import so calls before mount still do something.
+let notificationApi: NotificationInstance = staticNotification;
+
+export const setSnackbarNotificationApi = (api: NotificationInstance) => {
+    notificationApi = api;
+};
 
 type SnackbarType = "success" | "error" | "info" | "warning";
 
@@ -47,7 +61,7 @@ export const showSnackbar = (
     const bgColor = colors[type];
     const icon = icons[type];
 
-    notification.open({
+    notificationApi.open({
         message: (
             <div
                 style={{

@@ -131,21 +131,26 @@ a {
 
 .ant-input,
 .ant-input-affix-wrapper {
-  border-radius: 12px !important;
-  height: 50px;
+  border-radius: 10px !important;
+  height: 40px;
 }
 
 .ant-btn {
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   font-weight: 500;
 }
 
-/* Only "large" buttons (the main Save/Create/Submit actions) get the tall
-   50px treatment. Small/default/circle/icon-only buttons (mostly table row
-   actions like Edit/Delete) were being force-stretched to 50px too, which
-   is why tables looked bloated and misaligned. */
+/* Only "large" buttons (the main Save/Create/Submit actions) get the taller
+   treatment. Small/default/circle/icon-only buttons (mostly table row
+   actions like Edit/Delete) were being force-stretched too, which is why
+   tables looked bloated and misaligned. Both large and default sizes were
+   oversized app-wide, making the whole UI feel zoomed in. */
 .ant-btn-lg {
-  height: 46px;
+  height: 40px;
+}
+
+.ant-select .ant-select-selector {
+  border-radius: 10px !important;
 }
 
 .ant-btn-circle {

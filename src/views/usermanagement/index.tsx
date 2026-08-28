@@ -11,7 +11,6 @@ import {
     Modal,
     Form,
     Space,
-    message,
     Tooltip,
 } from "antd";
 import {
@@ -25,6 +24,7 @@ import {
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { userCreate, UsersGet, UserUpdate } from "../../redux/Services/connectersServices";
 import AppPagination from "../../components/AppPagination";
+import { showSnackbar } from "../../utils/snackbar";
 import type { ColumnsType } from "antd/es/table";
 
 const { Title, Text } = Typography;
@@ -126,7 +126,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                 })
             ).unwrap();
 
-            message.success("User created successfully");
+            showSnackbar("success", "User created successfully");
 
             dispatch(
                 UsersGet({
@@ -140,7 +140,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
 
             closeAddUser();
         } catch (error: any) {
-            message.error(error?.message || "Failed to create user");
+            showSnackbar("error", error?.message || "Failed to create user");
         } finally {
             setSaving(false);
         }
@@ -165,7 +165,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                 })
             ).unwrap();
 
-            message.success("User updated successfully");
+            showSnackbar("success", "User updated successfully");
 
             dispatch(
                 UsersGet({
@@ -179,7 +179,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
 
             closeAddUser();
         } catch (error: any) {
-            message.error(error?.message || "Failed to update user");
+            showSnackbar("error", error?.message || "Failed to update user");
         } finally {
             setSaving(false);
         }

@@ -30,7 +30,7 @@ export const aiconnecterCreate = createAsyncThunk("AI/create", async ({ payload 
         const data = response.data?.[0];
         if (data?.Status_Response === "Failure") {
             showSnackbar("error", data?.Status_Message || "Ai failed");
-        } else if (data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", data?.Status_Message || "Ai successful");
 
         }
@@ -51,7 +51,7 @@ export const aiconnecterUpdate = createAsyncThunk("AI/Update", async ({ payload 
         const data = response.data?.[0];
         if (data?.Status_Response === "Failure") {
             showSnackbar("error", data?.Status_Message || "Update failed");
-        } else if (data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", data?.Status_Message || "Update successful");
 
         }
@@ -71,7 +71,7 @@ export const aiconnecterDelete = createAsyncThunk("update/Delete", async ({ payl
         const data = response.data?.[0];
         if (data?.Status_Response === "Failure") {
             showSnackbar("error", data?.Status_Message || "Delete failed");
-        } else if (data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", data?.Status_Message || "Delete successful");
 
         }
@@ -109,7 +109,7 @@ export const GroupsCreate = createAsyncThunk("Groups/create", async ({ payload }
         const data = response.data?.[0];
         if (data?.Status_Response === "Failure") {
             showSnackbar("error", data?.Status_Message || "Group creation failed");
-        } else if (data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", data?.Status_Message || "Group created successfully");
 
         }
@@ -130,7 +130,7 @@ export const GroupsUpdate = createAsyncThunk("Groups/Update", async ({ payload }
         const data = response.data?.[0];
         if (data?.Status_Response === "Failure") {
             showSnackbar("error", data?.Status_Message || "Update failed");
-        } else if (data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", data?.Status_Message || "Update successful");
 
         }
@@ -150,7 +150,7 @@ export const GroupsDelete = createAsyncThunk("Groups/Delete", async ({ payload }
         const data = response.data?.[0];
         if (data?.Status_Response === "Failure") {
             showSnackbar("error", data?.Status_Message || "Delete failed");
-        } else if (data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", data?.Status_Message || "Delete successful");
 
         }
@@ -188,7 +188,7 @@ export const databaseconnecterCreate = createAsyncThunk("database/create", async
         const data = response.data?.[0];
         if (data?.Status_Response === "Failure") {
             showSnackbar("error", data?.Status_Message || "Ai failed");
-        } else if (data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", data?.Status_Message || "Ai successful");
 
         }
@@ -209,7 +209,7 @@ export const databaseconnecterUpdate = createAsyncThunk("database/Update", async
 
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Ai failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Ai successful");
 
         }
@@ -229,7 +229,7 @@ export const databaseconnecterDelete = createAsyncThunk("database/Delete", async
 
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Delete failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Delete successful");
 
         }
@@ -268,7 +268,7 @@ export const itsmconnecterCreate = createAsyncThunk("itsm/create", async ({ payl
 
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Ai failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Ai successful");
 
         }
@@ -320,7 +320,7 @@ export const TeamsconfigCreate = createAsyncThunk("Teamsconfig/create", async ({
         const response = await boomiApi.post("/teams_bot/Temas_Configuration/insert", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Ai failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Ai successful");
 
         }
@@ -340,7 +340,7 @@ export const TeamsconfigUpdate = createAsyncThunk("Teamsconfig/Update", async ({
         const response = await boomiApi.post("/teams_bot/Temas_Configuration/update", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Ai failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Ai successful");
 
         }
@@ -383,7 +383,7 @@ export const RestApiConnectersCreate = createAsyncThunk("RestApiConnecters/creat
         const response = await boomiApi.post("/teams_bot/restconfigure/create", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
 
         }
@@ -402,7 +402,7 @@ export const RestApiConnectersUpdate = createAsyncThunk("RestApiConnecters/Updat
         const response = await boomiApi.put("/teams_bot/restconfigure/updated", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
 
         }
@@ -421,7 +421,7 @@ export const RestApiConnectersDelete = createAsyncThunk("RestApiConnecters/Delet
         const response = await boomiApi.delete("/teams_bot/restconfigure/delete", { data: payload });
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
 
         }
@@ -458,7 +458,7 @@ export const TeamsconfigrationUpdate = createAsyncThunk("Teamsconfigration/Updat
         const response = await boomiApi.post("/teams_bot/Temas_Configuration/Create_Team", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
 
         }
@@ -494,7 +494,7 @@ export const IndividualuserUpdate = createAsyncThunk("IndividualuserUpdate/Updat
         const response = await boomiApi.put("/teams_bot/Individual/Update", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
 
         }
@@ -513,7 +513,7 @@ export const IndividualuserCreate = createAsyncThunk("IndividualuserCreate/Creat
         const response = await boomiApi.post("/teams_bot/Individual/Insert", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
 
         }
@@ -532,7 +532,7 @@ export const IndividualuserDelete = createAsyncThunk("Individualuser/Delete", as
         const response = await boomiApi.post("/teams_bot/Individual/Delete", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
 
         }
@@ -567,7 +567,7 @@ export const ChannelsCreate = createAsyncThunk("ChannelsCreate/Create", async ({
         const response = await boomiApi.post("/teams_bot/Channel/Create", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
 
         }
@@ -586,7 +586,7 @@ export const ChannelsDelete = createAsyncThunk("Channels/Delete", async ({ paylo
         const response = await boomiApi.post("/teams_bot/channels/delete", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "Rest API failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "Rest API successful");
 
         }
@@ -649,7 +649,7 @@ export const userCreate = createAsyncThunk("UsersCreate/create", async ({ payloa
         const response = await boomiApi.post("/teams_bot/create_User/details", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "User creation failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "User created successfully");
         }
         return response.data;
@@ -667,7 +667,7 @@ export const UserUpdate = createAsyncThunk("UsersUpdate/update", async ({ payloa
         const response = await boomiApi.post("/teams_bot/Update_User/detail", payload);
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "User update failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "User updated successfully");
         }
         return response.data;
@@ -688,7 +688,7 @@ export const LogoutUser = createAsyncThunk("LogoutUser/user", async (_: any, { r
         const response = await boomiApi.get("/teams_bot/logout/teams");
         if (response?.data?.Status_Response === "Failure") {
             showSnackbar("error", response?.data?.Status_Message || "LogoutUser failed");
-        } else if (response?.data?.Status_Response === "Success") {
+        } else {
             showSnackbar("success", response?.data?.Status_Message || "LogoutUser successful");
 
         }

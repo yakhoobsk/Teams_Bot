@@ -18,7 +18,7 @@ import {
     DatabaseOutlined,
     DeleteOutlined,
 } from "@ant-design/icons";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import azureImg from "../../assets/AzureSQL.png";
 import mysqlImg from "../../assets/mysql.png";
 import postgresImg from "../../assets/pgsql.png";
@@ -178,9 +178,9 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
             key: "connection_url",
         },
         {
-            title: "Username",
-            dataIndex: "username",
-            key: "username",
+            title: "user",
+            dataIndex: "user",
+            key: "user",
         },
         {
             title: "Password",
@@ -281,7 +281,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
             connector_name: current.apiKey,
             connection_url: values.connection_url || "",
             host: values.host || "",
-            user_name: values.username || "",
+            user: values.username || "",
             password: values.password || "",
             schema_name: values.schema || "",
             created_by: auth?.Mail_Id || "",
@@ -307,6 +307,8 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
                 database_type: type
             }
             dispatch(DataBaseConnectersGet(payloads));
+            suppressPrefillRef.current = true;
+            form.resetFields();
         } catch {
             // error toast already shown by the databaseconnecter thunks
         } finally {
@@ -317,7 +319,21 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
     const current =
         databases.find((db) => db.key === selectedDb) || databases[0];
 
+    // `databases`/`current` are rebuilt fresh on every render (not memoized),
+    // so this effect's [current, form] deps change on every re-render, not
+    // just when the connector's real data changes. After a successful save,
+    // suppress the prefill until the user actually switches to a different
+    // engine card - a one-shot skip isn't enough, since the refetch that
+    // follows a save triggers its own (later) re-render.
+    const suppressPrefillRef = useRef(false);
+
     useEffect(() => {
+        suppressPrefillRef.current = false;
+    }, [selectedDb]);
+
+    useEffect(() => {
+        if (suppressPrefillRef.current) return;
+
         form.setFieldsValue({
             database_schema: current.database_schema,
             host: current.host,
@@ -620,7 +636,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
                         host: item.host,
                         server: item.server,
                         connection_url: item.connection_url,
-                        username: item.user_name,
+                        user: item.user,
                         password: item.password,
                         port: item.port,
                         is_active: item.is_active,

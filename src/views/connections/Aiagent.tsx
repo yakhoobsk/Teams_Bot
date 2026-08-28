@@ -296,6 +296,9 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
             agent_id: "",
             agent_name: current.name,
             api_key: values.apiKey,
+            model: values.model,
+            deployment_name: values.deploymentName,
+            endpoint: values.endpoint,
             created_by: "",
             created_date: "",
             is_active: true,
@@ -304,6 +307,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
         try {
             await dispatch(aiconnecterCreate({ payload })).unwrap();
             dispatch(AIConnectersGet({}));
+            form.resetFields();
         } catch {
             // error toast already shown by the aiconnecterCreate thunk
         } finally {

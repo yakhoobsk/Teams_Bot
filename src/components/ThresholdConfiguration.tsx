@@ -9,7 +9,6 @@ import {
     Col,
     Divider,
     Modal,
-    message,
     DatePicker,
     InputNumber,
     Checkbox,
@@ -18,6 +17,7 @@ import {
     PlusOutlined,
 
 } from "@ant-design/icons";
+import { showSnackbar } from "../utils/snackbar";
 
 const { Option } = Select;
 
@@ -87,7 +87,7 @@ const ThresholdConfiguration: React.FC<ThresholdConfigurationProps> = ({
                 )
             );
 
-            message.success("Threshold Updated");
+            showSnackbar("success", "Threshold Updated");
         } else {
             setData((prev) => [
                 ...prev,
@@ -97,7 +97,7 @@ const ThresholdConfiguration: React.FC<ThresholdConfigurationProps> = ({
                 },
             ]);
 
-            message.success("Threshold Created");
+            showSnackbar("success", "Threshold Created");
         }
 
         closeModal();

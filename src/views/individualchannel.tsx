@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Checkbox, Space, Select, TimePicker, DatePicker, Button, Tooltip, Popconfirm } from "antd";
+import { Table, Checkbox, Space, Select, TimePicker, DatePicker, InputNumber, Button, Tooltip, Popconfirm } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { BellOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -21,10 +21,13 @@ interface UserPermission {
 
     scheduleType?: "daily" | "weekly" | "monthly" | "custom";
 
-    schedule_week?: number | null;
+    // Weekly: day name string, e.g. "Sunday".
+    schedule_days_of_week?: string | null;
+    // Monthly: numeric day of month, e.g. 26.
+    schedule_day_of_month?: number | null;
+    // Custom only.
     schedule_date?: string | null;
     schedule_time?: string | null;
-    schedule_days_of_week?: string | null;
     customSchedules?: {
         date: string | null;
         time: string | null;
@@ -77,55 +80,73 @@ const UserAlertsTable: React.FC = () => {
 
     useEffect(() => {
         if (individualuser?.Response?.length) {
-            const mappedData: UserPermission[] = individualuser.Response.map((item: any) => ({
-                key: item.id,
-                name: item.username,
-                email: item.usermail,
-                id: item.id,
-                type: item.type?.toLowerCase(),
+            // NOTE: GET uses schedule_days_of_month/schedule_days_of_week/schedule_hours/
+            // schedule_minutes/schedule_months/schedule_years, while create/update use the
+            // short day/week/month/year/hour/minute names below (handleEdit, onSubmit) -
+            // confirmed asymmetric by real samples from both sides.
+            const isSet = (v: any) => v !== undefined && v !== null && v !== "" && v !== "0" && v !== 0;
 
-                scheduleType: item.schedule_type?.toLowerCase(),
+            const mappedData: UserPermission[] = individualuser.Response.map((item: any) => {
+                // Real records have stray leading spaces / inconsistent casing
+                // (" weekly", " Monthly", "Daily"), so trim before comparing.
+                const scheduleType = item.schedule_type?.trim().toLowerCase();
 
-                schedule_week:
-                    item.schedule_type === "Monthly"
-                        ? Number(item.week)
-                        : null,
+                const hasCustomDate =
+                    isSet(item.schedule_years) &&
+                    isSet(item.schedule_months) &&
+                    isSet(item.schedule_days_of_month);
 
-                schedule_days_of_week:
-                    item.schedule_type === "Weekly" ||
-                        item.schedule_type === "Monthly"
-                        ? item.week
-                        : null,
+                return {
+                    key: item.id,
+                    name: item.username,
+                    email: item.usermail,
+                    id: item.id,
+                    type: item.type?.toLowerCase(),
 
-                schedule_date:
-                    item.schedule_type === "Custom" && item.year && item.month && item.day
-                        ? `${item.year}-${item.month}-${item.day}`
-                        : null,
+                    scheduleType,
 
-                schedule_time: utcHourMinuteToIstTime(item.hour, item.minute),
+                    // Weekly: day name string, e.g. "Sunday".
+                    schedule_days_of_week:
+                        scheduleType === "weekly" && isSet(item.schedule_days_of_week)
+                            ? item.schedule_days_of_week
+                            : null,
 
-                customSchedules:
-                    item.schedule_type === "Custom" && item.year && item.month && item.day
-                        ? [
-                            {
-                                date: `${item.year}-${item.month}-${item.day}`,
-                                time: utcHourMinuteToIstTime(item.hour, item.minute),
-                            },
-                        ]
-                        : [],
+                    // Monthly: numeric day of month.
+                    schedule_day_of_month:
+                        scheduleType === "monthly" && isSet(item.schedule_days_of_month)
+                            ? Number(item.schedule_days_of_month)
+                            : null,
 
-                mdm:
-                    item.mdm === true || item.mdm === "true",
+                    schedule_date:
+                        scheduleType === "custom" && hasCustomDate
+                            ? `${item.schedule_years}-${item.schedule_months}-${item.schedule_days_of_month}`
+                            : null,
 
-                longrun:
-                    item.longrun === true || item.longrun === "true",
+                    schedule_time: utcHourMinuteToIstTime(item.schedule_hours, item.schedule_minutes),
 
-                atom:
-                    item.atom === true || item.atom === "true",
+                    customSchedules:
+                        scheduleType === "custom" && hasCustomDate
+                            ? [
+                                {
+                                    date: `${item.schedule_years}-${item.schedule_months}-${item.schedule_days_of_month}`,
+                                    time: utcHourMinuteToIstTime(item.schedule_hours, item.schedule_minutes),
+                                },
+                            ]
+                            : [],
 
-                tickets:
-                    item.tickets === true || item.tickets === "true",
-            }));
+                    mdm:
+                        item.mdm === true || item.mdm === "true" || item.mdm === "1",
+
+                    longrun:
+                        item.longrun === true || item.longrun === "true" || item.longrun === "1",
+
+                    atom:
+                        item.atom === true || item.atom === "true" || item.atom === "1",
+
+                    tickets:
+                        item.tickets === true || item.tickets === "true" || item.tickets === "1",
+                };
+            });
 
             setData(mappedData);
         }
@@ -134,9 +155,8 @@ const UserAlertsTable: React.FC = () => {
     const handleScheduleChange = (
         key: string,
         field:
-            | "schedule_week"
             | "schedule_days_of_week"
-            | "schedule_days_of_month"
+            | "schedule_day_of_month"
             | "schedule_date"
             | "schedule_time",
         value: any
@@ -219,8 +239,8 @@ const UserAlertsTable: React.FC = () => {
                     ? {
                         ...item,
                         scheduleType: value,
-                        schedule_week: null,
                         schedule_days_of_week: null,
+                        schedule_day_of_month: null,
                         schedule_date: null,
                         schedule_time: null,
                     }
@@ -267,11 +287,23 @@ const UserAlertsTable: React.FC = () => {
     const handleEdit = async (record: UserPermission) => {
         const isCustom = record.scheduleType === "custom";
         const customEntry = record.customSchedules?.[0];
-
-        const scheduleDate = isCustom ? customEntry?.date : record.schedule_date;
         const scheduleTime = isCustom ? customEntry?.time : record.schedule_time;
-
         const { hour, minute } = istTimeToUtcHourMinute(scheduleTime);
+
+        let day: string | number = "";
+        let week = "";
+        let month: string | number = "";
+        let year: string | number = "";
+
+        if (record.scheduleType === "weekly") {
+            week = record.schedule_days_of_week ?? "";
+        } else if (record.scheduleType === "monthly") {
+            day = record.schedule_day_of_month ?? "";
+        } else if (isCustom && customEntry?.date) {
+            day = dayjs(customEntry.date).format("DD");
+            month = dayjs(customEntry.date).format("M");
+            year = dayjs(customEntry.date).format("YYYY");
+        }
 
         const payload = {
             id: record.key,
@@ -279,16 +311,10 @@ const UserAlertsTable: React.FC = () => {
             usermail: record.email,
             type: record.type === "datahub" ? "Datahub" : "Integration",
             schedule_type: record.scheduleType,
-            day: scheduleDate
-                ? dayjs(scheduleDate).format("DD")
-                : "",
-            week: record.schedule_days_of_week ?? "",
-            month: scheduleDate
-                ? dayjs(scheduleDate).format("M")
-                : "",
-            year: scheduleDate
-                ? dayjs(scheduleDate).format("YYYY")
-                : "",
+            day,
+            week,
+            month,
+            year,
             hour,
             minute,
             atom: record.atom ? "1" : "0",
@@ -380,19 +406,19 @@ const UserAlertsTable: React.FC = () => {
                         }
                     />
 
-                    {/* Weekly */}
+                    {/* Weekly - just a day-of-week name, no separate date */}
                     {record.scheduleType === "weekly" && (
                         <Select
                             placeholder="Day of Week"
                             value={record.schedule_days_of_week}
                             options={[
-                                { label: "Sunday", value: 0 },
-                                { label: "Monday", value: 1 },
-                                { label: "Tuesday", value: 2 },
-                                { label: "Wednesday", value: 3 },
-                                { label: "Thursday", value: 4 },
-                                { label: "Friday", value: 5 },
-                                { label: "Saturday", value: 6 },
+                                { label: "Sunday", value: "Sunday" },
+                                { label: "Monday", value: "Monday" },
+                                { label: "Tuesday", value: "Tuesday" },
+                                { label: "Wednesday", value: "Wednesday" },
+                                { label: "Thursday", value: "Thursday" },
+                                { label: "Friday", value: "Friday" },
+                                { label: "Saturday", value: "Saturday" },
                             ]}
                             onChange={(value) =>
                                 handleScheduleChange(
@@ -404,49 +430,22 @@ const UserAlertsTable: React.FC = () => {
                         />
                     )}
 
-                    {/* Monthly */}
+                    {/* Monthly - just a numeric day of month, no week/day-name */}
                     {record.scheduleType === "monthly" && (
-                        <>
-                            <Select
-                                placeholder="Week"
-                                value={record.schedule_week}
-                                options={[
-                                    { label: "First", value: 1 },
-                                    { label: "Second", value: 2 },
-                                    { label: "Third", value: 3 },
-                                    { label: "Fourth", value: 4 },
-                                    { label: "Last", value: 5 },
-                                ]}
-                                onChange={(value) =>
-                                    handleScheduleChange(
-                                        record.key,
-                                        "schedule_week",
-                                        value
-                                    )
-                                }
-                            />
-
-                            <Select
-                                placeholder="Day of Week"
-                                value={record.schedule_days_of_week}
-                                options={[
-                                    { label: "Sunday", value: 0 },
-                                    { label: "Monday", value: 1 },
-                                    { label: "Tuesday", value: 2 },
-                                    { label: "Wednesday", value: 3 },
-                                    { label: "Thursday", value: 4 },
-                                    { label: "Friday", value: 5 },
-                                    { label: "Saturday", value: 6 },
-                                ]}
-                                onChange={(value) =>
-                                    handleScheduleChange(
-                                        record.key,
-                                        "schedule_days_of_week",
-                                        value
-                                    )
-                                }
-                            />
-                        </>
+                        <InputNumber
+                            style={{ width: "100%" }}
+                            placeholder="Day of Month"
+                            min={1}
+                            max={31}
+                            value={record.schedule_day_of_month}
+                            onChange={(value) =>
+                                handleScheduleChange(
+                                    record.key,
+                                    "schedule_day_of_month",
+                                    value
+                                )
+                            }
+                        />
                     )}
 
                     {/* Custom */}
