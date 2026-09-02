@@ -133,7 +133,7 @@ textarea::placeholder,
                 title={initialValues ? "Edit REST API" : "Create REST API"}
                 open={open}
                 width={950}
-                destroyOnClose
+                destroyOnHidden
                 confirmLoading={loading}
                 styles={{
                     body: {

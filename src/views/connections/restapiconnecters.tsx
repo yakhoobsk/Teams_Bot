@@ -339,7 +339,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                 transition={{ duration: .5 }}
             >
                 <Card
-                    bordered={false}
+                    variant="borderless"
                     style={{
                         marginBottom: 25,
                         borderRadius: 18,
@@ -448,7 +448,7 @@ const RestApiManagement = ({ activeTab, type }: { activeTab: string; type: strin
                 transition={{ delay: .3 }}
             >
                 <Card
-                    bordered={false}
+                    variant="borderless"
                     style={{
                         borderRadius: 18,
                     }}

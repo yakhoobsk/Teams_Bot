@@ -688,7 +688,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                 ]}
                 width={1300}
                 centered
-                destroyOnClose
+                destroyOnHidden
             >
                 <Table<AiAgentRecord>
                     rowKey="key"
@@ -741,7 +741,7 @@ const AIAgentConnectors = ({ activeTab }: { activeTab: string }) => {
                 ]}
                 width={700}
                 centered
-                destroyOnClose
+                destroyOnHidden
             >
                 <style>
                     {`

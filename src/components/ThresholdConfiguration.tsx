@@ -115,7 +115,7 @@ const ThresholdConfiguration: React.FC<ThresholdConfigurationProps> = ({
             open={open}
             onCancel={closeModal}
             footer={null}
-            destroyOnClose
+            destroyOnHidden
             width={640}
         >
             <Form

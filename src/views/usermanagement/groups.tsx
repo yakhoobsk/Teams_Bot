@@ -51,9 +51,15 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
     const [saving, setSaving] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [togglingId, setTogglingId] = useState<number | null>(null);
+    const [membersPopup, setMembersPopup] = useState<{ groupName: string; members: string[] } | null>(null);
     const dispatch = useAppDispatch();
     const groupResponse = useAppSelector((state) => state.connecters.GroupsGets);
     const userspage = useAppSelector((state) => state.connecters?.Userswithoutpagnation);
+
+    const getUserLabel = (userId: string): string => {
+        const user = userspage?.find((u: any) => u.user_id === userId);
+        return user ? `${user.first_name} ${user.last_name}` : userId;
+    };
 
 
     useEffect(() => {
@@ -110,28 +116,20 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
     const openCreateModal = (): void => {
         setEditingId(null);
-        form.resetFields();
-        form.setFieldsValue({ active: true });
+        setEditingRecord(null);
         setOpen(true);
     };
 
     const openEditModal = (record: any): void => {
         setEditingId(record.id);
         setEditingRecord(record);
-
-        form.setFieldsValue({
-            groupName: record.groupName,
-            groupMembers: record.groupMembers,
-            active: record.active,
-        });
-
         setOpen(true);
     };
 
     const closeModal = (): void => {
         setOpen(false);
         setEditingId(null);
-        form.resetFields();
+        setEditingRecord(null);
     };
 
     const onFinish = async (values: GroupFormValues) => {
@@ -150,7 +148,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
                 await dispatch(GroupsUpdate({ payload })).unwrap();
 
-                showSnackbar("success", "Group updated successfully");
+                showSnackbar("success", "Team updated successfully");
             } else {
                 const payload = {
                     group_name: values.groupName,
@@ -162,7 +160,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
                 await dispatch(GroupsCreate({ payload })).unwrap();
 
-                showSnackbar("success", "Group created successfully");
+                showSnackbar("success", "Team created successfully");
             }
 
             dispatch(GroupsGet({}));
@@ -193,8 +191,8 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
             showSnackbar(
                 "success",
                 active
-                    ? "Group activated successfully"
-                    : "Group deactivated successfully"
+                    ? "Team activated successfully"
+                    : "Team deactivated successfully"
             );
         } catch {
             showSnackbar("error", "Failed to update status");
@@ -214,9 +212,9 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
             dispatch(GroupsGet({}));
 
-            showSnackbar("success", "Group deleted successfully");
+            showSnackbar("success", "Team deleted successfully");
         } catch {
-            showSnackbar("error", "Failed to delete group");
+            showSnackbar("error", "Failed to delete team");
         } finally {
             setDeletingId(null);
         }
@@ -226,7 +224,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
     const columns: ColumnsType<GroupData> = useMemo(
         () => [
             {
-                title: "Group Name",
+                title: "Team Name",
                 dataIndex: "groupName",
                 key: "groupName",
                 render: (groupName: string) => (
@@ -253,18 +251,38 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                 ),
             },
             {
-                title: "Group Members",
+                title: "Team Members",
                 dataIndex: "groupMembers",
                 key: "groupMembers",
-                render: (members: string[]) => (
-                    <Space size={[6, 6]} wrap>
-                        {members.map((member) => (
-                            <Tag key={member} color="blue" style={{ borderRadius: 999 }}>
-                                {member}
-                            </Tag>
-                        ))}
-                    </Space>
-                ),
+                render: (members: string[], record) => {
+                    const shown = members.slice(0, 3);
+                    const hidden = members.length - shown.length;
+
+                    return (
+                        <Space size={[6, 6]} wrap>
+                            {shown.map((member) => (
+                                <Tag key={member} color="blue" style={{ borderRadius: 999 }}>
+                                    {getUserLabel(member)}
+                                </Tag>
+                            ))}
+
+                            {hidden > 0 && (
+                                <Tag
+                                    color="purple"
+                                    style={{ borderRadius: 999, cursor: "pointer" }}
+                                    onClick={() =>
+                                        setMembersPopup({
+                                            groupName: record.groupName,
+                                            members,
+                                        })
+                                    }
+                                >
+                                    +{hidden}
+                                </Tag>
+                            )}
+                        </Space>
+                    );
+                },
             },
             {
                 title: "Status",
@@ -296,8 +314,8 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                         </Button>
 
                         <Popconfirm
-                            title="Delete group"
-                            description="Are you sure you want to delete this group?"
+                            title="Delete team"
+                            description="Are you sure you want to delete this team?"
                             okText="Delete"
                             cancelText="Cancel"
                             okButtonProps={{ danger: true, loading: deletingId === record.id }}
@@ -311,7 +329,7 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                 ),
             },
         ],
-        [togglingId, deletingId]
+        [togglingId, deletingId, userspage]
     );
 
     return (
@@ -394,15 +412,15 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                                 fontWeight: 600,
                             }}
                         >
-                            Group Management
+                            Team
                         </Tag>
 
                         <Title level={2} style={{ margin: 0, color: "#111827" }}>
-                            Groups
+                            Teams
                         </Title>
 
                         <Text style={{ color: "#64748b", fontSize: 15 }}>
-                            Create groups, assign members, and manage active or inactive status.
+                            Create teams, assign members, and manage active or inactive status.
                         </Text>
                     </Col>
 
@@ -411,16 +429,16 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                             <Col xs={12}>
                                 <Card
                                     className="summary-card"
-                                    bordered={false}
+                                    variant="borderless"
                                     style={{
                                         borderRadius: 14,
                                         border: "1px solid #dbeafe",
                                         boxShadow: "0 10px 26px rgba(15, 23, 42, 0.06)",
                                     }}
-                                    bodyStyle={{ padding: 18 }}
+                                    styles={{ body: { padding: 18 } }}
                                 >
                                     <Text style={{ color: "#2563eb", fontWeight: 600 }}>
-                                        Active Groups
+                                        Active Teams
                                     </Text>
                                     <Title level={3} style={{ margin: 0, color: "#1d4ed8" }}>
                                         {activeCount}
@@ -431,16 +449,16 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                             <Col xs={12}>
                                 <Card
                                     className="summary-card"
-                                    bordered={false}
+                                    variant="borderless"
                                     style={{
                                         borderRadius: 14,
                                         border: "1px solid #fed7aa",
                                         boxShadow: "0 10px 26px rgba(15, 23, 42, 0.06)",
                                     }}
-                                    bodyStyle={{ padding: 18 }}
+                                    styles={{ body: { padding: 18 } }}
                                 >
                                     <Text style={{ color: "#ea580c", fontWeight: 600 }}>
-                                        Inactive Groups
+                                        Inactive Teams
                                     </Text>
                                     <Title level={3} style={{ margin: 0, color: "#c2410c" }}>
                                         {inactiveCount}
@@ -453,13 +471,13 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
                 <Card
                     className="group-management-card"
-                    bordered={false}
+                    variant="borderless"
                     style={{
                         borderRadius: 16,
                         border: "1px solid #e5e7eb",
                         boxShadow: "0 14px 34px rgba(15, 23, 42, 0.08)",
                     }}
-                    bodyStyle={{ padding: 24 }}
+                    styles={{ body: { padding: 24 } }}
                 >
                     <Row
                         align="middle"
@@ -487,10 +505,10 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
 
                                 <div>
                                     <Title level={4} style={{ margin: 0 }}>
-                                        Group List
+                                        Team List
                                     </Title>
                                     <Text type="secondary">
-                                        View, edit, delete, and update group status.
+                                        View, edit, delete, and update team status.
                                     </Text>
                                 </div>
                             </Space>
@@ -510,16 +528,16 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                                     boxShadow: "0 8px 20px rgba(37, 99, 235, 0.22)",
                                 }}
                             >
-                                Create Group
+                                Create Team
                             </Button>
                         </Col>
                     </Row>
 
                     <Card
-                        bodyStyle={{
+                        styles={{ body: {
                             padding: 20,
                             overflow: "hidden",
-                        }}
+                        } }}
                     >
                         <Table
                             rowKey="groupId"
@@ -536,18 +554,22 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
             </div>
 
             <Modal
-                title={isEditing ? "Edit Group" : "Create Group"}
+                title={isEditing ? "Edit Team" : "Create Team"}
                 open={open}
                 onCancel={closeModal}
                 footer={null}
-                destroyOnClose
+                destroyOnHidden
                 width={560}
             >
                 <Form
                     form={form}
                     layout="vertical"
                     onFinish={onFinish}
-                    initialValues={{ active: true }}
+                    initialValues={{
+                        groupName: editingRecord?.groupName,
+                        groupMembers: editingRecord?.groupMembers,
+                        active: editingRecord ? editingRecord.active : true,
+                    }}
                     style={{ marginTop: 18 }}
                 >
                     <Form.Item
@@ -559,12 +581,12 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                                     fontWeight: 600,
                                 }}
                             >
-                                Group Name
+                                Team Name
                             </span>
                         }
-                        rules={[{ required: true, message: "Please enter group name" }]}
+                        rules={[{ required: true, message: "Please enter team name" }]}
                     >
-                        <Input size="large" placeholder="Enter group name" />
+                        <Input size="large" placeholder="Enter team name" />
                     </Form.Item>
 
                     <Form.Item
@@ -575,21 +597,21 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                                     fontWeight: 600,
                                 }}
                             >
-                                Group Members
+                                Team Members
                             </span>
                         }
                         name="groupMembers"
                         rules={[
                             {
                                 required: true,
-                                message: "Please select group members",
+                                message: "Please select team members",
                             },
                         ]}
                     >
                         <Select
                             mode="multiple"
                             showSearch
-                            placeholder="Select Group Members"
+                            placeholder="Select Team Members"
                             optionFilterProp="label"
                             options={userspage?.map((user: any) => ({
                                 label: `${user.first_name} ${user.last_name}`,
@@ -625,11 +647,28 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                                     fontWeight: 600,
                                 }}
                             >
-                                {isEditing ? "Update Group" : "Create Group"}
+                                {isEditing ? "Update Team" : "Create Team"}
                             </Button>
                         </Col>
                     </Row>
                 </Form>
+            </Modal>
+
+            <Modal
+                title={membersPopup ? `${membersPopup.groupName} — Members` : "Members"}
+                open={!!membersPopup}
+                onCancel={() => setMembersPopup(null)}
+                footer={
+                    <Button onClick={() => setMembersPopup(null)}>Close</Button>
+                }
+            >
+                <Space size={[8, 8]} wrap>
+                    {membersPopup?.members.map((member) => (
+                        <Tag key={member} color="blue" style={{ borderRadius: 999 }}>
+                            {getUserLabel(member)}
+                        </Tag>
+                    ))}
+                </Space>
             </Modal>
         </div>
     );

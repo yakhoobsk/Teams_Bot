@@ -3,17 +3,23 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import UserManagement from ".";
 import GroupManagement from "./groups";
+import AtomManagement from "./atoms";
+import RoleManagement from "./roles";
+import { INITIAL_ROLES, type RoleData } from "../../constants/roles";
 
 
 const Management = () => {
 
     const [activeTab, setActiveTab] = useState("usermanagemnt");
+    const [roles, setRoles] = useState<RoleData[]>(INITIAL_ROLES);
 
     const items = [
 
 
-        { key: "usermanagemnt", label: "User Management", children: <UserManagement activeTab={activeTab} /> },
-        { key: "GroupManagement", label: "Group Management", children: <GroupManagement activeTab={activeTab} /> },
+        { key: "usermanagemnt", label: "User Management", children: <UserManagement activeTab={activeTab} roles={roles} /> },
+        { key: "RoleManagement", label: "Role Management", children: <RoleManagement roles={roles} setRoles={setRoles} /> },
+        { key: "GroupManagement", label: "Team", children: <GroupManagement activeTab={activeTab} /> },
+        { key: "AtomManagement", label: "Atom Management", children: <AtomManagement activeTab={activeTab} /> },
     ];
 
     useEffect(() => {

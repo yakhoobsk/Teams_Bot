@@ -90,7 +90,7 @@ const AddTeamModal: React.FC<Props> = ({
             onCancel={onClose}
             width={950}
             centered
-            destroyOnClose
+            destroyOnHidden
 
         >
 

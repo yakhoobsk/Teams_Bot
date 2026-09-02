@@ -311,7 +311,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                                                 }))
                                                             }
                                                         >
-                                                            <Space direction="vertical">
+                                                            <Space orientation="vertical">
                                                                 <Radio value="owner">Owner</Radio>
                                                                 <Radio value="member">Member</Radio>
                                                             </Space>
@@ -325,7 +325,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                             </Form.Item>
                         </Col>
                         <Col xs={24} md={12}>
-                            <Form.Item name="groupUsers" label="groups">
+                            <Form.Item name="groupUsers" label="Teams">
                                 <Select
                                     style={{ width: "100%" }}
                                     dropdownStyle={{
@@ -333,7 +333,7 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                     }}
                                     mode="multiple"
                                     value={selectedGroups}
-                                    placeholder="Select Groups"
+                                    placeholder="Select Teams"
                                     maxTagCount="responsive"
                                     options={(groupResponse?.Response || []).map((group: any) => ({
                                         label: group.group_name,

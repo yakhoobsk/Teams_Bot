@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Key, type ReactNode } from "react";
 import {
     Table,
     Card,
@@ -12,22 +12,136 @@ import {
     Form,
     Space,
     Tooltip,
+    Checkbox,
+    Select,
+    Collapse,
 } from "antd";
 import {
     EditOutlined,
+    KeyOutlined,
     PlusOutlined,
+    SafetyOutlined,
     SearchOutlined,
+    TeamOutlined,
     UserAddOutlined,
     UserOutlined,
 } from "@ant-design/icons";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { userCreate, UsersGet, UserUpdate } from "../../redux/Services/connectersServices";
+import { userCreate, UsersGet, UserUpdate, GroupsGet } from "../../redux/Services/connectersServices";
 import AppPagination from "../../components/AppPagination";
 import { showSnackbar } from "../../utils/snackbar";
 import type { ColumnsType } from "antd/es/table";
+import { ATOM_LIST } from "../../constants/atomList";
+import { MODULE_ACCESS_OPTIONS } from "../../constants/moduleAccess";
+import type { RoleData } from "../../constants/roles";
 
 const { Title, Text } = Typography;
+const { Panel } = Collapse;
+
+type ModulePermission = { read: boolean; write: boolean };
+type ModulePermissions = Record<string, ModulePermission>;
+
+const emptyModulePermission = (): ModulePermission => ({ read: false, write: false });
+
+const ModuleAccessGrid = ({
+    value,
+    onChange,
+}: {
+    value?: ModulePermissions;
+    onChange?: (value: ModulePermissions) => void;
+}) => {
+    const current = value || {};
+
+    const handleToggle = (module: string, field: "read" | "write", checked: boolean) => {
+        onChange?.({
+            ...current,
+            [module]: {
+                read: current[module]?.read || false,
+                write: current[module]?.write || false,
+                [field]: checked,
+            },
+        });
+    };
+
+    return (
+        <Row gutter={[12, 12]}>
+            {MODULE_ACCESS_OPTIONS.map((module) => {
+                const enabled = current[module]?.read || current[module]?.write;
+
+                return (
+                    <Col xs={24} sm={12} key={module}>
+                        <div
+                            style={{
+                                border: enabled ? "1px solid #93c5fd" : "1px solid #e5e7eb",
+                                background: enabled ? "#eff6ff" : "#fff",
+                                borderRadius: 10,
+                                padding: "12px 14px",
+                                transition: "all 0.15s ease",
+                            }}
+                        >
+                            <Text strong style={{ display: "block", marginBottom: 8, color: "#111827" }}>
+                                {module}
+                            </Text>
+                            <Space size={16}>
+                                <Checkbox
+                                    checked={current[module]?.read || false}
+                                    onChange={(e) => handleToggle(module, "read", e.target.checked)}
+                                >
+                                    <span style={{ color: "#475569" }}>Read</span>
+                                </Checkbox>
+                                <Checkbox
+                                    checked={current[module]?.write || false}
+                                    onChange={(e) => handleToggle(module, "write", e.target.checked)}
+                                >
+                                    <span style={{ color: "#475569" }}>Write</span>
+                                </Checkbox>
+                            </Space>
+                        </div>
+                    </Col>
+                );
+            })}
+        </Row>
+    );
+};
+
+const SectionHeader = ({
+    icon,
+    title,
+    subtitle,
+}: {
+    icon: ReactNode;
+    title: string;
+    subtitle?: string;
+}) => (
+    <Space align="start" size={12} style={{ marginBottom: 18 }}>
+        <div
+            style={{
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                background: "#eff6ff",
+                color: "#2563eb",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 16,
+                flexShrink: 0,
+            }}
+        >
+            {icon}
+        </div>
+
+        <div>
+            <Text strong style={{ display: "block", fontSize: 15, color: "#111827" }}>
+                {title}
+            </Text>
+            {subtitle && (
+                <Text style={{ fontSize: 12, color: "#64748b" }}>{subtitle}</Text>
+            )}
+        </div>
+    </Space>
+);
 
 type UserRow = {
     id: string | number;
@@ -44,11 +158,15 @@ type AddUserFormValues = {
     email: string;
     role: string;
     active: boolean;
+    moduleAccess: ModulePermissions;
+    teamAccess: string[];
+    atomAccess: string[];
 };
 
-const UserManagement = ({ activeTab }: { activeTab: string }) => {
+const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleData[] }) => {
     const dispatch = useAppDispatch();
     const userspage = useAppSelector((state) => state.connecters?.usersget);
+    const groupResponse = useAppSelector((state) => state.connecters.GroupsGets);
     const [isEdit, setIsEdit] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
     const [form] = Form.useForm<AddUserFormValues>();
@@ -56,6 +174,16 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
     const [search, setSearch] = useState("");
     const [addUserOpen, setAddUserOpen] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+    const [teamModulePermissions, setTeamModulePermissions] = useState<Record<string, ModulePermissions>>({});
+    const [teamAccessOpen, setTeamAccessOpen] = useState(false);
+    const [teamAccessTeams, setTeamAccessTeams] = useState<string[]>([]);
+    const [teamAccessModules, setTeamAccessModules] = useState<ModulePermissions>({});
+    const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
+    const [accessModalOpen, setAccessModalOpen] = useState(false);
+    const [accessTargetUser, setAccessTargetUser] = useState<UserRow | null>(null);
+    const [accessModules, setAccessModules] = useState<ModulePermissions>({});
+    const [accessAtoms, setAccessAtoms] = useState<string[]>([]);
 
     useEffect(() => {
         if (activeTab === "usermanagemnt") {
@@ -67,6 +195,28 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
         }
 
     }, [dispatch, pagination, search]);
+
+    useEffect(() => {
+        if (activeTab === "usermanagemnt") {
+            dispatch(GroupsGet({}));
+        }
+    }, [dispatch]);
+
+    const teamOptions =
+        groupResponse?.Response?.map((group: any) => ({
+            label: group.group_name,
+            value: group.group_name,
+        })) || [];
+
+    const atomOptions = ATOM_LIST.map((atom) => ({
+        label: atom.atomName,
+        value: atom.atomName,
+    }));
+
+    const roleOptions = roles.map((role) => ({
+        label: role.roleName,
+        value: role.roleName,
+    }));
 
     const handlePagination = (page: number, limit: number) => {
         setPagination({ page, limit });
@@ -95,16 +245,113 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
     const openAddUser = () => {
         setIsEdit(false);
         setSelectedUser(null);
-        form.resetFields();
+        setSelectedTeams([]);
+        setTeamModulePermissions({});
         setAddUserOpen(true);
     };
     const closeAddUser = () => {
-        form.resetFields();
+        setSelectedTeams([]);
+        setTeamModulePermissions({});
         setAddUserOpen(false);
     };
 
+    const handleTeamAccessChange = (teams: string[]) => {
+        setSelectedTeams(teams);
+        setTeamModulePermissions((prev) => {
+            const next: Record<string, ModulePermissions> = {};
+            teams.forEach((team) => {
+                next[team] = prev[team] || {};
+            });
+            return next;
+        });
+    };
 
+    const handleTeamModuleChange = (team: string, permissions: ModulePermissions) => {
+        setTeamModulePermissions((prev) => ({ ...prev, [team]: permissions }));
+    };
 
+    const buildAccessControl = (values: AddUserFormValues) => {
+        if (isEdit && selectedTeams.length > 0) {
+            return {
+                teams: selectedTeams,
+                teamPermissions: selectedTeams.map((team) => {
+                    const perms = teamModulePermissions[team] || {};
+                    return {
+                        team,
+                        mdm: perms.MDM || emptyModulePermission(),
+                        atom: perms.Atom || emptyModulePermission(),
+                        tickets: perms.Tickets || emptyModulePermission(),
+                        longrun: perms.LongRun || emptyModulePermission(),
+                    };
+                }),
+                atoms: values.atomAccess || [],
+            };
+        }
+
+        const perms = values.moduleAccess || {};
+
+        return {
+            teams: [],
+            mdm: perms.MDM || emptyModulePermission(),
+            atom: perms.Atom || emptyModulePermission(),
+            tickets: perms.Tickets || emptyModulePermission(),
+            longrun: perms.LongRun || emptyModulePermission(),
+            atoms: values.atomAccess || [],
+        };
+    };
+
+    const handleUpdateTeamAccess = () => {
+        const payload = {
+            teams: teamAccessTeams,
+            access: {
+                mdm: teamAccessModules.MDM || emptyModulePermission(),
+                atom: teamAccessModules.Atom || emptyModulePermission(),
+                tickets: teamAccessModules.Tickets || emptyModulePermission(),
+                longrun: teamAccessModules.LongRun || emptyModulePermission(),
+            },
+        };
+
+        console.log("Team access payload:", payload);
+
+        showSnackbar("success", `Access updated for ${teamAccessTeams.length} team(s)`);
+
+        setTeamAccessOpen(false);
+        setTeamAccessTeams([]);
+        setTeamAccessModules({});
+    };
+
+    const openAccessModal = (record: UserRow) => {
+        setAccessTargetUser(record);
+        setAccessModules({});
+        setAccessAtoms([]);
+        setAccessModalOpen(true);
+    };
+
+    const closeAccessModal = () => {
+        setAccessModalOpen(false);
+        setAccessTargetUser(null);
+        setAccessModules({});
+        setAccessAtoms([]);
+    };
+
+    const handleUpdateUserAccess = () => {
+        const payload = {
+            userId: accessTargetUser?.id,
+            access: {
+                mdm: accessModules.MDM || emptyModulePermission(),
+                atom: accessModules.Atom || emptyModulePermission(),
+                tickets: accessModules.Tickets || emptyModulePermission(),
+                longrun: accessModules.LongRun || emptyModulePermission(),
+            },
+            atoms: accessAtoms,
+        };
+
+        console.log("Update user access payload:", payload);
+
+        showSnackbar("success", `Access updated for ${accessTargetUser?.userName}`);
+
+        closeAccessModal();
+    };
 
     const handleAddUser = async (values: AddUserFormValues) => {
         setSaving(true);
@@ -117,8 +364,15 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                 first_name: values.firstName,
                 accountid: "",
                 is_boomi_user: "false",
-                type: "User",
+                type: values.role,
             };
+
+            const payloadWithAccess = {
+                ...payload,
+                access_control: buildAccessControl(values),
+            };
+
+            console.log("Create User payload:", payloadWithAccess);
 
             await dispatch(
                 userCreate({
@@ -156,8 +410,15 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                 last_name: values.lastName,
                 accountid: "",
                 is_boomi_user: "false",
-                type: "User",
+                type: values.role,
             };
+
+            const payloadWithAccess = {
+                ...payload,
+                access_control: buildAccessControl(values),
+            };
+
+            console.log("Update User payload:", payloadWithAccess);
 
             await dispatch(
                 UserUpdate({
@@ -187,15 +448,8 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
     const handleEdit = (record: UserRow) => {
         setIsEdit(true);
         setSelectedUser(record);
-
-        const [firstName, ...last] = record.userName.split(" ");
-
-        form.setFieldsValue({
-            firstName,
-            lastName: last.join(" "),
-            email: record.usermail,
-        });
-
+        setSelectedTeams([]);
+        setTeamModulePermissions({});
         setAddUserOpen(true);
     };
 
@@ -272,7 +526,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
         {
             title: "Actions",
             key: "actions",
-            width: 140,
+            width: 170,
             align: "center",
             render: (_: any, record: UserRow) => (
                 <Space size="middle">
@@ -292,6 +546,15 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                                 fontSize: 18,
                             }}
                             onClick={() => handleEdit(record)}
+                        />
+                    </Tooltip>
+
+                    <Tooltip title="Update Access">
+                        <Button
+                            type="text"
+                            icon={<KeyOutlined />}
+                            style={{ color: "#1677ff", fontSize: 18 }}
+                            onClick={() => openAccessModal(record)}
                         />
                     </Tooltip>
 
@@ -361,13 +624,13 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
 
             <Card
                 className="user-management-card"
-                bordered={false}
+                variant="borderless"
                 style={{
                     borderRadius: 16,
                     border: "1px solid #e5e7eb",
                     boxShadow: "0 14px 34px rgba(15, 23, 42, 0.08)",
                 }}
-                bodyStyle={{ padding: 24 }}
+                styles={{ body: { padding: 24 } }}
             >
                 <Row justify="space-between" align="middle" gutter={[16, 16]}>
                     <Col xs={24} md={14}>
@@ -400,21 +663,34 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                     </Col>
 
                     <Col xs={24} md={10} style={{ textAlign: "right" }}>
-                        <Button
-                            type="primary"
-                            size="large"
-                            icon={<PlusOutlined />}
-                            onClick={openAddUser}
-                            style={{
-                                borderRadius: 10,
-                                fontWeight: 600,
-                                background: "#2563eb",
-                                borderColor: "#2563eb",
-                                boxShadow: "0 8px 20px rgba(37, 99, 235, 0.22)",
-                            }}
-                        >
-                            Add User
-                        </Button>
+                        <Space>
+                            <Button
+                                size="large"
+                                onClick={() => setTeamAccessOpen(true)}
+                                style={{
+                                    borderRadius: 10,
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Team
+                            </Button>
+
+                            <Button
+                                type="primary"
+                                size="large"
+                                icon={<PlusOutlined />}
+                                onClick={openAddUser}
+                                style={{
+                                    borderRadius: 10,
+                                    fontWeight: 600,
+                                    background: "#2563eb",
+                                    borderColor: "#2563eb",
+                                    boxShadow: "0 8px 20px rgba(37, 99, 235, 0.22)",
+                                }}
+                            >
+                                Add User
+                            </Button>
+                        </Space>
                     </Col>
                 </Row>
 
@@ -433,6 +709,7 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                             onChange={(e) => handleSearch(e.target.value)}
                         />
                     </Col>
+
                 </Row>
 
                 <Table
@@ -441,6 +718,10 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                     dataSource={tableUsers}
                     scroll={{ x: 900, y: 500 }}
                     pagination={false}
+                    rowSelection={{
+                        selectedRowKeys,
+                        onChange: (keys) => setSelectedRowKeys(keys),
+                    }}
                 />
 
                 <div
@@ -464,8 +745,8 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                 open={addUserOpen}
                 onCancel={closeAddUser}
                 footer={null}
-                destroyOnClose
-                width={560}
+                destroyOnHidden
+                width={640}
             >
                 <Form
                     form={form}
@@ -477,57 +758,227 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                             handleAddUser(values);
                         }
                     }}
-                    initialValues={{ active: true }}
+                    initialValues={{
+                        active: true,
+                        firstName: selectedUser?.userName.split(" ")[0],
+                        lastName: selectedUser?.userName.split(" ").slice(1).join(" "),
+                        email: selectedUser?.usermail,
+                        role: selectedUser?.role,
+                        moduleAccess: {},
+                        teamAccess: [],
+                        atomAccess: [],
+                    }}
                     style={{ marginTop: 18 }}
                 >
-                    <Row gutter={16}>
-                        <Col xs={24} md={12}>
-                            <Form.Item
-                                name="firstName"
-                                label={
-                                    <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                                        First Name
-                                    </span>
-                                }
-                                rules={[{ required: true, message: "Please enter first name" }]}
-                            >
-                                <Input size="large" placeholder="Enter first name" />
-                            </Form.Item>
-                        </Col>
+                    <div
+                        style={{
+                            background: "#f8fafc",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: 14,
+                            padding: 20,
+                            marginBottom: 20,
+                        }}
+                    >
+                        <SectionHeader
+                            icon={<UserOutlined />}
+                            title="Basic Information"
+                            subtitle="Name, email, and role for this user."
+                        />
 
-                        <Col xs={24} md={12}>
+                        <Row gutter={16}>
+                            <Col xs={24} md={12}>
+                                <Form.Item
+                                    name="firstName"
+                                    label={
+                                        <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                            First Name
+                                        </span>
+                                    }
+                                    rules={[{ required: true, message: "Please enter first name" }]}
+                                >
+                                    <Input size="large" placeholder="Enter first name" />
+                                </Form.Item>
+                            </Col>
+
+                            <Col xs={24} md={12}>
+                                <Form.Item
+                                    name="lastName"
+                                    label={
+                                        <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                            Last Name
+                                        </span>
+                                    }
+                                    rules={[{ required: true, message: "Please enter last name" }]}
+                                >
+                                    <Input size="large" placeholder="Enter last name" />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+
+                        <Form.Item
+                            name="email"
+                            label={
+                                <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                    Email
+                                </span>
+                            }
+                            rules={[
+                                { required: true, message: "Please enter user mail" },
+                                { type: "email", message: "Please enter valid email" },
+                            ]}
+                        >
+                            <Input size="large" placeholder="Enter user mail" />
+                        </Form.Item>
+
+                        <Form.Item
+                            name="role"
+                            label={
+                                <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                    Role
+                                </span>
+                            }
+                            rules={[{ required: true, message: "Please select a role" }]}
+                            style={{ marginBottom: 0 }}
+                        >
+                            <Select
+                                size="large"
+                                showSearch
+                                placeholder="Select role"
+                                optionFilterProp="label"
+                                options={roleOptions}
+                            />
+                        </Form.Item>
+                    </div>
+
+                    <div
+                        style={{
+                            background: "#f8fafc",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: 14,
+                            padding: 20,
+                            marginBottom: 20,
+                        }}
+                    >
+                        <SectionHeader
+                            icon={<SafetyOutlined />}
+                            title="Access Control"
+                            subtitle="Configure module, team, and Atom level permissions for this user."
+                        />
+
+                        {isEdit ? (
+                        <>
                             <Form.Item
-                                name="lastName"
+                                name="teamAccess"
                                 label={
                                     <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                                        Last Name
+                                        Team Restriction
                                     </span>
                                 }
-                                rules={[{ required: true, message: "Please enter last name" }]}
+                                extra={
+                                    <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                                        Leave empty to apply Module Access globally, across all teams. Pick one or more teams to restrict MDM / LongRun / Atom / Tickets access per team instead.
+                                    </span>
+                                }
                             >
-                                <Input size="large" placeholder="Enter last name" />
+                                <Select
+                                    mode="multiple"
+                                    allowClear
+                                    showSearch
+                                    size="large"
+                                    placeholder="Select teams to restrict access to"
+                                    optionFilterProp="label"
+                                    options={teamOptions}
+                                    maxTagCount="responsive"
+                                    onChange={handleTeamAccessChange}
+                                />
                             </Form.Item>
-                        </Col>
-                    </Row>
+
+                            {selectedTeams.length > 0 && (
+                                <Form.Item
+                                    label={
+                                        <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                            Module Access per Team
+                                        </span>
+                                    }
+                                    extra={
+                                        <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                                            Choose which modules this user can access within each team.
+                                        </span>
+                                    }
+                                >
+                                    <Collapse defaultActiveKey={selectedTeams}>
+                                        {selectedTeams.map((team) => (
+                                            <Panel header={team} key={team}>
+                                                <ModuleAccessGrid
+                                                    value={teamModulePermissions[team] || {}}
+                                                    onChange={(permissions) =>
+                                                        handleTeamModuleChange(team, permissions)
+                                                    }
+                                                />
+                                            </Panel>
+                                        ))}
+                                    </Collapse>
+                                </Form.Item>
+                            )}
+                        </>
+                    ) : (
+                        <Form.Item
+                            label={
+                                <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                    Team Restriction
+                                </span>
+                            }
+                        >
+                            <Text style={{ color: "#94a3b8", fontSize: 13 }}>
+                                Not available while creating a user — add this user to a team from the Team tab first, then set their team restriction from Update User.
+                            </Text>
+                        </Form.Item>
+                    )}
+
+                    {!(isEdit && selectedTeams.length > 0) && (
+                        <Form.Item
+                            name="moduleAccess"
+                            label={
+                                <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                    Module Access
+                                </span>
+                            }
+                            extra={
+                                <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                                    Choose which modules this user can access, and whether they can read or write to each.
+                                </span>
+                            }
+                        >
+                            <ModuleAccessGrid />
+                        </Form.Item>
+                    )}
 
                     <Form.Item
-                        name="email"
+                        name="atomAccess"
                         label={
                             <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                                Email
+                                Atom Restriction
                             </span>
                         }
-                        rules={[
-                            { required: true, message: "Please enter user mail" },
-                            { type: "email", message: "Please enter valid email" },
-                        ]}
+                        extra={
+                            <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                                Leave empty to allow all Atoms.
+                            </span>
+                        }
+                        style={{ marginBottom: 0 }}
                     >
-                        <Input size="large" placeholder="Enter user mail" />
+                        <Select
+                            mode="multiple"
+                            allowClear
+                            showSearch
+                            size="large"
+                            placeholder="Select Atoms to restrict access to"
+                            optionFilterProp="label"
+                            options={atomOptions}
+                            maxTagCount="responsive"
+                        />
                     </Form.Item>
-
-
-
-
+                    </div>
 
                     <Row justify="end" gutter={12}>
                         <Col>
@@ -551,6 +1002,149 @@ const UserManagement = ({ activeTab }: { activeTab: string }) => {
                         </Col>
                     </Row>
                 </Form>
+            </Modal>
+
+            <Modal
+                title="Team Access"
+                open={teamAccessOpen}
+                onCancel={() => {
+                    setTeamAccessOpen(false);
+                    setTeamAccessTeams([]);
+                    setTeamAccessModules({});
+                }}
+                footer={null}
+                destroyOnHidden
+                width={480}
+            >
+                <div style={{ marginTop: 4 }}>
+                    <SectionHeader
+                        icon={<TeamOutlined />}
+                        title="Assign Teams"
+                        subtitle="Pick teams and set their module access."
+                    />
+
+                    <Text style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                        Teams
+                    </Text>
+
+                    <Select
+                        mode="multiple"
+                        allowClear
+                        showSearch
+                        size="large"
+                        style={{ width: "100%", marginTop: 8 }}
+                        placeholder="Select one or more teams"
+                        optionFilterProp="label"
+                        options={teamOptions}
+                        value={teamAccessTeams}
+                        onChange={setTeamAccessTeams}
+                        maxTagCount="responsive"
+                    />
+
+                    <div style={{ marginTop: 20 }}>
+                        <Text style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                            Module Access
+                        </Text>
+
+                        <div style={{ marginTop: 8 }}>
+                            <ModuleAccessGrid value={teamAccessModules} onChange={setTeamAccessModules} />
+                        </div>
+                    </div>
+
+                    <Row justify="end" gutter={12} style={{ marginTop: 24 }}>
+                        <Col>
+                            <Button
+                                onClick={() => {
+                                    setTeamAccessOpen(false);
+                                    setTeamAccessTeams([]);
+                                    setTeamAccessModules({});
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                        </Col>
+
+                        <Col>
+                            <Button
+                                type="primary"
+                                disabled={teamAccessTeams.length === 0}
+                                onClick={handleUpdateTeamAccess}
+                                style={{
+                                    background: "#2563eb",
+                                    borderColor: "#2563eb",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Update
+                            </Button>
+                        </Col>
+                    </Row>
+                </div>
+            </Modal>
+
+            <Modal
+                title={`Update Access — ${accessTargetUser?.userName || ""}`}
+                open={accessModalOpen}
+                onCancel={closeAccessModal}
+                footer={null}
+                destroyOnHidden
+                width={480}
+            >
+                <div style={{ marginTop: 4 }}>
+                    <SectionHeader
+                        icon={<KeyOutlined />}
+                        title="User Permissions"
+                        subtitle="Set module and Atom level access for this user."
+                    />
+
+                    <Text style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                        Module Access
+                    </Text>
+
+                    <div style={{ marginTop: 8 }}>
+                        <ModuleAccessGrid value={accessModules} onChange={setAccessModules} />
+                    </div>
+
+                    <div style={{ marginTop: 20 }}>
+                        <Text style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                            Atom Restriction
+                        </Text>
+
+                        <Select
+                            mode="multiple"
+                            allowClear
+                            showSearch
+                            size="large"
+                            style={{ width: "100%", marginTop: 8 }}
+                            placeholder="Select Atoms to restrict access to"
+                            optionFilterProp="label"
+                            options={atomOptions}
+                            value={accessAtoms}
+                            onChange={setAccessAtoms}
+                            maxTagCount="responsive"
+                        />
+                    </div>
+
+                    <Row justify="end" gutter={12} style={{ marginTop: 24 }}>
+                        <Col>
+                            <Button onClick={closeAccessModal}>Cancel</Button>
+                        </Col>
+
+                        <Col>
+                            <Button
+                                type="primary"
+                                onClick={handleUpdateUserAccess}
+                                style={{
+                                    background: "#2563eb",
+                                    borderColor: "#2563eb",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Update
+                            </Button>
+                        </Col>
+                    </Row>
+                </div>
             </Modal>
         </div>
     );

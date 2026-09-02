@@ -348,7 +348,7 @@ const LoginPage: React.FC = () => {
                     animate={{ y: 0, opacity: 1 }}
                 >
                     <Card
-                        bordered={false}
+                        variant="borderless"
                         style={{
                             width: 480,
                             borderRadius: 32,

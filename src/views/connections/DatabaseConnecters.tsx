@@ -620,7 +620,7 @@ const DatabaseConnectors = ({ activeTab, type }: { activeTab: string; type: stri
                 ]}
                 width={1400}
                 centered
-                destroyOnClose
+                destroyOnHidden
             >
                 <Table
                     bordered

@@ -66,7 +66,7 @@ function AgentCard({
         >
             <Card
                 hoverable
-                bordered={false}
+                variant="borderless"
                 style={{
                     height: "100%",
                     display: "flex",
@@ -80,7 +80,7 @@ function AgentCard({
                         : "0 10px 30px rgba(15, 23, 42, 0.07)",
                     transition: "all 0.25s ease",
                 }}
-                bodyStyle={{ padding: 0, display: "flex", flexDirection: "column", flex: 1 }}
+                styles={{ body: { padding: 0, display: "flex", flexDirection: "column", flex: 1 } }}
             >
                 <div
                     style={{
@@ -947,13 +947,13 @@ export default function AgentConfiguration(): React.ReactElement {
             </div>
 
             <Card
-                bordered={false}
+                variant="borderless"
                 style={{
                     borderRadius: 18,
                     boxShadow: "0 14px 34px rgba(15, 23, 42, 0.08)",
                     border: "1px solid #e5e7eb",
                 }}
-                bodyStyle={{ padding: 24 }}
+                styles={{ body: { padding: 24 } }}
             >
                 <Tabs
                     activeKey={activeTab}

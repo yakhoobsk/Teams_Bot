@@ -142,9 +142,9 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                 >
                     <Card
                         style={cardStyle}
-                        bodyStyle={{
+                        styles={{ body: {
                             padding: 0,
-                        }}
+                        } }}
                     >
                         <div
                             style={{
@@ -337,9 +337,9 @@ const ITSMConnectors = ({ activeTab }: { activeTab: string }) => {
                 >
                     <Card
                         style={cardStyle}
-                        bodyStyle={{
+                        styles={{ body: {
                             padding: 0,
-                        }}
+                        } }}
                     >
 
                         <div
