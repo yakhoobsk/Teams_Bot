@@ -46,6 +46,7 @@ const initialAtoms: AtomData[] = ATOM_LIST.map((atom) => ({
 }));
 
 export default function AtomManagement({ activeTab }: { activeTab: string }): React.ReactElement {
+    console.log(activeTab);
     const [atoms, setAtoms] = useState<AtomData[]>(initialAtoms);
     const [togglingId, setTogglingId] = useState<number | null>(null);
     const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
@@ -403,10 +404,12 @@ export default function AtomManagement({ activeTab }: { activeTab: string }): Re
                     </Row>
 
                     <Card
-                        styles={{ body: {
-                            padding: 20,
-                            overflow: "hidden",
-                        } }}
+                        styles={{
+                            body: {
+                                padding: 20,
+                                overflow: "hidden",
+                            }
+                        }}
                     >
                         <Table
                             rowKey="id"
