@@ -2,7 +2,8 @@ import { Tabs } from "antd";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Channels from "./channels";
-import AlertsTable from "./alertsIndex";
+import UserAlertsTable from "./individualchannel";
+import TeamAlertsTable from "./teamchannel";
 
 
 const ChannelIndex = () => {
@@ -13,7 +14,8 @@ const ChannelIndex = () => {
 
 
         { key: "Channels", label: "Channels Alerts", children: <Channels /> },
-        { key: "Alerts", label: "Alerts", children: <AlertsTable /> },
+        { key: "Individual", label: "Individual Alerts", children: <UserAlertsTable /> },
+        { key: "TeamAlerts", label: "Team Alerts", children: <TeamAlertsTable /> },
         // { key: "TeamsConfiguration", label: "Teams Configuration", children: <TeamConfiguration activeTab={activeTab} /> },
     ];
 

@@ -1,132 +1,97 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-    Button,
     Card,
     Col,
-    Modal,
     Row,
-    Select,
     Space,
     Switch,
     Table,
     Tag,
-    TimePicker,
     Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import dayjs, { type Dayjs } from "dayjs";
-import { ClockCircleOutlined, CloudServerOutlined, DatabaseOutlined, EditOutlined } from "@ant-design/icons";
-import { showSnackbar } from "../../utils/snackbar";
+import { CloudServerOutlined, DatabaseOutlined } from "@ant-design/icons";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { AtomStatusGet, AtomStatusUpdate } from "../../redux/Services/connectersServices";
 import { ATOM_LIST } from "../../constants/atomList";
 
 const { Title, Text } = Typography;
-
-const INTERVAL_OPTIONS = [1, 2, 3, 4, 6, 8, 12, 24].map((hours) => ({
-    label: `Every ${hours} hr`,
-    value: hours,
-}));
-
-interface AtomSchedule {
-    time: string;
-    intervalHours: number;
-}
 
 interface AtomData {
     id: number;
     atomName: string;
     status: "online" | "offline";
     active: boolean;
-    schedule: AtomSchedule | null;
 }
-
-const initialAtoms: AtomData[] = ATOM_LIST.map((atom) => ({
-    ...atom,
-    active: atom.atomName === "Esi_stagging",
-    schedule: null,
-}));
 
 export default function AtomManagement({ activeTab }: { activeTab: string }): React.ReactElement {
     console.log(activeTab);
-    const [atoms, setAtoms] = useState<AtomData[]>(initialAtoms);
+    const dispatch = useAppDispatch();
+    const atomStatusGet = useAppSelector((state) => state.connecters?.AtomStatusGets);
+    const [atoms, setAtoms] = useState<AtomData[]>([]);
     const [togglingId, setTogglingId] = useState<number | null>(null);
-    const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
-    const [scheduleTarget, setScheduleTarget] = useState<AtomData | null>(null);
-    const [scheduleTime, setScheduleTime] = useState<Dayjs | null>(null);
-    const [scheduleInterval, setScheduleInterval] = useState<number | null>(null);
+
+    useEffect(() => {
+        dispatch(AtomStatusGet({}));
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (atomStatusGet?.Response?.length) {
+            const mapped: AtomData[] = atomStatusGet.Response.map((item: any) => {
+                const name = item.atom_name || item.atomName || item.name || "";
+
+                // Online/offline health isn't part of this API yet - fall back to the
+                // known static Atom list (matched by name) for that indicator.
+                const staticMatch = ATOM_LIST.find(
+                    (atom) => atom.atomName.toLowerCase() === String(name).toLowerCase()
+                );
+
+                return {
+                    id: item.id,
+                    atomName: name,
+                    status: staticMatch?.status || "online",
+                    active:
+                        String(item.action ?? item.status ?? "")
+                            .toLowerCase() === "active",
+                };
+            });
+
+            setAtoms(mapped);
+        }
+    }, [atomStatusGet]);
 
     const onlineCount = atoms.filter((item) => item.status === "online").length;
     const activeAtom = atoms.find((item) => item.active);
 
-    const handleToggle = (record: AtomData, checked: boolean) => {
+    const handleToggle = async (record: AtomData, checked: boolean) => {
         setTogglingId(record.id);
 
-        // Only one Atom can be Active at a time, activating one deactivates the rest.
-        setAtoms((prev) =>
-            prev.map((atom) => {
-                if (atom.id === record.id) {
-                    return { ...atom, active: checked };
+        try {
+            // Only one Atom can be Active at a time, activating one deactivates the rest.
+            await dispatch(
+                AtomStatusUpdate({
+                    payload: { id: record.id, action: checked ? "Active" : "InActive" },
+                })
+            ).unwrap();
+
+            if (checked) {
+                const others = atoms.filter((atom) => atom.id !== record.id && atom.active);
+
+                for (const other of others) {
+                    await dispatch(
+                        AtomStatusUpdate({
+                            payload: { id: other.id, action: "InActive" },
+                        })
+                    ).unwrap();
                 }
+            }
 
-                return checked ? { ...atom, active: false } : atom;
-            })
-        );
-
-        console.log("Update Atom payload:", {
-            id: record.id,
-            atomName: record.atomName,
-            active: checked,
-        });
-
-        showSnackbar(
-            "success",
-            checked
-                ? `${record.atomName} is now the active Atom`
-                : `${record.atomName} deactivated`
-        );
-
-        setTogglingId(null);
-    };
-
-    const openScheduleModal = (record: AtomData) => {
-        setScheduleTarget(record);
-        setScheduleTime(record.schedule ? dayjs(record.schedule.time, "HH:mm") : null);
-        setScheduleInterval(record.schedule?.intervalHours || null);
-        setScheduleModalOpen(true);
-    };
-
-    const closeScheduleModal = () => {
-        setScheduleModalOpen(false);
-        setScheduleTarget(null);
-        setScheduleTime(null);
-        setScheduleInterval(null);
-    };
-
-    const handleSaveSchedule = () => {
-        if (!scheduleTarget || !scheduleTime || !scheduleInterval) return;
-
-        const schedule: AtomSchedule = {
-            time: scheduleTime.format("HH:mm"),
-            intervalHours: scheduleInterval,
-        };
-
-        setAtoms((prev) =>
-            prev.map((atom) =>
-                atom.id === scheduleTarget.id ? { ...atom, schedule } : atom
-            )
-        );
-
-        console.log("Update Atom Schedule payload:", {
-            id: scheduleTarget.id,
-            atomName: scheduleTarget.atomName,
-            schedule,
-        });
-
-        showSnackbar(
-            "success",
-            `${scheduleTarget.atomName} scheduled at ${schedule.time}, every ${schedule.intervalHours} hr`
-        );
-
-        closeScheduleModal();
+            dispatch(AtomStatusGet({}));
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setTogglingId(null);
+        }
     };
 
     const columns: ColumnsType<AtomData> = [
@@ -185,39 +150,6 @@ export default function AtomManagement({ activeTab }: { activeTab: string }): Re
                     />
                     {status}
                 </Tag>
-            ),
-        },
-        {
-            title: "Schedule",
-            key: "schedule",
-            align: "center",
-            render: (_, record) => (
-                <Space>
-                    {record.schedule ? (
-                        <Tag
-                            style={{
-                                borderRadius: 999,
-                                fontWeight: 600,
-                                padding: "4px 12px",
-                                background: "#eff6ff",
-                                color: "#2563eb",
-                                border: "1px solid #bfdbfe",
-                            }}
-                        >
-                            <ClockCircleOutlined style={{ marginRight: 6 }} />
-                            {record.schedule.time} · Every {record.schedule.intervalHours} hr
-                        </Tag>
-                    ) : (
-                        <Text style={{ color: "#94a3b8" }}>Not scheduled</Text>
-                    )}
-
-                    <Button
-                        type="text"
-                        icon={<EditOutlined />}
-                        style={{ color: "#1677ff" }}
-                        onClick={() => openScheduleModal(record)}
-                    />
-                </Space>
             ),
         },
         {
@@ -424,66 +356,6 @@ export default function AtomManagement({ activeTab }: { activeTab: string }): Re
                     </Card>
                 </Card>
             </div>
-
-            <Modal
-                title={scheduleTarget ? `Schedule — ${scheduleTarget.atomName}` : "Schedule"}
-                open={scheduleModalOpen}
-                onCancel={closeScheduleModal}
-                footer={null}
-                destroyOnHidden
-                width={420}
-            >
-                <div style={{ marginTop: 8 }}>
-                    <Text style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                        Time
-                    </Text>
-
-                    <TimePicker
-                        format="HH:mm"
-                        style={{ width: "100%", marginTop: 8 }}
-                        size="large"
-                        value={scheduleTime}
-                        onChange={setScheduleTime}
-                        placeholder="Select time"
-                    />
-
-                    <div style={{ marginTop: 20 }}>
-                        <Text style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                            Repeat Every
-                        </Text>
-
-                        <Select
-                            style={{ width: "100%", marginTop: 8 }}
-                            size="large"
-                            placeholder="Select interval"
-                            options={INTERVAL_OPTIONS}
-                            value={scheduleInterval}
-                            onChange={setScheduleInterval}
-                        />
-                    </div>
-
-                    <Row justify="end" gutter={12} style={{ marginTop: 24 }}>
-                        <Col>
-                            <Button onClick={closeScheduleModal}>Cancel</Button>
-                        </Col>
-
-                        <Col>
-                            <Button
-                                type="primary"
-                                disabled={!scheduleTime || !scheduleInterval}
-                                onClick={handleSaveSchedule}
-                                style={{
-                                    background: "#2563eb",
-                                    borderColor: "#2563eb",
-                                    fontWeight: 600,
-                                }}
-                            >
-                                Save
-                            </Button>
-                        </Col>
-                    </Row>
-                </div>
-            </Modal>
         </div>
     );
 }

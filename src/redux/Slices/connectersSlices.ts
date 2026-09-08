@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { AIConnectersGet, ChannelsUser, DataBaseConnectersGet, GroupsGet, IndividualUser, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigDashboardGet, TeamsconfigGet, TeamsconfigrationGet, UsersGet, UserswithoutpagnationGet } from "../Services/connectersServices";
+import { AIConnectersGet, AtomStatusGet, ChannelsUser, DataBaseConnectersGet, GroupAlertGet, GroupsGet, IndividualUser, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigDashboardGet, TeamsconfigGet, TeamsconfigrationGet, UsersGet, UserswithoutpagnationGet } from "../Services/connectersServices";
 
 
 
@@ -18,6 +18,8 @@ interface ConnectersState {
     TeamsconfigrationGets: any;
     IndividualUsers: any;
     ChannelsUsers: any;
+    GroupAlerts: any;
+    AtomStatusGets: any;
 }
 
 const initialState: ConnectersState = {
@@ -35,6 +37,8 @@ const initialState: ConnectersState = {
     TeamsconfigrationGets: null,
     IndividualUsers: null,
     ChannelsUsers: null,
+    GroupAlerts: null,
+    AtomStatusGets: null,
 };
 
 const ConnectersSlice = createSlice({
@@ -178,6 +182,36 @@ const ConnectersSlice = createSlice({
             })
 
             .addCase(IndividualUser.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(GroupAlertGet.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+
+            .addCase(GroupAlertGet.fulfilled, (state, action) => {
+                state.loading = false;
+                state.GroupAlerts = action.payload;
+            })
+
+            .addCase(GroupAlertGet.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(AtomStatusGet.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+
+            .addCase(AtomStatusGet.fulfilled, (state, action) => {
+                state.loading = false;
+                state.AtomStatusGets = action.payload;
+            })
+
+            .addCase(AtomStatusGet.rejected, (state, action: any) => {
                 state.loading = false;
                 state.error = action.payload;
             })

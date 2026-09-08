@@ -17,6 +17,7 @@ import {
     AlertOutlined,
 } from "@ant-design/icons";
 import ChannelsPage from "../components/channelcreate";
+import ExistingChannelModal from "../components/ExistingChannelModal";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { ChannelsDelete, ChannelsUser } from "../redux/Services/connectersServices";
 import utc from "dayjs/plugin/utc";
@@ -43,6 +44,7 @@ interface ChannelData {
 
 const Channels: React.FC = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isExistingChannelModalOpen, setIsExistingChannelModalOpen] = useState(false);
     const dispatch = useAppDispatch()
     const [form] = Form.useForm();
     const [tableData, setTableData] = useState<ChannelData[]>([]);
@@ -351,6 +353,9 @@ const Channels: React.FC = () => {
                     <Button type="primary" onClick={() => showModal()}>
                         + Create Channel
                     </Button>
+                    <Button onClick={() => setIsExistingChannelModalOpen(true)}>
+                        Existing Channel Create
+                    </Button>
                 </div>
             </div>
             <Table
@@ -365,6 +370,14 @@ const Channels: React.FC = () => {
                 form={form}
                 onCancel={() => setIsModalVisible(false)}
 
+            />
+            <ExistingChannelModal
+                open={isExistingChannelModalOpen}
+                onCancel={() => setIsExistingChannelModalOpen(false)}
+                onSubmit={(payload) => {
+                    console.log("Existing Channel Create payload:", payload);
+                    setIsExistingChannelModalOpen(false);
+                }}
             />
         </div>
 
