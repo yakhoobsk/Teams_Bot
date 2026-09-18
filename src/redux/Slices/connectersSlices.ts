@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { AIConnectersGet, AtomStatusGet, ChannelsUser, DataBaseConnectersGet, GroupAlertGet, GroupsGet, IndividualUser, ITSMConnectersGet, RestApiConnectersGet, TeamsconfigDashboardGet, TeamsconfigGet, TeamsconfigrationGet, UsersGet, UserswithoutpagnationGet } from "../Services/connectersServices";
+import { AIConnectersGet, AtomStatusGet, ChannelsUser, DataBaseConnectersGet, GroupAlertGet, GroupsGet, IndividualUser, ITSMConnectersGet, RestApiConnectersGet, RoleManagementGet, TeamsconfigDashboardGet, TeamsconfigGet, TeamsconfigrationGet, UsersGet, UserswithoutpagnationGet } from "../Services/connectersServices";
 
 
 
@@ -20,6 +20,7 @@ interface ConnectersState {
     ChannelsUsers: any;
     GroupAlerts: any;
     AtomStatusGets: any;
+    RoleManagementGets: any;
 }
 
 const initialState: ConnectersState = {
@@ -39,6 +40,7 @@ const initialState: ConnectersState = {
     ChannelsUsers: null,
     GroupAlerts: null,
     AtomStatusGets: null,
+    RoleManagementGets: null,
 };
 
 const ConnectersSlice = createSlice({
@@ -212,6 +214,21 @@ const ConnectersSlice = createSlice({
             })
 
             .addCase(AtomStatusGet.rejected, (state, action: any) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+
+            .addCase(RoleManagementGet.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+
+            .addCase(RoleManagementGet.fulfilled, (state, action) => {
+                state.loading = false;
+                state.RoleManagementGets = action.payload;
+            })
+
+            .addCase(RoleManagementGet.rejected, (state, action: any) => {
                 state.loading = false;
                 state.error = action.payload;
             })

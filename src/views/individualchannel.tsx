@@ -36,6 +36,7 @@ interface UserPermission {
     longrun: boolean;
     atom: boolean;
     tickets: boolean;
+    errorhandler: boolean;
 }
 
 
@@ -145,6 +146,9 @@ const UserAlertsTable: React.FC = () => {
 
                     tickets:
                         item.tickets === true || item.tickets === "true" || item.tickets === "1",
+
+                    errorhandler:
+                        item.errorhandler === true || item.errorhandler === "true" || item.errorhandler === "1",
                 };
             });
 
@@ -321,6 +325,7 @@ const UserAlertsTable: React.FC = () => {
             longrun: record.longrun ? "1" : "0",
             mdm: record.mdm ? "1" : "0",
             tickets: record.tickets ? "1" : "0",
+            errorhandler: record.errorhandler ? "1" : "0",
         };
 
         setUpdatingKey(record.key);
@@ -580,6 +585,19 @@ const UserAlertsTable: React.FC = () => {
                     }
                 />
             ),
+        },
+        {
+            title: "Error Handler",
+            dataIndex: "errorhandler",
+            align: "center",
+            render: (_, record) => (
+                <Checkbox
+                    checked={record.errorhandler}
+                    onChange={(e) =>
+                        handleCheckbox(record.key, "errorhandler", e.target.checked)
+                    }
+                />
+            ),
         }, {
             title: "Actions",
             key: "actions",
@@ -728,6 +746,7 @@ const UserAlertsTable: React.FC = () => {
                                 longrun: values.longrun,
                                 mdm: values.mdm,
                                 tickets: values.tickets,
+                                errorhandler: values.errorhandler,
                                 created_at: new Date().toISOString(),
                                 updated_at: new Date().toISOString(),
                             };

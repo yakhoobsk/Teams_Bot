@@ -72,6 +72,7 @@ const NotificationModal: React.FC<Props> = ({
                     longrun: false,
                     mdm: false,
                     tickets: false,
+                    errorhandler: false,
                 }}
             >
                 <Row gutter={16}>
@@ -350,6 +351,16 @@ const NotificationModal: React.FC<Props> = ({
                                         noStyle
                                     >
                                         <Checkbox>Tickets</Checkbox>
+                                    </Form.Item>
+                                </Col>
+
+                                <Col span={6}>
+                                    <Form.Item
+                                        name="errorhandler"
+                                        valuePropName="checked"
+                                        noStyle
+                                    >
+                                        <Checkbox>Error Handler</Checkbox>
                                     </Form.Item>
                                 </Col>
                             </Row>

@@ -13,7 +13,13 @@ import { ChannelsCreate, ChannelsUser, GroupsGet, UserswithoutpagnationGet } fro
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 const { Option } = Select;
 
-const alertsOptions = ["MDM", "LongRun", "Atom", "Tickets"];
+const alertsOptions = [
+    { label: "MDM", value: "MDM" },
+    { label: "LongRun", value: "LongRun" },
+    { label: "Atom", value: "Atom" },
+    { label: "Tickets", value: "Tickets" },
+    { label: "Error Handler", value: "errorhandler" },
+];
 
 interface ChannelModalProps {
     open: boolean;
@@ -529,8 +535,8 @@ const ChannelsPage: React.FC<ChannelModalProps> = ({ open, form, onCancel, }) =>
                                 style={{ marginTop: "10px" }}
                             >
                                 {alertsOptions.map((item) => (
-                                    <Checkbox key={item} value={item}>
-                                        {item}
+                                    <Checkbox key={item.value} value={item.value}>
+                                        {item.label}
                                     </Checkbox>
                                 ))}
                             </div>

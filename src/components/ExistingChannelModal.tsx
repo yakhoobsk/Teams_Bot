@@ -6,6 +6,7 @@ const { Text } = Typography;
 
 interface Props {
     open: boolean;
+    loading?: boolean;
     onCancel: () => void;
     onSubmit: (values: any) => void;
 }
@@ -15,6 +16,9 @@ interface ExistingChannelFormValues {
     channelId?: string;
     groupId?: string;
     tenantId?: string;
+    teamDisplayName?: string;
+    channelDisplayName?: string;
+    type?: string;
     schedule_type?: string;
     day?: number;
     week?: string;
@@ -24,6 +28,7 @@ interface ExistingChannelFormValues {
     longrun?: boolean;
     mdm?: boolean;
     tickets?: boolean;
+    errorhandler?: boolean;
 }
 
 const parseTeamsChannelUrl = (url: string) => {
@@ -89,7 +94,7 @@ const sectionCardStyle: React.CSSProperties = {
     marginBottom: 20,
 };
 
-const ExistingChannelModal: React.FC<Props> = ({ open, onCancel, onSubmit }) => {
+const ExistingChannelModal: React.FC<Props> = ({ open, loading, onCancel, onSubmit }) => {
     const [form] = Form.useForm<ExistingChannelFormValues>();
     const channelId = Form.useWatch("channelId", form);
     const groupId = Form.useWatch("groupId", form);
@@ -116,6 +121,9 @@ const ExistingChannelModal: React.FC<Props> = ({ open, onCancel, onSubmit }) => 
             group_id: values.groupId || "",
             tenant_id: values.tenantId || "",
             channel_url: values.channelUrl || "",
+            team_display_name: values.teamDisplayName || "",
+            channel_display_name: values.channelDisplayName || "",
+            type: values.type || "",
             schedule_type: values.schedule_type || "",
             day: values.day ?? "",
             week: values.week ?? "",
@@ -125,6 +133,7 @@ const ExistingChannelModal: React.FC<Props> = ({ open, onCancel, onSubmit }) => 
             longrun: !!values.longrun,
             mdm: !!values.mdm,
             tickets: !!values.tickets,
+            errorhandler: !!values.errorhandler,
         };
 
         onSubmit(payload);
@@ -152,11 +161,13 @@ const ExistingChannelModal: React.FC<Props> = ({ open, onCancel, onSubmit }) => 
                 layout="vertical"
                 onFinish={handleFinish}
                 initialValues={{
+                    type: "DataHub",
                     schedule_type: "Daily",
                     atom: false,
                     longrun: false,
                     mdm: false,
                     tickets: false,
+                    errorhandler: false,
                 }}
                 style={{ marginTop: 16 }}
             >
@@ -199,6 +210,47 @@ const ExistingChannelModal: React.FC<Props> = ({ open, onCancel, onSubmit }) => 
                         <Col xs={24} md={8}>
                             <Form.Item label={fieldLabel("Tenant ID")} name="tenantId" style={{ marginBottom: 0 }}>
                                 <Input size="large" placeholder="Enter Tenant ID" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16} style={{ marginTop: 16 }}>
+                        <Col xs={24} md={8}>
+                            <Form.Item
+                                label={fieldLabel("Team Display Name")}
+                                name="teamDisplayName"
+                                rules={[{ required: true, message: "Please enter team display name" }]}
+                                style={{ marginBottom: 0 }}
+                            >
+                                <Input size="large" placeholder="Enter team display name" />
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={8}>
+                            <Form.Item
+                                label={fieldLabel("Channel Display Name")}
+                                name="channelDisplayName"
+                                rules={[{ required: true, message: "Please enter channel display name" }]}
+                                style={{ marginBottom: 0 }}
+                            >
+                                <Input size="large" placeholder="Enter channel display name" />
+                            </Form.Item>
+                        </Col>
+
+                        <Col xs={24} md={8}>
+                            <Form.Item
+                                label={fieldLabel("Type")}
+                                name="type"
+                                rules={[{ required: true, message: "Please select type" }]}
+                                style={{ marginBottom: 0 }}
+                            >
+                                <Select
+                                    size="large"
+                                    options={[
+                                        { label: "DataHub", value: "DataHub" },
+                                        { label: "Integration", value: "Integration" },
+                                    ]}
+                                />
                             </Form.Item>
                         </Col>
                     </Row>
@@ -359,6 +411,12 @@ const ExistingChannelModal: React.FC<Props> = ({ open, onCancel, onSubmit }) => 
                                 <Checkbox>Tickets</Checkbox>
                             </Form.Item>
                         </Col>
+
+                        <Col xs={12} sm={6}>
+                            <Form.Item name="errorhandler" valuePropName="checked" noStyle>
+                                <Checkbox>Error Handler</Checkbox>
+                            </Form.Item>
+                        </Col>
                     </Row>
                 </div>
 
@@ -384,13 +442,14 @@ const ExistingChannelModal: React.FC<Props> = ({ open, onCancel, onSubmit }) => 
                         size="large"
                         htmlType="submit"
                         disabled={!hasAnyId}
+                        loading={loading}
                         style={{
                             background: "#2563eb",
                             borderColor: "#2563eb",
                             fontWeight: 600,
                         }}
                     >
-                        Update
+                        Create
                     </Button>
                 </div>
             </Form>

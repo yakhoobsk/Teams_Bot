@@ -1,1 +1,1 @@
-export const MODULE_ACCESS_OPTIONS = ["MDM", "LongRun", "Atom", "Tickets"];
+export const MODULE_ACCESS_OPTIONS = ["MDM", "LongRun", "Atom", "Tickets", "Error Handler"];

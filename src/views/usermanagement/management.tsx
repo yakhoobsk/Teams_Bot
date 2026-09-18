@@ -5,19 +5,32 @@ import UserManagement from ".";
 import GroupManagement from "./groups";
 import AtomManagement from "./atoms";
 import RoleManagement from "./roles";
-import { INITIAL_ROLES, type RoleData } from "../../constants/roles";
+import type { RoleData } from "../../constants/roles";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { RoleManagementGet } from "../../redux/Services/connectersServices";
 
 
 const Management = () => {
 
     const [activeTab, setActiveTab] = useState("usermanagemnt");
-    const [roles, setRoles] = useState<RoleData[]>(INITIAL_ROLES);
+    const dispatch = useAppDispatch();
+    const roleManagementGet = useAppSelector((state) => state.connecters?.RoleManagementGets);
+
+    useEffect(() => {
+        dispatch(RoleManagementGet({}));
+    }, [dispatch]);
+
+    const roles: RoleData[] = (roleManagementGet?.[0]?.data || []).map((item: any) => ({
+        id: item.role_id,
+        roleName: item.role_name,
+        description: item.description,
+    }));
 
     const items = [
 
 
         { key: "usermanagemnt", label: "User Management", children: <UserManagement activeTab={activeTab} roles={roles} /> },
-        { key: "RoleManagement", label: "Role Management", children: <RoleManagement roles={roles} setRoles={setRoles} /> },
+        { key: "RoleManagement", label: "Role Management", children: <RoleManagement roles={roles} /> },
         { key: "GroupManagement", label: "Team", children: <GroupManagement activeTab={activeTab} /> },
         { key: "AtomManagement", label: "Atom Management", children: <AtomManagement activeTab={activeTab} /> },
     ];

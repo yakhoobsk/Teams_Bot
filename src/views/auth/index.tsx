@@ -175,6 +175,7 @@ const LoginPage: React.FC = () => {
     };
     return (
         <div
+            className="login-page"
             style={{
                 minHeight: "100vh",
                 display: "flex",
@@ -182,8 +183,82 @@ const LoginPage: React.FC = () => {
                 background: "#fff",
             }}
         >
+            <style>
+                {`
+          .login-left {
+            overflow: hidden;
+          }
+
+          @media (max-width: 992px) {
+            .login-page {
+              flex-direction: column !important;
+            }
+
+            .login-left {
+              padding: 32px 24px !important;
+            }
+
+            .login-hero-logo {
+              width: 140px !important;
+            }
+
+            .login-hero-title {
+              font-size: 32px !important;
+              margin-top: 16px !important;
+            }
+
+            .login-hero-subtitle {
+              font-size: 15px !important;
+            }
+
+            .login-feature-carousel {
+              display: none !important;
+            }
+
+            .login-right {
+              width: 100% !important;
+              padding: 24px 16px 40px !important;
+            }
+
+            .login-card-wrapper {
+              width: 100% !important;
+              display: flex !important;
+              justify-content: center !important;
+            }
+
+            .login-card {
+              width: 100% !important;
+              max-width: 480px !important;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .login-left {
+              padding: 24px 16px !important;
+            }
+
+            .login-hero-logo {
+              width: 120px !important;
+            }
+
+            .login-hero-title {
+              font-size: 26px !important;
+            }
+
+            .login-card {
+              border-radius: 20px !important;
+            }
+
+            .login-card-header {
+              padding: 28px 18px !important;
+            }
+          }
+        `}
+            </style>
+
             {/* LEFT SIDE */}
             <div
+                className="login-left"
                 style={{
                     flex: 1,
                     background:
@@ -240,6 +315,7 @@ const LoginPage: React.FC = () => {
                         }}
                     >
                         <img
+                            className="login-hero-logo"
                             src={logo}
                             width={190}
                             alt="Logo"
@@ -247,6 +323,7 @@ const LoginPage: React.FC = () => {
                     </div>
 
                     <Title
+                        className="login-hero-title"
                         style={{
                             color: "#fff",
                             fontSize: 56,
@@ -258,6 +335,7 @@ const LoginPage: React.FC = () => {
                     </Title>
 
                     <Text
+                        className="login-hero-subtitle"
                         style={{
                             color: "rgba(255,255,255,0.85)",
                             fontSize: 22,
@@ -268,6 +346,7 @@ const LoginPage: React.FC = () => {
                     </Text>
 
                     <div
+                        className="login-feature-carousel"
                         style={{
                             marginTop: 50,
                             width: "100%",
@@ -334,6 +413,7 @@ const LoginPage: React.FC = () => {
 
             {/* RIGHT SIDE */}
             <div
+                className="login-right"
                 style={{
                     width: 650,
                     background: "#fff",
@@ -344,10 +424,12 @@ const LoginPage: React.FC = () => {
                 }}
             >
                 <motion.div
+                    className="login-card-wrapper"
                     initial={{ y: 50, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                 >
                     <Card
+                        className="login-card"
                         variant="borderless"
                         style={{
                             width: 480,
@@ -361,6 +443,7 @@ const LoginPage: React.FC = () => {
                     >
                         {/* Header */}
                         <div
+                            className="login-card-header"
                             style={{
                                 background:
                                     "linear-gradient(135deg,#464775 0%,#6264A7 50%,#7B83EB 100%)",

@@ -77,6 +77,7 @@ const TeamNotificationModal: React.FC<Props> = ({
                     longrun: false,
                     mdm: false,
                     tickets: false,
+                    errorhandler: false,
                 }}
             >
                 <Divider titlePlacement="left" style={{ margin: "0 0 20px" }}>
@@ -355,6 +356,16 @@ const TeamNotificationModal: React.FC<Props> = ({
                                         noStyle
                                     >
                                         <Checkbox>Tickets</Checkbox>
+                                    </Form.Item>
+                                </Col>
+
+                                <Col span={6}>
+                                    <Form.Item
+                                        name="errorhandler"
+                                        valuePropName="checked"
+                                        noStyle
+                                    >
+                                        <Checkbox>Error Handler</Checkbox>
                                     </Form.Item>
                                 </Col>
                             </Row>

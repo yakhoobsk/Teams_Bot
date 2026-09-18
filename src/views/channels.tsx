@@ -19,7 +19,7 @@ import {
 import ChannelsPage from "../components/channelcreate";
 import ExistingChannelModal from "../components/ExistingChannelModal";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { ChannelsDelete, ChannelsUser } from "../redux/Services/connectersServices";
+import { ChannelsDelete, ChannelsUser, ExistChannelCreate } from "../redux/Services/connectersServices";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
@@ -50,6 +50,7 @@ const Channels: React.FC = () => {
     const [tableData, setTableData] = useState<ChannelData[]>([]);
     const [typeFilter, setTypeFilter] = useState("all");
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [existingChannelSaving, setExistingChannelSaving] = useState(false);
     const channelsget = useAppSelector((state) => state.connecters?.ChannelsUsers) || [];
 
     useEffect(() => {
@@ -373,10 +374,34 @@ const Channels: React.FC = () => {
             />
             <ExistingChannelModal
                 open={isExistingChannelModalOpen}
+                loading={existingChannelSaving}
                 onCancel={() => setIsExistingChannelModalOpen(false)}
-                onSubmit={(payload) => {
-                    console.log("Existing Channel Create payload:", payload);
-                    setIsExistingChannelModalOpen(false);
+                onSubmit={async (payload) => {
+                    setExistingChannelSaving(true);
+                    try {
+                        // Form collects the time in IST - the API stores it in UTC.
+                        const utcTime = dayjs()
+                            .tz("Asia/Kolkata")
+                            .hour(payload.hour)
+                            .minute(payload.minute)
+                            .second(0)
+                            .utc();
+
+                        const finalPayload = {
+                            ...payload,
+                            hour: Number(utcTime.format("HH")),
+                            minute: Number(utcTime.format("mm")),
+                        };
+
+                        await dispatch(ExistChannelCreate({ payload: finalPayload })).unwrap();
+
+                        setIsExistingChannelModalOpen(false);
+                        dispatch(ChannelsUser({}));
+                    } catch (error) {
+                        console.error(error);
+                    } finally {
+                        setExistingChannelSaving(false);
+                    }
                 }}
             />
         </div>

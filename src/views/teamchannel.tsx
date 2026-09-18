@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { GroupAlertCreate, GroupAlertDelete, GroupAlertUpdate, GroupsGet } from "../redux/Services/connectersServices";
+import { GroupAlertCreate, GroupAlertDelete, GroupAlertGet, GroupAlertUpdate } from "../redux/Services/connectersServices";
 import TeamNotificationModal from "../components/Teamcreate";
 import { parseGroupMembers } from "../utils/groupMembers";
 
@@ -35,19 +35,20 @@ interface TeamPermission {
     longrun: boolean;
     atom: boolean;
     tickets: boolean;
+    errorhandler: boolean;
 }
 
 const TeamAlertsTable: React.FC = () => {
     const [data, setData] = useState<TeamPermission[]>([]);
     const dispatch = useAppDispatch();
-    const groupAlerts = useAppSelector((state) => state.connecters?.GroupsGets) || [];
+    const groupAlerts = useAppSelector((state) => state.connecters?.GroupAlerts) || [];
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [updatingKey, setUpdatingKey] = useState<string | null>(null);
     const [deletingKey, setDeletingKey] = useState<string | null>(null);
 
     useEffect(() => {
-        dispatch(GroupsGet({}));
+        dispatch(GroupAlertGet({}));
     }, [dispatch]);
 
     const isValidTimeString = (value: any): boolean =>
@@ -112,6 +113,9 @@ const TeamAlertsTable: React.FC = () => {
 
                     tickets:
                         item.tickets === true || item.tickets === "true" || item.tickets === "1",
+
+                    errorhandler:
+                        item.errorhandler === true || item.errorhandler === "true" || item.errorhandler === "1",
                 };
             });
 
@@ -288,13 +292,14 @@ const TeamAlertsTable: React.FC = () => {
             longrun: record.longrun ? "1" : "0",
             mdm: record.mdm ? "1" : "0",
             tickets: record.tickets ? "1" : "0",
+            errorhandler: record.errorhandler ? "1" : "0",
             updated_at: new Date().toISOString(),
         };
 
         setUpdatingKey(record.key);
         try {
             await dispatch(GroupAlertUpdate({ payload })).unwrap();
-            dispatch(GroupsGet({}));
+            dispatch(GroupAlertGet({}));
         } catch (error) {
             console.error(error);
         } finally {
@@ -309,7 +314,7 @@ const TeamAlertsTable: React.FC = () => {
                 id: record.id,
             };
             await dispatch(GroupAlertDelete({ payload })).unwrap();
-            dispatch(GroupsGet({}));
+            dispatch(GroupAlertGet({}));
         } catch (error) {
             console.error(error);
         } finally {
@@ -547,6 +552,19 @@ const TeamAlertsTable: React.FC = () => {
                     }
                 />
             ),
+        },
+        {
+            title: "Error Handler",
+            dataIndex: "errorhandler",
+            align: "center",
+            render: (_, record) => (
+                <Checkbox
+                    checked={record.errorhandler}
+                    onChange={(e) =>
+                        handleCheckbox(record.key, "errorhandler", e.target.checked)
+                    }
+                />
+            ),
         }, {
             title: "Actions",
             key: "actions",
@@ -695,6 +713,7 @@ const TeamAlertsTable: React.FC = () => {
                                 longrun: values.longrun,
                                 mdm: values.mdm,
                                 tickets: values.tickets,
+                                errorhandler: values.errorhandler,
                                 created_at: values.created_at,
                                 updated_at: values.updated_at,
                             };
@@ -706,7 +725,7 @@ const TeamAlertsTable: React.FC = () => {
                             ).unwrap();
 
                             setIsModalOpen(false);
-                            dispatch(GroupsGet({}));
+                            dispatch(GroupAlertGet({}));
                         } catch (error) {
                             console.error(error);
                         } finally {

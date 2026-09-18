@@ -163,6 +163,97 @@ export const GroupsDelete = createAsyncThunk("Groups/Delete", async ({ payload }
 }
 );
 
+// team module access (User Management > Team button)
+
+export const TeamModuleAccessUpdate = createAsyncThunk("TeamModuleAccess/Update", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/team/update", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Team access update failed");
+        } else {
+            showSnackbar("success", response?.data?.Status_Message || "Team access updated successfully");
+        }
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.message || "Team access update failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
+    }
+}
+);
+
+// role management
+
+export const RoleManagementGet = createAsyncThunk(
+    "RoleManagementGet/get",
+    async (_: any, { rejectWithValue }) => {
+
+        try {
+            const response = await boomiApi.post("/teams_bot/Role_Management/get");
+            return response.data;
+        } catch (error: any) {
+            return rejectWithValue(
+                error.response?.data?.message || "Fetch failed"
+            );
+        }
+    }
+);
+
+export const RoleManagementCreate = createAsyncThunk("RoleManagement/create", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Role_Management/create", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Role creation failed");
+        } else {
+            showSnackbar("success", response?.data?.Status_Message || "Role created successfully");
+        }
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.message || "Role creation failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
+    }
+}
+);
+
+export const RoleManagementUpdate = createAsyncThunk("RoleManagement/Update", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Role_Management/Update", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Role update failed");
+        } else {
+            showSnackbar("success", response?.data?.Status_Message || "Role updated successfully");
+        }
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.message || "Role update failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
+    }
+}
+);
+
+export const RoleManagementDelete = createAsyncThunk("RoleManagement/Delete", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Role_Management/delete", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Role deletion failed");
+        } else {
+            showSnackbar("success", response?.data?.Status_Message || "Role deleted successfully");
+        }
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.message || "Role deletion failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
+    }
+}
+);
+
 // database connecters
 
 export const DataBaseConnectersGet = createAsyncThunk(
@@ -703,6 +794,25 @@ export const ChannelsDelete = createAsyncThunk("Channels/Delete", async ({ paylo
         return response.data;
     } catch (error: any) {
         const message = error.response?.data?.message || "Rest API failed";
+        showSnackbar("error", message);
+        return rejectWithValue(message);
+    }
+}
+);
+
+export const ExistChannelCreate = createAsyncThunk("ExistChannel/Create", async ({ payload }: any, { rejectWithValue }) => {
+    try {
+
+        const response = await boomiApi.post("/teams_bot/Exist_Channel/Create", payload);
+        if (response?.data?.Status_Response === "Failure") {
+            showSnackbar("error", response?.data?.Status_Message || "Existing channel creation failed");
+        } else {
+            showSnackbar("success", response?.data?.Status_Message || "Existing channel created successfully");
+
+        }
+        return response.data;
+    } catch (error: any) {
+        const message = error.response?.data?.message || "Existing channel creation failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }

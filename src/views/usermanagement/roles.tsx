@@ -20,8 +20,9 @@ import {
     PlusOutlined,
     SafetyCertificateOutlined,
 } from "@ant-design/icons";
-import { showSnackbar } from "../../utils/snackbar";
 import type { RoleData } from "../../constants/roles";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { RoleManagementCreate, RoleManagementDelete, RoleManagementGet, RoleManagementUpdate } from "../../redux/Services/connectersServices";
 
 const { Title, Text } = Typography;
 
@@ -32,15 +33,18 @@ interface RoleFormValues {
 
 interface RoleManagementProps {
     roles: RoleData[];
-    setRoles: React.Dispatch<React.SetStateAction<RoleData[]>>;
 }
 
-export default function RoleManagement({ roles, setRoles }: RoleManagementProps): React.ReactElement {
+export default function RoleManagement({ roles }: RoleManagementProps): React.ReactElement {
+    const dispatch = useAppDispatch();
+    const auth = useAppSelector((state) => state.auth?.authotp);
+    const currentUserEmail = auth?.Mail_Id || "";
     const [form] = Form.useForm<RoleFormValues>();
     const [open, setOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [editingRecord, setEditingRecord] = useState<RoleData | null>(null);
-    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [saving, setSaving] = useState(false);
 
     const isEditing = editingId !== null;
 
@@ -62,53 +66,46 @@ export default function RoleManagement({ roles, setRoles }: RoleManagementProps)
         setEditingRecord(null);
     };
 
-    const onFinish = (values: RoleFormValues) => {
-        if (isEditing) {
-            const payload = {
-                id: editingId,
-                roleName: values.roleName,
-                description: values.description,
-            };
-
-            console.log("Update Role payload:", payload);
-
-            setRoles((prev) =>
-                prev.map((role) =>
-                    role.id === editingId
-                        ? { ...role, roleName: values.roleName, description: values.description }
-                        : role
-                )
-            );
-            showSnackbar("success", "Role updated successfully");
-        } else {
-            const newId = roles.length ? Math.max(...roles.map((role) => role.id)) + 1 : 1;
-
-            const payload = {
-                roleName: values.roleName,
-                description: values.description,
-            };
-
-            console.log("Create Role payload:", payload);
-
-            setRoles((prev) => [
-                ...prev,
-                {
-                    id: newId,
-                    roleName: values.roleName,
+    const onFinish = async (values: RoleFormValues) => {
+        setSaving(true);
+        try {
+            if (isEditing) {
+                const payload = {
+                    role_id: editingId,
+                    role_name: values.roleName,
                     description: values.description,
-                },
-            ]);
-            showSnackbar("success", "Role created successfully");
-        }
+                };
 
-        closeModal();
+                await dispatch(RoleManagementUpdate({ payload })).unwrap();
+            } else {
+                const payload = {
+                    role_name: values.roleName,
+                    description: values.description,
+                    created_by: currentUserEmail,
+                };
+
+                await dispatch(RoleManagementCreate({ payload })).unwrap();
+            }
+
+            dispatch(RoleManagementGet({}));
+            closeModal();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSaving(false);
+        }
     };
 
-    const deleteRole = (record: RoleData) => {
+    const deleteRole = async (record: RoleData) => {
         setDeletingId(record.id);
-        setRoles((prev) => prev.filter((role) => role.id !== record.id));
-        showSnackbar("success", "Role deleted successfully");
-        setDeletingId(null);
+        try {
+            await dispatch(RoleManagementDelete({ payload: { role_id: record.id } })).unwrap();
+            dispatch(RoleManagementGet({}));
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setDeletingId(null);
+        }
     };
 
     const columns: ColumnsType<RoleData> = [
@@ -383,6 +380,7 @@ export default function RoleManagement({ roles, setRoles }: RoleManagementProps)
                             <Button
                                 type="primary"
                                 htmlType="submit"
+                                loading={saving}
                                 icon={isEditing ? <EditOutlined /> : <PlusOutlined />}
                                 style={{
                                     background: "#2563eb",

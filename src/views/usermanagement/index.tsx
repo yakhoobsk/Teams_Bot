@@ -28,13 +28,13 @@ import {
 } from "@ant-design/icons";
 
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { userCreate, UsersGet, UserUpdate, GroupsGet } from "../../redux/Services/connectersServices";
+import { userCreate, UsersGet, UserUpdate, GroupsGet, TeamModuleAccessUpdate } from "../../redux/Services/connectersServices";
 import AppPagination from "../../components/AppPagination";
 import { showSnackbar } from "../../utils/snackbar";
 import type { ColumnsType } from "antd/es/table";
-import { ATOM_LIST } from "../../constants/atomList";
 import { MODULE_ACCESS_OPTIONS } from "../../constants/moduleAccess";
 import type { RoleData } from "../../constants/roles";
+import { parseGroupMembers } from "../../utils/groupMembers";
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
@@ -43,6 +43,55 @@ type ModulePermission = { read: boolean; write: boolean };
 type ModulePermissions = Record<string, ModulePermission>;
 
 const emptyModulePermission = (): ModulePermission => ({ read: false, write: false });
+
+// Maps a module's Read/Write checkboxes to the flat field names the
+// create/update User APIs expect (e.g. mdm_read, mdm_write - "0"/"1" strings).
+const MODULE_PAYLOAD_KEYS: Record<string, { read: string; write: string }> = {
+    MDM: { read: "mdm_read", write: "mdm_write" },
+    LongRun: { read: "longRun_read", write: "longRun_write" },
+    Atom: { read: "atom_read", write: "atom_write" },
+    Tickets: { read: "tickets_read", write: "tickets_write" },
+    "Error Handler": { read: "error_handler_read", write: "error_handler_write" },
+};
+
+const buildModuleAccessFields = (perms: ModulePermissions): Record<string, string> => {
+    const fields: Record<string, string> = {};
+
+    Object.entries(MODULE_PAYLOAD_KEYS).forEach(([module, keys]) => {
+        fields[keys.read] = perms[module]?.read ? "1" : "0";
+        fields[keys.write] = perms[module]?.write ? "1" : "0";
+    });
+
+    return fields;
+};
+
+// Maps a module's Read/Write checkboxes to the nested module_access object
+// the team/update API expects (numeric 1/0, not strings).
+const TEAM_MODULE_ACCESS_KEYS: Record<string, string> = {
+    MDM: "mdm",
+    LongRun: "longrun",
+    Atom: "atom",
+    Tickets: "tickets",
+    "Error Handler": "error_handler",
+};
+
+const buildTeamModuleAccess = (perms: ModulePermissions) => {
+    const access: Record<string, { read: number; write: number }> = {};
+
+    Object.entries(TEAM_MODULE_ACCESS_KEYS).forEach(([module, key]) => {
+        access[key] = {
+            read: perms[module]?.read ? 1 : 0,
+            write: perms[module]?.write ? 1 : 0,
+        };
+    });
+
+    return access;
+};
+
+// Only MDM / LongRun expose separate Read and Write checkboxes. Every other
+// module (Atom, Tickets, Error Handler) shows a single Read checkbox that
+// grants both read and write.
+const READ_WRITE_MODULES = new Set(["MDM", "LongRun"]);
 
 const ModuleAccessGrid = ({
     value,
@@ -54,13 +103,28 @@ const ModuleAccessGrid = ({
     const current = value || {};
 
     const handleToggle = (module: string, field: "read" | "write", checked: boolean) => {
-        onChange?.({
-            ...current,
-            [module]: {
+        let next: ModulePermission;
+
+        if (!READ_WRITE_MODULES.has(module)) {
+            // Single Read checkbox for this module - it grants both read and write.
+            next = { read: checked, write: checked };
+        } else {
+            next = {
                 read: current[module]?.read || false,
                 write: current[module]?.write || false,
                 [field]: checked,
-            },
+            };
+
+            // MDM / LongRun require Read to grant Write - checking Write also checks Read.
+            // Unchecking Write leaves Read as-is.
+            if (field === "write" && checked) {
+                next.read = true;
+            }
+        }
+
+        onChange?.({
+            ...current,
+            [module]: next,
         });
     };
 
@@ -68,6 +132,7 @@ const ModuleAccessGrid = ({
         <Row gutter={[12, 12]}>
             {MODULE_ACCESS_OPTIONS.map((module) => {
                 const enabled = current[module]?.read || current[module]?.write;
+                const hasWriteCheckbox = READ_WRITE_MODULES.has(module);
 
                 return (
                     <Col xs={24} sm={12} key={module}>
@@ -90,12 +155,14 @@ const ModuleAccessGrid = ({
                                 >
                                     <span style={{ color: "#475569" }}>Read</span>
                                 </Checkbox>
-                                <Checkbox
-                                    checked={current[module]?.write || false}
-                                    onChange={(e) => handleToggle(module, "write", e.target.checked)}
-                                >
-                                    <span style={{ color: "#475569" }}>Write</span>
-                                </Checkbox>
+                                {hasWriteCheckbox && (
+                                    <Checkbox
+                                        checked={current[module]?.write || false}
+                                        onChange={(e) => handleToggle(module, "write", e.target.checked)}
+                                    >
+                                        <span style={{ color: "#475569" }}>Write</span>
+                                    </Checkbox>
+                                )}
                             </Space>
                         </div>
                     </Col>
@@ -145,6 +212,7 @@ const SectionHeader = ({
 
 type UserRow = {
     id: string | number;
+    rawId: string;
     userName: string;
     usermail: string;
     role: string;
@@ -179,6 +247,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
     const [teamAccessOpen, setTeamAccessOpen] = useState(false);
     const [teamAccessTeams, setTeamAccessTeams] = useState<string[]>([]);
     const [teamAccessModules, setTeamAccessModules] = useState<ModulePermissions>({});
+    const [savingTeamAccess, setSavingTeamAccess] = useState(false);
     const [selectedRowKeys, setSelectedRowKeys] = useState<Key[]>([]);
     const [accessModalOpen, setAccessModalOpen] = useState(false);
     const [accessTargetUser, setAccessTargetUser] = useState<UserRow | null>(null);
@@ -208,11 +277,6 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
             value: group.group_name,
         })) || [];
 
-    const atomOptions = ATOM_LIST.map((atom) => ({
-        label: atom.atomName,
-        value: atom.atomName,
-    }));
-
     const roleOptions = roles.map((role) => ({
         label: role.roleName,
         value: role.roleName,
@@ -233,6 +297,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
 
     const users: UserRow[] = (userspage?.[0]?.results || []).map((item: any) => ({
         id: item.boomi_user_id,
+        rawId: item.id,
         userName: `${item.first_name} ${item.last_name}`,
         usermail: item.user_id,
         role: item.type,
@@ -270,54 +335,57 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
         setTeamModulePermissions((prev) => ({ ...prev, [team]: permissions }));
     };
 
-    const buildAccessControl = (values: AddUserFormValues) => {
+    const buildAccessControl = (values: AddUserFormValues): Record<string, string> => {
         if (isEdit && selectedTeams.length > 0) {
-            return {
-                teams: selectedTeams,
-                teamPermissions: selectedTeams.map((team) => {
-                    const perms = teamModulePermissions[team] || {};
-                    return {
-                        team,
-                        mdm: perms.MDM || emptyModulePermission(),
-                        atom: perms.Atom || emptyModulePermission(),
-                        tickets: perms.Tickets || emptyModulePermission(),
-                        longrun: perms.LongRun || emptyModulePermission(),
+            // No per-team permission field exists on the User API - a module is
+            // granted if any of the user's restricted teams grants it.
+            const merged: ModulePermissions = {};
+
+            selectedTeams.forEach((team) => {
+                const perms = teamModulePermissions[team] || {};
+
+                Object.keys(MODULE_PAYLOAD_KEYS).forEach((module) => {
+                    merged[module] = {
+                        read: merged[module]?.read || perms[module]?.read || false,
+                        write: merged[module]?.write || perms[module]?.write || false,
                     };
-                }),
-                atoms: values.atomAccess || [],
-            };
+                });
+            });
+
+            return buildModuleAccessFields(merged);
         }
 
-        const perms = values.moduleAccess || {};
-
-        return {
-            teams: [],
-            mdm: perms.MDM || emptyModulePermission(),
-            atom: perms.Atom || emptyModulePermission(),
-            tickets: perms.Tickets || emptyModulePermission(),
-            longrun: perms.LongRun || emptyModulePermission(),
-            atoms: values.atomAccess || [],
-        };
+        return buildModuleAccessFields(values.moduleAccess || {});
     };
 
-    const handleUpdateTeamAccess = () => {
-        const payload = {
-            teams: teamAccessTeams,
-            access: {
-                mdm: teamAccessModules.MDM || emptyModulePermission(),
-                atom: teamAccessModules.Atom || emptyModulePermission(),
-                tickets: teamAccessModules.Tickets || emptyModulePermission(),
-                longrun: teamAccessModules.LongRun || emptyModulePermission(),
-            },
-        };
+    const handleUpdateTeamAccess = async () => {
+        setSavingTeamAccess(true);
+        try {
+            const moduleAccess = buildTeamModuleAccess(teamAccessModules);
 
-        console.log("Team access payload:", payload);
+            for (const teamName of teamAccessTeams) {
+                const group = groupResponse?.Response?.find(
+                    (item: any) => item.group_name === teamName
+                );
 
-        showSnackbar("success", `Access updated for ${teamAccessTeams.length} team(s)`);
+                const payload = {
+                    id: Number(group?.id),
+                    team_name: teamName,
+                    members: parseGroupMembers(group?.members),
+                    module_access: moduleAccess,
+                };
 
-        setTeamAccessOpen(false);
-        setTeamAccessTeams([]);
-        setTeamAccessModules({});
+                await dispatch(TeamModuleAccessUpdate({ payload })).unwrap();
+            }
+
+            setTeamAccessOpen(false);
+            setTeamAccessTeams([]);
+            setTeamAccessModules({});
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSavingTeamAccess(false);
+        }
     };
 
     const openAccessModal = (record: UserRow) => {
@@ -342,6 +410,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                 atom: accessModules.Atom || emptyModulePermission(),
                 tickets: accessModules.Tickets || emptyModulePermission(),
                 longrun: accessModules.LongRun || emptyModulePermission(),
+                errorhandler: accessModules["Error Handler"] || emptyModulePermission(),
             },
             atoms: accessAtoms,
         };
@@ -365,14 +434,8 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                 accountid: "",
                 is_boomi_user: "false",
                 type: values.role,
+                ...buildAccessControl(values),
             };
-
-            const payloadWithAccess = {
-                ...payload,
-                access_control: buildAccessControl(values),
-            };
-
-            console.log("Create User payload:", payloadWithAccess);
 
             await dispatch(
                 userCreate({
@@ -405,20 +468,15 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
         try {
             const payload = {
                 boomi_user_id: selectedUser?.id,
+                id: selectedUser?.rawId || "",
                 user_id: values.email,
                 first_name: values.firstName,
                 last_name: values.lastName,
                 accountid: "",
                 is_boomi_user: "false",
                 type: values.role,
+                ...buildAccessControl(values),
             };
-
-            const payloadWithAccess = {
-                ...payload,
-                access_control: buildAccessControl(values),
-            };
-
-            console.log("Update User payload:", payloadWithAccess);
 
             await dispatch(
                 UserUpdate({
@@ -866,93 +924,93 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                         />
 
                         {isEdit ? (
-                        <>
+                            <>
+                                <Form.Item
+                                    name="teamAccess"
+                                    label={
+                                        <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                            Team Restriction
+                                        </span>
+                                    }
+                                    extra={
+                                        <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                                            Leave empty to apply Module Access globally, across all teams. Pick one or more teams to restrict MDM / LongRun / Atom / Tickets access per team instead.
+                                        </span>
+                                    }
+                                >
+                                    <Select
+                                        mode="multiple"
+                                        allowClear
+                                        showSearch
+                                        size="large"
+                                        placeholder="Select teams to restrict access to"
+                                        optionFilterProp="label"
+                                        options={teamOptions}
+                                        maxTagCount="responsive"
+                                        onChange={handleTeamAccessChange}
+                                    />
+                                </Form.Item>
+
+                                {selectedTeams.length > 0 && (
+                                    <Form.Item
+                                        label={
+                                            <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                                Module Access per Team
+                                            </span>
+                                        }
+                                        extra={
+                                            <span style={{ color: "#94a3b8", fontSize: 12 }}>
+                                                Choose which modules this user can access within each team.
+                                            </span>
+                                        }
+                                    >
+                                        <Collapse defaultActiveKey={selectedTeams}>
+                                            {selectedTeams.map((team) => (
+                                                <Panel header={team} key={team}>
+                                                    <ModuleAccessGrid
+                                                        value={teamModulePermissions[team] || {}}
+                                                        onChange={(permissions) =>
+                                                            handleTeamModuleChange(team, permissions)
+                                                        }
+                                                    />
+                                                </Panel>
+                                            ))}
+                                        </Collapse>
+                                    </Form.Item>
+                                )}
+                            </>
+                        ) : (
                             <Form.Item
-                                name="teamAccess"
                                 label={
                                     <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
                                         Team Restriction
                                     </span>
                                 }
+                            >
+                                <Text style={{ color: "#94a3b8", fontSize: 13 }}>
+                                    Not available while creating a user — add this user to a team from the Team tab first, then set their team restriction from Update User.
+                                </Text>
+                            </Form.Item>
+                        )}
+
+                        {!(isEdit && selectedTeams.length > 0) && (
+                            <Form.Item
+                                name="moduleAccess"
+                                label={
+                                    <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
+                                        Module Access
+                                    </span>
+                                }
                                 extra={
                                     <span style={{ color: "#94a3b8", fontSize: 12 }}>
-                                        Leave empty to apply Module Access globally, across all teams. Pick one or more teams to restrict MDM / LongRun / Atom / Tickets access per team instead.
+                                        Choose which modules this user can access, and whether they can read or write to each.
                                     </span>
                                 }
                             >
-                                <Select
-                                    mode="multiple"
-                                    allowClear
-                                    showSearch
-                                    size="large"
-                                    placeholder="Select teams to restrict access to"
-                                    optionFilterProp="label"
-                                    options={teamOptions}
-                                    maxTagCount="responsive"
-                                    onChange={handleTeamAccessChange}
-                                />
+                                <ModuleAccessGrid />
                             </Form.Item>
-
-                            {selectedTeams.length > 0 && (
-                                <Form.Item
-                                    label={
-                                        <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                                            Module Access per Team
-                                        </span>
-                                    }
-                                    extra={
-                                        <span style={{ color: "#94a3b8", fontSize: 12 }}>
-                                            Choose which modules this user can access within each team.
-                                        </span>
-                                    }
-                                >
-                                    <Collapse defaultActiveKey={selectedTeams}>
-                                        {selectedTeams.map((team) => (
-                                            <Panel header={team} key={team}>
-                                                <ModuleAccessGrid
-                                                    value={teamModulePermissions[team] || {}}
-                                                    onChange={(permissions) =>
-                                                        handleTeamModuleChange(team, permissions)
-                                                    }
-                                                />
-                                            </Panel>
-                                        ))}
-                                    </Collapse>
-                                </Form.Item>
-                            )}
-                        </>
-                    ) : (
-                        <Form.Item
-                            label={
-                                <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                                    Team Restriction
-                                </span>
-                            }
-                        >
-                            <Text style={{ color: "#94a3b8", fontSize: 13 }}>
-                                Not available while creating a user — add this user to a team from the Team tab first, then set their team restriction from Update User.
-                            </Text>
-                        </Form.Item>
-                    )}
-
-                    {!(isEdit && selectedTeams.length > 0) && (
-                        <Form.Item
-                            name="moduleAccess"
-                            label={
-                                <span style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
-                                    Module Access
-                                </span>
-                            }
-                            extra={
-                                <span style={{ color: "#94a3b8", fontSize: 12 }}>
-                                    Choose which modules this user can access, and whether they can read or write to each.
-                                </span>
-                            }
-                        >
-                            <ModuleAccessGrid />
-                        </Form.Item>
-                    )}
-
+                        )}
+                        {/* 
                     <Form.Item
                         name="atomAccess"
                         label={
@@ -977,7 +1035,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                             options={atomOptions}
                             maxTagCount="responsive"
                         />
-                    </Form.Item>
+                    </Form.Item> */}
                     </div>
 
                     <Row justify="end" gutter={12}>
@@ -1068,6 +1126,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                             <Button
                                 type="primary"
                                 disabled={teamAccessTeams.length === 0}
+                                loading={savingTeamAccess}
                                 onClick={handleUpdateTeamAccess}
                                 style={{
                                     background: "#2563eb",
@@ -1094,7 +1153,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                     <SectionHeader
                         icon={<KeyOutlined />}
                         title="User Permissions"
-                        subtitle="Set module and Atom level access for this user."
+                        subtitle="Set module level access for this user."
                     />
 
                     <Text style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
@@ -1105,6 +1164,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                         <ModuleAccessGrid value={accessModules} onChange={setAccessModules} />
                     </div>
 
+                    {/*
                     <div style={{ marginTop: 20 }}>
                         <Text style={{ color: "#000000a5", fontSize: 14, fontWeight: 500 }}>
                             Atom Restriction
@@ -1124,6 +1184,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                             maxTagCount="responsive"
                         />
                     </div>
+                    */}
 
                     <Row justify="end" gutter={12} style={{ marginTop: 24 }}>
                         <Col>
