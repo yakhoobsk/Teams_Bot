@@ -57,16 +57,32 @@ export const LoginUser = createAsyncThunk(
 export const Loginotp = createAsyncThunk("auth/OTP", async (payload: LoginOTPPayload, { rejectWithValue }) => {
     try {
         const response = await boomiApi.post("/teams_bot/OTP/login_validation", payload);
+        const data = response.data;
 
-        if (response.data?.["Status message"] === "success") {
-            showSnackbar("error", response.data?.["Status message"] || "Login failed");
+        // Same fields the OTP screen itself checks before navigating (auth/index.tsx) -
+        // this endpoint uses "Status_Response" (underscore), unlike the email step's
+        // "Status Response" (space).
+        const statusCode = String(data?.["Status code"] ?? data?.Status_code ?? "").trim();
+        const statusResponse = String(data?.["Status_Response"] ?? data?.Status_Response ?? "")
+            .trim()
+            .toLowerCase();
+        const statusMessage = data?.Status_Message || data?.["Status message"];
+
+        if (statusCode === "200" && statusResponse === "success") {
+            showSnackbar("success", statusMessage || "Login successful");
         } else {
-            showSnackbar("success", response.data?.["Status message"] || "Login successful");
+            showSnackbar("error", statusMessage || "Login failed");
         }
-        return response.data;
+
+        return data;
     } catch (error: any) {
-        showSnackbar("error", error.response.data?.["Status message"] || "Login failed");
-        return rejectWithValue(error.response.data?.["Status message"] || "Login failed");
+        const message =
+            error.response?.data?.Status_Message ||
+            error.response?.data?.["Status message"] ||
+            "Login failed";
+
+        showSnackbar("error", message);
+        return rejectWithValue(message);
     }
 }
 );

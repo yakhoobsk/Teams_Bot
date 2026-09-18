@@ -1,6 +1,7 @@
-import React, { type ReactNode } from "react";
-import { Modal, Form, Input, Select, InputNumber, Checkbox, Row, Col, Button, Typography, Alert } from "antd";
-import { BellOutlined, ClockCircleOutlined, LinkOutlined } from "@ant-design/icons";
+import React, { useState, type ReactNode } from "react";
+import { Modal, Form, Input, Select, InputNumber, Checkbox, Row, Col, Button, Typography, Alert, Space, Tooltip } from "antd";
+import { BellOutlined, ClockCircleOutlined, LinkOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import teamsCopyLinkGuide from "../assets/teams-copy-channel-link-guide.png";
 
 const { Text } = Typography;
 
@@ -96,6 +97,7 @@ const sectionCardStyle: React.CSSProperties = {
 
 const ExistingChannelModal: React.FC<Props> = ({ open, loading, onCancel, onSubmit }) => {
     const [form] = Form.useForm<ExistingChannelFormValues>();
+    const [linkHelpOpen, setLinkHelpOpen] = useState(false);
     const channelId = Form.useWatch("channelId", form);
     const groupId = Form.useWatch("groupId", form);
     const tenantId = Form.useWatch("tenantId", form);
@@ -141,6 +143,7 @@ const ExistingChannelModal: React.FC<Props> = ({ open, loading, onCancel, onSubm
     };
 
     return (
+        <>
         <Modal
             open={open}
             title={
@@ -193,6 +196,45 @@ const ExistingChannelModal: React.FC<Props> = ({ open, loading, onCancel, onSubm
                             onChange={(e) => handleUrlChange(e.target.value)}
                         />
                     </Form.Item>
+
+                    <div
+                        style={{
+                            marginBottom: 16,
+                            padding: 12,
+                            background: "#fff",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: 10,
+                        }}
+                    >
+                        <Space size={6} style={{ marginBottom: 8 }}>
+                            <Text strong style={{ fontSize: 13, color: "#111827" }}>
+                                How to copy a Teams channel link
+                            </Text>
+                            <Tooltip title="Click the image to enlarge">
+                                <QuestionCircleOutlined style={{ color: "#2563eb" }} />
+                            </Tooltip>
+                        </Space>
+
+                        <img
+                            src={teamsCopyLinkGuide}
+                            alt="In Microsoft Teams, open a channel's more-options (...) menu and select Copy link"
+                            onClick={() => setLinkHelpOpen(true)}
+                            style={{
+                                width: "100%",
+                                maxHeight: 220,
+                                objectFit: "contain",
+                                borderRadius: 8,
+                                cursor: "zoom-in",
+                                display: "block",
+                                border: "1px solid #e5e7eb",
+                            }}
+                        />
+
+                        <span style={{ display: "block", marginTop: 8, color: "#64748b", fontSize: 12 }}>
+                            In Microsoft Teams, hover over the channel, open its <b>...</b> (more options) menu,
+                            and select <b>Copy link</b>. Paste that link into the Channel URL field above.
+                        </span>
+                    </div>
 
                     <Row gutter={16}>
                         <Col xs={24} md={8}>
@@ -454,6 +496,31 @@ const ExistingChannelModal: React.FC<Props> = ({ open, loading, onCancel, onSubm
                 </div>
             </Form>
         </Modal>
+
+        <Modal
+            open={linkHelpOpen}
+            onCancel={() => setLinkHelpOpen(false)}
+            footer={null}
+            title={
+                <span style={{ fontSize: 16, fontWeight: 600, color: "#111827" }}>
+                    How to copy a Teams channel link
+                </span>
+            }
+            width={760}
+        >
+            <img
+                src={teamsCopyLinkGuide}
+                alt="In Microsoft Teams, open a channel's more-options (...) menu and select Copy link"
+                style={{ width: "100%", borderRadius: 8, border: "1px solid #e5e7eb" }}
+            />
+
+            <Text style={{ display: "block", marginTop: 12, color: "#64748b", fontSize: 13 }}>
+                In Microsoft Teams, go to <b>Teams → Channels</b>, hover over the channel, open its{" "}
+                <b>...</b> (more options) menu, and select <b>Copy link</b>. Paste that link into the
+                Channel URL field.
+            </Text>
+        </Modal>
+        </>
     );
 };
 

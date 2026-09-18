@@ -25,7 +25,6 @@ import {
 } from "@ant-design/icons";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { GroupsCreate, GroupsDelete, GroupsGet, GroupsUpdate, UserswithoutpagnationGet } from "../../redux/Services/connectersServices";
-import { showSnackbar } from "../../utils/snackbar";
 
 const { Title, Text } = Typography;
 
@@ -147,8 +146,6 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                 };
 
                 await dispatch(GroupsUpdate({ payload })).unwrap();
-
-                showSnackbar("success", "Team updated successfully");
             } else {
                 const payload = {
                     group_name: values.groupName,
@@ -159,14 +156,13 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
                 };
 
                 await dispatch(GroupsCreate({ payload })).unwrap();
-
-                showSnackbar("success", "Team created successfully");
             }
 
             dispatch(GroupsGet({}));
             closeModal();
-        } catch {
-            showSnackbar("error", "Operation failed");
+        } catch (error) {
+            // GroupsUpdate/GroupsCreate already show the real backend message on failure.
+            console.error(error);
         } finally {
             setSaving(false);
         }
@@ -187,15 +183,9 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
             await dispatch(GroupsUpdate({ payload })).unwrap();
 
             dispatch(GroupsGet({}));
-
-            showSnackbar(
-                "success",
-                active
-                    ? "Team activated successfully"
-                    : "Team deactivated successfully"
-            );
-        } catch {
-            showSnackbar("error", "Failed to update status");
+        } catch (error) {
+            // GroupsUpdate already shows the real backend message on failure.
+            console.error(error);
         } finally {
             setTogglingId(null);
         }
@@ -211,10 +201,9 @@ export default function GroupManagement({ activeTab }: { activeTab: string }): R
             await dispatch(GroupsDelete({ payload })).unwrap();
 
             dispatch(GroupsGet({}));
-
-            showSnackbar("success", "Team deleted successfully");
-        } catch {
-            showSnackbar("error", "Failed to delete team");
+        } catch (error) {
+            // GroupsDelete already shows the real backend message on failure.
+            console.error(error);
         } finally {
             setDeletingId(null);
         }

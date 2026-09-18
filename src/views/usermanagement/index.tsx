@@ -30,7 +30,6 @@ import {
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { userCreate, UsersGet, UserUpdate, GroupsGet, TeamModuleAccessUpdate } from "../../redux/Services/connectersServices";
 import AppPagination from "../../components/AppPagination";
-import { showSnackbar } from "../../utils/snackbar";
 import type { ColumnsType } from "antd/es/table";
 import { MODULE_ACCESS_OPTIONS } from "../../constants/moduleAccess";
 import type { RoleData } from "../../constants/roles";
@@ -41,8 +40,6 @@ const { Panel } = Collapse;
 
 type ModulePermission = { read: boolean; write: boolean };
 type ModulePermissions = Record<string, ModulePermission>;
-
-const emptyModulePermission = (): ModulePermission => ({ read: false, write: false });
 
 // Maps a module's Read/Write checkboxes to the flat field names the
 // create/update User APIs expect (e.g. mdm_read, mdm_write - "0"/"1" strings).
@@ -63,6 +60,23 @@ const buildModuleAccessFields = (perms: ModulePermissions): Record<string, strin
     });
 
     return fields;
+};
+
+const isTruthyFlag = (value: any) => value === true || value === "true" || value === "1" || value === 1;
+
+// Reverse of buildModuleAccessFields - reads the flat mdm_read/mdm_write/...
+// fields a GET user record comes back with into the checkbox grid's shape.
+const parseModuleAccessFields = (item: any): ModulePermissions => {
+    const perms: ModulePermissions = {};
+
+    Object.entries(MODULE_PAYLOAD_KEYS).forEach(([module, keys]) => {
+        perms[module] = {
+            read: isTruthyFlag(item?.[keys.read]),
+            write: isTruthyFlag(item?.[keys.write]),
+        };
+    });
+
+    return perms;
 };
 
 // Maps a module's Read/Write checkboxes to the nested module_access object
@@ -218,6 +232,7 @@ type UserRow = {
     role: string;
     active: boolean;
     isBoomiUser: boolean;
+    moduleAccess: ModulePermissions;
 };
 
 type AddUserFormValues = {
@@ -252,7 +267,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
     const [accessModalOpen, setAccessModalOpen] = useState(false);
     const [accessTargetUser, setAccessTargetUser] = useState<UserRow | null>(null);
     const [accessModules, setAccessModules] = useState<ModulePermissions>({});
-    const [accessAtoms, setAccessAtoms] = useState<string[]>([]);
+    const [savingUserAccess, setSavingUserAccess] = useState(false);
 
     useEffect(() => {
         if (activeTab === "usermanagemnt") {
@@ -303,6 +318,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
         role: item.type,
         active: item.is_boomi_user === "true",
         isBoomiUser: item.is_boomi_user === "true",
+        moduleAccess: parseModuleAccessFields(item),
     }));
 
     const tableUsers = users;
@@ -390,8 +406,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
 
     const openAccessModal = (record: UserRow) => {
         setAccessTargetUser(record);
-        setAccessModules({});
-        setAccessAtoms([]);
+        setAccessModules(record.moduleAccess || {});
         setAccessModalOpen(true);
     };
 
@@ -399,27 +414,48 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
         setAccessModalOpen(false);
         setAccessTargetUser(null);
         setAccessModules({});
-        setAccessAtoms([]);
     };
 
-    const handleUpdateUserAccess = () => {
-        const payload = {
-            userId: accessTargetUser?.id,
-            access: {
-                mdm: accessModules.MDM || emptyModulePermission(),
-                atom: accessModules.Atom || emptyModulePermission(),
-                tickets: accessModules.Tickets || emptyModulePermission(),
-                longrun: accessModules.LongRun || emptyModulePermission(),
-                errorhandler: accessModules["Error Handler"] || emptyModulePermission(),
-            },
-            atoms: accessAtoms,
-        };
+    const handleUpdateUserAccess = async () => {
+        if (!accessTargetUser) return;
 
-        console.log("Update user access payload:", payload);
+        setSavingUserAccess(true);
+        try {
+            const nameParts = accessTargetUser.userName.split(" ");
+            const firstName = nameParts[0] || "";
+            const lastName = nameParts.slice(1).join(" ");
 
-        showSnackbar("success", `Access updated for ${accessTargetUser?.userName}`);
+            const payload = {
+                boomi_user_id: accessTargetUser.id,
+                id: accessTargetUser.rawId || "",
+                user_id: accessTargetUser.usermail,
+                first_name: firstName,
+                last_name: lastName,
+                accountid: "",
+                is_boomi_user: "false",
+                type: accessTargetUser.role,
+                ...buildModuleAccessFields(accessModules),
+            };
 
-        closeAccessModal();
+            await dispatch(UserUpdate({ payload })).unwrap();
+
+            dispatch(
+                UsersGet({
+                    Payload: {
+                        search_by_filter: "All",
+                        search,
+                    },
+                    pagnation: pagination,
+                })
+            );
+
+            closeAccessModal();
+        } catch (error) {
+            // UserUpdate already shows the real backend message on failure.
+            console.error(error);
+        } finally {
+            setSavingUserAccess(false);
+        }
     };
 
     const handleAddUser = async (values: AddUserFormValues) => {
@@ -443,8 +479,6 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                 })
             ).unwrap();
 
-            showSnackbar("success", "User created successfully");
-
             dispatch(
                 UsersGet({
                     Payload: {
@@ -456,8 +490,9 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
             );
 
             closeAddUser();
-        } catch (error: any) {
-            showSnackbar("error", error?.message || "Failed to create user");
+        } catch (error) {
+            // userCreate already shows the real backend message on failure.
+            console.error(error);
         } finally {
             setSaving(false);
         }
@@ -484,8 +519,6 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                 })
             ).unwrap();
 
-            showSnackbar("success", "User updated successfully");
-
             dispatch(
                 UsersGet({
                     Payload: {
@@ -497,8 +530,9 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
             );
 
             closeAddUser();
-        } catch (error: any) {
-            showSnackbar("error", error?.message || "Failed to update user");
+        } catch (error) {
+            // UserUpdate already shows the real backend message on failure.
+            console.error(error);
         } finally {
             setSaving(false);
         }
@@ -822,7 +856,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                         lastName: selectedUser?.userName.split(" ").slice(1).join(" "),
                         email: selectedUser?.usermail,
                         role: selectedUser?.role,
-                        moduleAccess: {},
+                        moduleAccess: selectedUser?.moduleAccess || {},
                         teamAccess: [],
                         atomAccess: [],
                     }}
@@ -1194,6 +1228,7 @@ const UserManagement = ({ activeTab, roles }: { activeTab: string; roles: RoleDa
                         <Col>
                             <Button
                                 type="primary"
+                                loading={savingUserAccess}
                                 onClick={handleUpdateUserAccess}
                                 style={{
                                     background: "#2563eb",
