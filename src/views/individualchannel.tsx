@@ -11,6 +11,13 @@ import NotificationModal from "../components/Individualcreate";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+// Some flags come back as the number 0/1 rather than a string, and the
+// backend's error handler field is spelled "errorhandeler" (not
+// "errorhandler") on this endpoint - handled by the caller passing both keys.
+const isTruthyFlag = (value: any) =>
+    value === true || value === 1 || value === "true" || value === "1";
+
 interface UserPermission {
     key: string;
     name: string;
@@ -135,20 +142,16 @@ const UserAlertsTable: React.FC = () => {
                             ]
                             : [],
 
-                    mdm:
-                        item.mdm === true || item.mdm === "true" || item.mdm === "1",
+                    mdm: isTruthyFlag(item.mdm),
 
-                    longrun:
-                        item.longrun === true || item.longrun === "true" || item.longrun === "1",
+                    longrun: isTruthyFlag(item.longrun),
 
-                    atom:
-                        item.atom === true || item.atom === "true" || item.atom === "1",
+                    atom: isTruthyFlag(item.atom),
 
-                    tickets:
-                        item.tickets === true || item.tickets === "true" || item.tickets === "1",
+                    tickets: isTruthyFlag(item.tickets),
 
-                    errorhandler:
-                        item.errorhandler === true || item.errorhandler === "true" || item.errorhandler === "1",
+                    // Backend field is misspelled "errorhandeler" on this endpoint.
+                    errorhandler: isTruthyFlag(item.errorhandeler ?? item.errorhandler),
                 };
             });
 
@@ -325,7 +328,10 @@ const UserAlertsTable: React.FC = () => {
             longrun: record.longrun ? "1" : "0",
             mdm: record.mdm ? "1" : "0",
             tickets: record.tickets ? "1" : "0",
+            // Backend column is spelled "errorhandeler" on this endpoint - send
+            // both spellings so this keeps working if that gets corrected.
             errorhandler: record.errorhandler ? "1" : "0",
+            errorhandeler: record.errorhandler ? "1" : "0",
         };
 
         setUpdatingKey(record.key);
@@ -746,7 +752,10 @@ const UserAlertsTable: React.FC = () => {
                                 longrun: values.longrun,
                                 mdm: values.mdm,
                                 tickets: values.tickets,
+                                // Backend column is spelled "errorhandeler" on this endpoint - send
+                                // both spellings so this keeps working if that gets corrected.
                                 errorhandler: values.errorhandler,
+                                errorhandeler: values.errorhandler,
                                 created_at: new Date().toISOString(),
                                 updated_at: new Date().toISOString(),
                             };

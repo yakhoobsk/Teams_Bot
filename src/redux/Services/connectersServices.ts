@@ -41,15 +41,15 @@ export const aiconnecterCreate = createAsyncThunk("AI/create", async ({ payload 
         const response = await boomiApi.post("/teams_bot/AI_Agent_Details/create", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Ai failed";
+            const message = data?.Status_Message || "AI agent creation failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Ai successful");
+        showSnackbar("success", data?.Status_Message || "AI agent created successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Ai failed";
+        const message = error.response?.data?.message || "AI agent creation failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -308,15 +308,15 @@ export const databaseconnecterCreate = createAsyncThunk("database/create", async
         const response = await boomiApi.post("/teams_bot/Database_connectors/create", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Ai failed";
+            const message = data?.Status_Message || "Database connector creation failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Ai successful");
+        showSnackbar("success", data?.Status_Message || "Database connector created successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Ai failed";
+        const message = error.response?.data?.message || "Database connector creation failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -331,15 +331,15 @@ export const databaseconnecterUpdate = createAsyncThunk("database/Update", async
         const data = unwrapStatus(response.data);
 
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Ai failed";
+            const message = data?.Status_Message || "Database connector update failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Ai successful");
+        showSnackbar("success", data?.Status_Message || "Database connector updated successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Ai failed";
+        const message = error.response?.data?.message || "Database connector update failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -394,15 +394,15 @@ export const itsmconnecterCreate = createAsyncThunk("itsm/create", async ({ payl
         const data = unwrapStatus(response.data);
 
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Ai failed";
+            const message = data?.Status_Message || "ITSM connector creation failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Ai successful");
+        showSnackbar("success", data?.Status_Message || "ITSM connector created successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Ai failed";
+        const message = error.response?.data?.message || "ITSM connector creation failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -448,15 +448,15 @@ export const TeamsconfigCreate = createAsyncThunk("Teamsconfig/create", async ({
         const response = await boomiApi.post("/teams_bot/Temas_Configuration/insert", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Ai failed";
+            const message = data?.Status_Message || "Teams configuration creation failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Ai successful");
+        showSnackbar("success", data?.Status_Message || "Teams configuration created successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Ai failed";
+        const message = error.response?.data?.message || "Teams configuration creation failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -470,15 +470,15 @@ export const TeamsconfigUpdate = createAsyncThunk("Teamsconfig/Update", async ({
         const response = await boomiApi.post("/teams_bot/Temas_Configuration/update", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Ai failed";
+            const message = data?.Status_Message || "Teams configuration update failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Ai successful");
+        showSnackbar("success", data?.Status_Message || "Teams configuration updated successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Ai failed";
+        const message = error.response?.data?.message || "Teams configuration update failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -515,15 +515,15 @@ export const RestApiConnectersCreate = createAsyncThunk("RestApiConnecters/creat
         const response = await boomiApi.post("/teams_bot/restconfigure/create", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "REST API connector creation failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "REST API connector created successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "REST API connector creation failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -536,15 +536,15 @@ export const RestApiConnectersUpdate = createAsyncThunk("RestApiConnecters/Updat
         const response = await boomiApi.put("/teams_bot/restconfigure/updated", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "REST API connector update failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "REST API connector updated successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "REST API connector update failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -557,15 +557,15 @@ export const RestApiConnectersDelete = createAsyncThunk("RestApiConnecters/Delet
         const response = await boomiApi.delete("/teams_bot/restconfigure/delete", { data: payload });
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "REST API connector deletion failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "REST API connector deleted successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "REST API connector deletion failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -596,15 +596,15 @@ export const TeamsconfigrationUpdate = createAsyncThunk("Teamsconfigration/Updat
         const response = await boomiApi.post("/teams_bot/Temas_Configuration/Create_Team", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Team configuration update failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Team configuration updated successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Team configuration update failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -634,15 +634,15 @@ export const IndividualuserUpdate = createAsyncThunk("IndividualuserUpdate/Updat
         const response = await boomiApi.put("/teams_bot/Individual/Update", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Individual alert update failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Individual alert updated successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Individual alert update failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -655,15 +655,15 @@ export const IndividualuserCreate = createAsyncThunk("IndividualuserCreate/Creat
         const response = await boomiApi.post("/teams_bot/Individual/Insert", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Individual alert creation failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Individual alert created successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Individual alert creation failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -676,15 +676,15 @@ export const IndividualuserDelete = createAsyncThunk("Individualuser/Delete", as
         const response = await boomiApi.post("/teams_bot/Individual/Delete", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Individual alert deletion failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Individual alert deleted successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Individual alert deletion failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -714,15 +714,15 @@ export const AtomStatusUpdate = createAsyncThunk("AtomStatusUpdate/Update", asyn
         const response = await boomiApi.post("/teams_bot/Atomstatus/Update", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Atom status update failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Atom status updated successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Atom status update failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -736,7 +736,7 @@ export const GroupAlertGet = createAsyncThunk(
     async (_: any, { rejectWithValue }) => {
 
         try {
-            const response = await boomiApi.get("/teams_bot/Group_Alert/Get");
+            const response = await boomiApi.post("/teams_bot/Group_Alert/Get");
             return response.data;
         } catch (error: any) {
             return rejectWithValue(
@@ -752,15 +752,15 @@ export const GroupAlertCreate = createAsyncThunk("GroupAlertCreate/Create", asyn
         const response = await boomiApi.post("/teams_bot/Group_Alert/Create", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Team alert creation failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Team alert created successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Team alert creation failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -773,15 +773,15 @@ export const GroupAlertUpdate = createAsyncThunk("GroupAlertUpdate/Update", asyn
         const response = await boomiApi.put("/teams_bot/Group_Alert/Update", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Team alert update failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Team alert updated successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Team alert update failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -794,15 +794,15 @@ export const GroupAlertDelete = createAsyncThunk("GroupAlertDelete/Delete", asyn
         const response = await boomiApi.post("/teams_bot/Group_Alert/Delete", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Team alert deletion failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Team alert deleted successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Team alert deletion failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -831,15 +831,15 @@ export const ChannelsCreate = createAsyncThunk("ChannelsCreate/Create", async ({
         const response = await boomiApi.post("/teams_bot/Channel/Create", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Channel creation failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Channel created successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Channel creation failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }
@@ -852,15 +852,15 @@ export const ChannelsDelete = createAsyncThunk("Channels/Delete", async ({ paylo
         const response = await boomiApi.post("/teams_bot/channels/delete", payload);
         const data = unwrapStatus(response.data);
         if (data?.Status_Response === "Failure") {
-            const message = data?.Status_Message || "Rest API failed";
+            const message = data?.Status_Message || "Channel deletion failed";
             showSnackbar("error", message);
             return rejectWithValue(message);
         }
 
-        showSnackbar("success", data?.Status_Message || "Rest API successful");
+        showSnackbar("success", data?.Status_Message || "Channel deleted successfully");
         return response.data;
     } catch (error: any) {
-        const message = error.response?.data?.message || "Rest API failed";
+        const message = error.response?.data?.message || "Channel deletion failed";
         showSnackbar("error", message);
         return rejectWithValue(message);
     }

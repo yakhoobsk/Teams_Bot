@@ -10,6 +10,15 @@ export const parseGroupMembers = (raw: any): string[] => {
 
         return Array.isArray(parsed) ? parsed : [String(parsed)];
     } catch {
+        // Some endpoints (Team Alerts) return members as a plain
+        // comma-separated string instead of JSON.
+        if (typeof raw === "string") {
+            return raw
+                .split(",")
+                .map((m) => m.trim())
+                .filter(Boolean);
+        }
+
         return [];
     }
 };

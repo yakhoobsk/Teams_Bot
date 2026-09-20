@@ -20,6 +20,7 @@ import ChannelsPage from "../components/channelcreate";
 import ExistingChannelModal from "../components/ExistingChannelModal";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { ChannelsDelete, ChannelsUser, ExistChannelCreate } from "../redux/Services/connectersServices";
+import { parseGroupMembers } from "../utils/groupMembers";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
@@ -62,12 +63,21 @@ const Channels: React.FC = () => {
         if (Array.isArray(value)) return value;
 
         try {
-            const parsed = JSON.parse(value);
+            // The backend sometimes double-encodes this (a JSON string whose own
+            // content is itself a JSON-stringified array) - keep unwrapping until
+            // it's no longer a string, same as parseGroupMembers.
+            let parsed = value;
+            while (typeof parsed === "string") {
+                parsed = JSON.parse(parsed);
+            }
             return Array.isArray(parsed) ? parsed : [];
         } catch {
             return [];
         }
     };
+
+    const formatAlertLabel = (alert: string) =>
+        alert === "errorhandler" ? "Error Handler" : alert;
 
     useEffect(() => {
         if (channelsget?.Response?.length) {
@@ -105,8 +115,9 @@ const Channels: React.FC = () => {
 
                 scheduleParts.push(istTime);
 
-                const memberList =
-                    item.group_members ?? item.teamMembers ?? item.channelMembers ?? [];
+                const memberList = parseGroupMembers(
+                    item.channel_members ?? item.team_members ?? item.group_members
+                );
 
                 return {
                     key: item.id,
@@ -116,9 +127,9 @@ const Channels: React.FC = () => {
                     notificationType: item.membership_type ?? item.membershipType,
                     Type: item.type,
 
-                    members: Array.isArray(memberList)
-                        ? memberList.map((m: any) => `${m.userId} (${m.role})`)
-                        : [],
+                    members: memberList.map((m: any) =>
+                        typeof m === "string" ? m : `${m.userId} (${m.role})`
+                    ),
 
                     groups: item.group_name ? [item.group_name] : [],
 
@@ -254,11 +265,11 @@ const Channels: React.FC = () => {
                     <Space wrap>
                         {shown.map((a) => (
                             <Tag color="green" key={a}>
-                                <BellOutlined /> {a}
+                                <BellOutlined /> {formatAlertLabel(a)}
                             </Tag>
                         ))}
                         {hidden > 0 && (
-                            <Tooltip title={alerts.slice(2).join(", ")}>
+                            <Tooltip title={alerts.slice(2).map(formatAlertLabel).join(", ")}>
                                 <Tag color="green">+{hidden}...</Tag>
                             </Tooltip>
                         )}

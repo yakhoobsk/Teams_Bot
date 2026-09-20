@@ -13,6 +13,12 @@ import { parseGroupMembers } from "../utils/groupMembers";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+// Some flags come back as the number 0/1 rather than a string, and the
+// backend's error handler field is spelled "errorhandeler" (not
+// "errorhandler") on this endpoint too.
+const isTruthyFlag = (value: any) =>
+    value === true || value === 1 || value === "true" || value === "1";
+
 interface TeamPermission {
     key: string;
     id: number;
@@ -75,10 +81,29 @@ const TeamAlertsTable: React.FC = () => {
     };
 
     useEffect(() => {
-        if (groupAlerts?.Response?.length) {
+        // This endpoint doesn't get auto-parsed by axios (its response isn't
+        // sent as application/json), so groupAlerts can arrive as a raw JSON
+        // string - and unlike other GET endpoints, the array lives under
+        // "Group", not "Response". The backend also emits invalid JSON for
+        // single-digit hours (e.g. "hour" : 09, a leading-zero numeric
+        // literal, which the JSON spec forbids) - strip the leading zero so
+        // it parses as a plain number instead of throwing.
+        let normalized: any = groupAlerts;
+        while (typeof normalized === "string") {
+            try {
+                const sanitized = normalized.replace(/:(\s*)0(\d+)(\s*[,}\]])/g, ":$1$2$3");
+                normalized = JSON.parse(sanitized);
+            } catch {
+                break;
+            }
+        }
+
+        const groupList = normalized?.Group ?? normalized?.Response;
+
+        if (groupList?.length) {
             const isSet = (v: any) => v !== undefined && v !== null && v !== "" && v !== "0" && v !== 0;
 
-            const mappedData: TeamPermission[] = groupAlerts.Response.map((item: any) => {
+            const mappedData: TeamPermission[] = groupList.map((item: any) => {
                 const scheduleType = item.schedule_type?.trim().toLowerCase();
 
                 return {
@@ -102,20 +127,16 @@ const TeamAlertsTable: React.FC = () => {
 
                     customSchedules: [],
 
-                    mdm:
-                        item.mdm === true || item.mdm === "true" || item.mdm === "1",
+                    mdm: isTruthyFlag(item.mdm),
 
-                    longrun:
-                        item.longrun === true || item.longrun === "true" || item.longrun === "1",
+                    longrun: isTruthyFlag(item.longrun),
 
-                    atom:
-                        item.atom === true || item.atom === "true" || item.atom === "1",
+                    atom: isTruthyFlag(item.atom),
 
-                    tickets:
-                        item.tickets === true || item.tickets === "true" || item.tickets === "1",
+                    tickets: isTruthyFlag(item.tickets),
 
-                    errorhandler:
-                        item.errorhandler === true || item.errorhandler === "true" || item.errorhandler === "1",
+                    // Backend field is misspelled "errorhandeler" on this endpoint.
+                    errorhandler: isTruthyFlag(item.errorhandeler ?? item.errorhandler),
                 };
             });
 
@@ -279,7 +300,7 @@ const TeamAlertsTable: React.FC = () => {
         const payload = {
             id: record.id,
             team_name: record.teamName,
-            members: record.members,
+            members: record.members.join(","),
             type: record.type === "datahub" ? "Datahub" : "Integration",
             schedule_type: record.scheduleType,
             day,
@@ -292,7 +313,10 @@ const TeamAlertsTable: React.FC = () => {
             longrun: record.longrun ? "1" : "0",
             mdm: record.mdm ? "1" : "0",
             tickets: record.tickets ? "1" : "0",
+            // Backend column is spelled "errorhandeler" on this endpoint - send
+            // both spellings so this keeps working if that gets corrected.
             errorhandler: record.errorhandler ? "1" : "0",
+            errorhandeler: record.errorhandler ? "1" : "0",
             updated_at: new Date().toISOString(),
         };
 
@@ -700,7 +724,9 @@ const TeamAlertsTable: React.FC = () => {
 
                             const payload = {
                                 team_name: values.team_name,
-                                members: values.members,
+                                members: Array.isArray(values.members)
+                                    ? values.members.join(",")
+                                    : values.members,
                                 type: values.type,
                                 schedule_type: values.schedule_type,
                                 day: values.day ?? "",
@@ -713,7 +739,10 @@ const TeamAlertsTable: React.FC = () => {
                                 longrun: values.longrun,
                                 mdm: values.mdm,
                                 tickets: values.tickets,
+                                // Backend column is spelled "errorhandeler" on this endpoint - send
+                                // both spellings so this keeps working if that gets corrected.
                                 errorhandler: values.errorhandler,
+                                errorhandeler: values.errorhandler,
                                 created_at: values.created_at,
                                 updated_at: values.updated_at,
                             };
